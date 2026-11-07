@@ -1,0 +1,125 @@
+---
+// Items José uses in each world and design-thinking phase, drawn in his flat style (thick dark
+// outlines, flat fills) in the puppet's own coordinates (viewBox 380 640 920 1140). Drawn inline so
+// each part can be animated. part="head" is what moves with his head (the VR headset).
+interface Props { part: 'head' | 'body' }
+const { part } = Astro.props;
+const ink = '#363636';
+const confetti: [number, number, string][] = [
+  [520, 700, '#b02e2e'], [640, 620, '#f2c14e'], [760, 580, '#2fb3a6'], [900, 600, '#4b5bd1'],
+  [1020, 640, '#f08aa8'], [1140, 700, '#f2c14e'], [470, 860, '#2fb3a6'], [1200, 860, '#b02e2e'],
+  [700, 520, '#f08aa8'], [980, 520, '#3fbf6f'], [1250, 760, '#4b5bd1'], [420, 760, '#f2c14e'],
+];
+---
+{part === 'head' ? (
+  <g class="pp-props-head">
+    {/* VR headset, worn over the glasses */}
+    <g data-prop="visor" display="none">
+      <path d="M470 1195 H1210" stroke={ink} stroke-width="46" stroke-linecap="round" />
+      <rect x="528" y="1072" width="624" height="246" rx="96" fill="#f4f3ff" stroke={ink} stroke-width="18" />
+      <rect x="586" y="1124" width="508" height="142" rx="62" fill="#3d4a7a" />
+      <path d="M636 1162 Q706 1140 790 1150" stroke="#ffffff99" stroke-width="16" stroke-linecap="round" fill="none" />
+      <circle class="pr-led" cx="1094" cy="1104" r="13" fill="#f2a33a" />
+    </g>
+  </g>
+) : (
+  <g class="pp-props">
+    {/* Laptop seen from behind, with a </> sticker */}
+    <g data-prop="laptop" display="none">
+      <g class="pr-in">
+        <rect x="586" y="1392" width="508" height="300" rx="26" fill="#c9d1e6" stroke={ink} stroke-width="18" />
+        <path class="pr-code" d="M800 1508 l-44 34 44 34 M880 1508 l44 34 -44 34 M856 1500 l-32 84" stroke="#3d4a7a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        <rect x="512" y="1684" width="656" height="44" rx="22" fill="#9aa4c4" stroke={ink} stroke-width="18" />
+      </g>
+    </g>
+
+    {/* Wireframe cube with rig dots */}
+    <g data-prop="cube" display="none">
+      <g transform="translate(1120 1440) scale(1.5)">
+        <g class="pr-in">
+          <path d="M0 -84 L74 -42 L0 0 L-74 -42 Z" fill="#f6b7c9" stroke={ink} stroke-width="14" stroke-linejoin="round" />
+          <path d="M-74 -42 L0 0 L0 84 L-74 42 Z" fill="#f08aa8" stroke={ink} stroke-width="14" stroke-linejoin="round" />
+          <path d="M74 -42 L0 0 L0 84 L74 42 Z" fill="#d4637f" stroke={ink} stroke-width="14" stroke-linejoin="round" />
+          <g fill="#f2c14e" stroke={ink} stroke-width="8">
+            <circle cx="0" cy="-84" r="13" /><circle cx="74" cy="-42" r="13" /><circle cx="-74" cy="-42" r="13" />
+            <circle cx="0" cy="0" r="13" /><circle cx="0" cy="84" r="13" /><circle cx="74" cy="42" r="13" /><circle cx="-74" cy="42" r="13" />
+          </g>
+        </g>
+      </g>
+    </g>
+
+    {/* Arcade coin */}
+    <g data-prop="coin" display="none">
+      <g transform="translate(1110 900) scale(1.6)">
+        <g class="pr-in">
+          <circle r="50" fill="#f2c14e" stroke={ink} stroke-width="16" />
+          <rect x="-9" y="-26" width="18" height="52" rx="9" fill="#e2a53a" />
+        </g>
+      </g>
+    </g>
+
+    {/* Speech bubble and a heart (empathise) */}
+    <g data-prop="talk" display="none">
+      <g transform="translate(-70 10)">
+      <g class="pr-b1">
+        <path d="M300 820 h190 a40 40 0 0 1 40 40 v60 a40 40 0 0 1 -40 40 h-110 l-40 36 v-36 h-40 a40 40 0 0 1 -40 -40 v-60 a40 40 0 0 1 40 -40 z" fill="#ffffff" stroke={ink} stroke-width="16" stroke-linejoin="round" />
+        <g fill={ink}><circle class="pr-dot" cx="345" cy="890" r="14" /><circle class="pr-dot" cx="395" cy="890" r="14" /><circle class="pr-dot" cx="445" cy="890" r="14" /></g>
+      </g>
+      <path class="pr-heart" d="M420 760 c-30 -40 -90 -10 -60 30 l60 50 60 -50 c30 -40 -30 -70 -60 -30 z" fill="#b02e2e" stroke={ink} stroke-width="12" stroke-linejoin="round" />
+      </g>
+    </g>
+
+    {/* Thought cloud with a question mark (define) */}
+    <g data-prop="thought" display="none">
+      <circle class="pr-t1" cx="560" cy="820" r="20" fill="#ffffff" stroke={ink} stroke-width="12" />
+      <circle class="pr-t2" cx="500" cy="752" r="30" fill="#ffffff" stroke={ink} stroke-width="12" />
+      <g class="pr-t3">
+        <path d="M330 690 a56 56 0 0 1 60 -70 a70 70 0 0 1 120 -10 a56 56 0 0 1 60 80 a50 50 0 0 1 -40 80 h-160 a50 50 0 0 1 -40 -80 z" fill="#ffffff" stroke={ink} stroke-width="14" stroke-linejoin="round" />
+        <path d="M420 640 a32 32 0 1 1 46 28 c-14 8 -16 16 -16 30" stroke="#3d4a7a" stroke-width="20" stroke-linecap="round" fill="none" />
+        <circle cx="450" cy="732" r="12" fill="#3d4a7a" />
+      </g>
+    </g>
+
+    {/* Light bulb (ideate) */}
+    <g data-prop="bulb" display="none">
+      <g class="pr-rays" stroke="#f2c14e" stroke-width="16" stroke-linecap="round">
+        <path d="M840 400 v-50" /><path d="M940 440 l34 -34" /><path d="M740 440 l-34 -34" /><path d="M980 530 h48" /><path d="M700 530 h-48" />
+      </g>
+      <path class="pr-glass" d="M840 440 a90 90 0 0 1 56 160 v26 h-112 v-26 a90 90 0 0 1 56 -160 z" fill="#e6e6ea" stroke={ink} stroke-width="16" stroke-linejoin="round" />
+      <rect x="788" y="626" width="104" height="22" rx="8" fill="#9aa4c4" stroke={ink} stroke-width="12" />
+      <rect x="800" y="648" width="80" height="22" rx="8" fill="#9aa4c4" stroke={ink} stroke-width="12" />
+    </g>
+
+    {/* Gear and wrench (prototype) */}
+    <g data-prop="gear" display="none">
+      <g transform="translate(1180 1340) scale(1.35)">
+        <g class="pr-in">
+          <path d="M-14 -80 h28 l6 22 a60 60 0 0 1 18 8 l20 -12 20 20 -12 20 a60 60 0 0 1 8 18 l22 6 v28 l-22 6 a60 60 0 0 1 -8 18 l12 20 -20 20 -20 -12 a60 60 0 0 1 -18 8 l-6 22 h-28 l-6 -22 a60 60 0 0 1 -18 -8 l-20 12 -20 -20 12 -20 a60 60 0 0 1 -8 -18 l-22 -6 v-28 l22 -6 a60 60 0 0 1 8 -18 l-12 -20 20 -20 20 12 a60 60 0 0 1 18 -8 z" fill="#9aa4c4" stroke={ink} stroke-width="12" stroke-linejoin="round" />
+          <circle r="22" fill="#2a2a2e" />
+        </g>
+      </g>
+    </g>
+    <g data-prop="wrench" display="none">
+      <g transform="translate(560 1640) scale(1.6)">
+        <g class="pr-in">
+          <path d="M0 0 L0 -150" stroke={ink} stroke-width="44" stroke-linecap="round" />
+          <path d="M0 0 L0 -150" stroke="#c9d1e6" stroke-width="20" stroke-linecap="round" />
+          <path d="M-34 -150 a40 40 0 1 1 68 0 l-14 -30 h-40 z" fill="#c9d1e6" stroke={ink} stroke-width="14" stroke-linejoin="round" />
+        </g>
+      </g>
+    </g>
+
+    {/* Confetti and a check badge (test) */}
+    <g data-prop="confetti" display="none">
+      {confetti.map(([x, y, c]) => <rect class="pr-bit" x={x} y={y} width="44" height="22" rx="6" fill={c} />)}
+    </g>
+    <g data-prop="check" display="none">
+      <g transform="translate(540 760) scale(1.3)">
+        <g class="pr-in">
+          <circle r="64" fill="#3fbf6f" stroke={ink} stroke-width="16" />
+          <path d="M-28 2 l20 22 l38 -44" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        </g>
+      </g>
+    </g>
+  </g>
+)}

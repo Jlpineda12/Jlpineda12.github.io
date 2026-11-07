@@ -3,7 +3,7 @@
 import { gsap } from 'gsap';
 import { POSES, type Pose, type PoseDef } from './poses';
 
-export type Anim = 'idle' | 'happy' | 'sleep' | 'travel' | 'listen' | 'think' | 'idea' | 'build' | 'celebrate' | 'story' | 'learn' | 'play' | 'pose' | 'vr' | 'wake' | 'wait' | 'code';
+export type Anim = 'idle' | 'happy' | 'sleep' | 'travel' | 'listen' | 'think' | 'idea' | 'build' | 'celebrate' | 'story' | 'learn' | 'play' | 'pose' | 'vr' | 'wake' | 'wait' | 'code' | 'sculpt';
 export type Puppet = {
   play: (a: Anim) => void;
   current: () => Anim;
@@ -19,8 +19,15 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FACE: Record<Anim, Pose> = {
   idle: 'calm', happy: 'happy', sleep: 'sleep', travel: 'travel', listen: 'listen',
   think: 'think', idea: 'think', build: 'build', celebrate: 'celebrate', story: 'story', learn: 'learn',
-  play: 'play', pose: 'pose', vr: 'vr', wake: 'sleep', wait: 'wait', code: 'code',
+  play: 'play', pose: 'pose', vr: 'vr', wake: 'sleep', wait: 'wait', code: 'code', sculpt: 'sculpt',
 };
+
+// The items each animation brings along (only on puppets drawn with props).
+const PROPS: Partial<Record<Anim, string[]>> = {
+  play: ['coin'], vr: ['visor'], sculpt: ['cube'], code: ['laptop'], build: ['gear', 'wrench'],
+  listen: ['talk'], think: ['thought'], idea: ['bulb'], celebrate: ['confetti', 'check'],
+};
+const PROP_PARTS = '.pr-in, .pr-b1, .pr-heart, .pr-dot, .pr-t1, .pr-t2, .pr-t3, .pr-rays, .pr-glass, .pr-bit, .pr-led, .pr-code';
 
 export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { follow?: boolean } = {}): Puppet {
   const $ = <T extends Element>(s: string) => svg.querySelector(s) as T;
@@ -36,6 +43,15 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
   const phones = $<SVGGElement>('.pp-phones');
   const hands = $<SVGGElement>('.pp-hands');
   const parts = [rig, body, head, eyes, pupils, phones, hands];
+  const propGroups = [...svg.querySelectorAll<SVGGElement>('[data-prop]')];
+  const propParts = [...svg.querySelectorAll<SVGElement>(PROP_PARTS)];
+  // Puppets drawn without props get a stand-in, so the shared timelines still run quietly.
+  const spare = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const pr = (id: string, sel = '.pr-in') => svg.querySelector(`[data-prop="${id}"] ${sel}`) || spare;
+  const prAll = (id: string, sel: string) => {
+    const all = [...svg.querySelectorAll(`[data-prop="${id}"] ${sel}`)];
+    return all.length ? all : [spare];
+  };
 
   let state: Anim = start;
   let tl: gsap.core.Timeline | null = null;
@@ -72,6 +88,15 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
     gsap.killTweensOf(parts);
     gsap.set([rig, body, hands, phones], { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 });
     gsap.set(head, { rotation: 0, y: 0, svgOrigin: HEAD });
+    if (propParts.length) {
+      gsap.killTweensOf(propParts);
+      gsap.set(propParts, { clearProps: 'all' });
+    }
+  };
+
+  const showProps = (a: Anim) => {
+    const list = PROPS[a] || [];
+    propGroups.forEach((g) => showEl(g, list.includes(g.dataset.prop || '')));
   };
 
   // Blinks use José's own lid frames: the lid drops, the eye shuts for a beat, then opens again.
@@ -133,23 +158,33 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
         break;
       case 'listen':
         breathe();
-        t.to(head, { rotation: -1, svgOrigin: HEAD, duration: 0.3, ease: 'sine.inOut', yoyo: true, repeat: 3 })
+        t.fromTo(pr('talk', '.pr-b1'), { scale: 0 }, { scale: 1, transformOrigin: '70% 100%', duration: 0.35, ease: 'back.out(2)' }, 0)
+          .fromTo(prAll('talk', '.pr-dot'), { opacity: 0 }, { opacity: 1, duration: 0.1, stagger: 0.25 }, 0.3)
+          .to(pr('talk', '.pr-heart'), { scale: 1.25, transformOrigin: '50% 50%', duration: 0.18, yoyo: true, repeat: 3, ease: 'power1.inOut' }, 1.2)
+          .to(head, { rotation: -1, svgOrigin: HEAD, duration: 0.3, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 0)
           .to(head, { rotation: -4, svgOrigin: HEAD, duration: 0.3 })
           .add(talk([7, 8, 7], 0.3), '+=0.6')
           .to({}, { duration: 1.4 });
         break;
       case 'think':
         breathe();
-        t.to(head, { rotation: 5, svgOrigin: HEAD, duration: 1.8, ease: 'sine.inOut' })
-          .to(pupils, { x: 6, y: -8, duration: 0.6, ease: 'sine.inOut' }, 0.4)
+        t.fromTo([pr('thought', '.pr-t1'), pr('thought', '.pr-t2'), pr('thought', '.pr-t3')], { scale: 0 },
+          { scale: 1, transformOrigin: '50% 50%', duration: 0.3, stagger: 0.2, ease: 'back.out(2)' }, 0)
+          .to(pr('thought', '.pr-t3'), { rotation: 3, transformOrigin: '50% 50%', duration: 0.6, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0.8)
+          .to(head, { rotation: 5, svgOrigin: HEAD, duration: 1.8, ease: 'sine.inOut' }, 0)
+          .to(pupils, { x: -10, y: -10, duration: 0.6, ease: 'sine.inOut' }, 0.4)
           .to(head, { rotation: 3, svgOrigin: HEAD, duration: 1.8, ease: 'sine.inOut' })
           .to(pupils, { x: 12, y: -2, duration: 0.6, ease: 'sine.inOut' }, '<');
         break;
       case 'idea':
         breathe();
         t.call(() => setFace(POSES.think))
+          .set(pr('bulb', '.pr-glass'), { attr: { fill: '#e6e6ea' } }, 0)
+          .set(pr('bulb', '.pr-rays'), { scale: 0, opacity: 0, transformOrigin: '50% 100%' }, 0)
           .to(head, { rotation: 7, svgOrigin: HEAD, duration: 0.9, ease: 'sine.inOut' })
           .call(() => setFace(POSES.idea))
+          .set(pr('bulb', '.pr-glass'), { attr: { fill: '#ffe27a' } })
+          .to(pr('bulb', '.pr-rays'), { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(3)' }, '<')
           .to(head, { rotation: -2, y: -26, svgOrigin: HEAD, duration: 0.18, ease: 'power3.out' })
           .to(head, { y: 0, duration: 0.35, ease: 'bounce.out' })
           .call(() => setFace({ ...POSES.celebrate, phones: false, hands: false }))
@@ -159,12 +194,16 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
         break;
       case 'build':
         breathe();
-        t.to(hands, { y: -5, duration: 0.08, yoyo: true, repeat: 3, ease: 'power1.inOut' })
-          .to(hands, { rotation: -3, svgOrigin: HANDS, duration: 0.5, ease: 'sine.inOut' })
-          .to(head, { rotation: 3, svgOrigin: HEAD, duration: 0.5, ease: 'sine.inOut' }, '<')
-          .to(hands, { y: -5, duration: 0.08, yoyo: true, repeat: 5, ease: 'power1.inOut' }, '+=0.3')
-          .to(hands, { rotation: 2, svgOrigin: HANDS, duration: 0.5, ease: 'sine.inOut' })
-          .to(head, { rotation: 1, svgOrigin: HEAD, duration: 0.5, ease: 'sine.inOut' }, '<');
+        // Prototyping: the wrench taps, the gear turns, his eyes go from one to the other.
+        t.to(pr('gear'), { rotation: '+=120', transformOrigin: '50% 50%', duration: 2, ease: 'none' }, 0)
+          .to(pr('wrench'), { rotation: -28, transformOrigin: '50% 100%', duration: 0.16, yoyo: true, repeat: 5, ease: 'power2.inOut' }, 0)
+          .to(head, { y: 5, duration: 0.16, yoyo: true, repeat: 5, ease: 'power1.inOut' }, 0)
+          .to(pupils, { x: 14, y: 4, duration: 0.3, ease: 'power2.out' }, 1)
+          .to(head, { rotation: 4, svgOrigin: HEAD, duration: 0.4, ease: 'sine.inOut' }, 1)
+          .call(() => frame(mouth, 8), [], 1.2)
+          .to(pupils, { x: -12, y: 12, duration: 0.3, ease: 'power2.out' }, 1.7)
+          .to(head, { rotation: 2, svgOrigin: HEAD, duration: 0.3, ease: 'sine.inOut' }, 1.7)
+          .call(() => frame(mouth, 10), [], 1.7);
         break;
       case 'story':
         // He narrates: talks with his whole head, glances away to remember, comes back to you.
@@ -212,6 +251,8 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
           .to(pupils, { x: 0, duration: 0.2 }, 0.95)
           .call(() => { frame(mouth, 0); frame(lens, 3); }, [], 1.3)
           .to(head, { y: -14, duration: 0.15, yoyo: true, repeat: 1, ease: 'power2.out' }, 1.3)
+          .fromTo(pr('coin'), { y: 80, opacity: 0, scale: 0.5 }, { y: -10, opacity: 1, scale: 1, transformOrigin: '50% 50%', duration: 0.3, ease: 'back.out(2)' }, 1.3)
+          .to(pr('coin'), { y: -70, opacity: 0, duration: 0.35, ease: 'power1.in' }, 1.75)
           .call(() => { frame(mouth, 10); frame(lens, 1); }, [], 1.9)
           .to({}, { duration: 0.3 }, 1.9);
         break;
@@ -238,7 +279,18 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
           .call(() => frame(mouth, 3), [], 2.3)
           .to(head, { rotation: 0, svgOrigin: HEAD, duration: 0.8, ease: 'sine.inOut' }, 2.5)
           .to(pupils, { x: 0, y: -6, duration: 0.8, ease: 'sine.inOut' }, 2.5)
-          .to(hands, { y: 0, duration: 0.5, ease: 'power2.inOut' }, 2.8);
+          .to(hands, { y: 0, duration: 0.5, ease: 'power2.inOut' }, 2.8)
+          .to(pr('visor', '.pr-led'), { opacity: 0.15, duration: 0.25, yoyo: true, repeat: 5 }, 0);
+        break;
+      case 'sculpt':
+        // Sculpting in 3D: the model spins beside him and he follows it with his eyes.
+        breathe();
+        t.to(pr('cube'), { rotation: '+=360', transformOrigin: '50% 50%', duration: 3.2, ease: 'none' }, 0)
+          .to(pr('cube'), { y: -24, duration: 0.8, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0)
+          .to(pupils, { x: 16, y: 6, duration: 0.8, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0)
+          .to(head, { rotation: 4, svgOrigin: HEAD, duration: 1.6, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 0)
+          .call(() => frame(mouth, 2), [], 1.4)
+          .call(() => frame(mouth, 8), [], 2);
         break;
       case 'wake':
         // Woken up: a big yawn with eyes shut, the lids open, then he looks over at the email.
@@ -288,6 +340,7 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
           .call(() => { frame(mouth, 7); frame(lens, 0); }, [], 1.9)
           .to(pupils, { x: 0, y: 0, duration: 0.2 }, 1.9)
           .to(head, { rotation: -3, svgOrigin: HEAD, duration: 0.25, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 1.9)
+          .to(pr('laptop', '.pr-code'), { opacity: 0.35, duration: 0.15, yoyo: true, repeat: 3 }, 1.9)
           .call(() => { frame(mouth, 11); frame(lens, 1); }, [], 2.8)
           .to({}, { duration: 0.1 }, 2.8);
         break;
@@ -298,7 +351,10 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
           .to(hands, { y: 0, duration: 0.24, ease: 'power2.in' }, '<')
           .to(rig, { scaleY: 1, scaleX: 1, svgOrigin: FEET, duration: 0.12 })
           .add(talk([0, 1, 0, 2, 0], 0.08), 0)
-          .to(head, { rotation: 5, svgOrigin: HEAD, duration: 0.31, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 0);
+          .to(head, { rotation: 5, svgOrigin: HEAD, duration: 0.31, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 0)
+          .fromTo(prAll('confetti', '.pr-bit'), { y: -140, opacity: 1, rotation: 0 },
+            { y: () => 220 + Math.random() * 260, x: () => Math.random() * 80 - 40, rotation: () => Math.random() * 540 - 270, transformOrigin: '50% 50%', opacity: 0, duration: 0.86, ease: 'power1.in', stagger: 0.015 }, 0)
+          .fromTo(pr('check'), { scale: 0 }, { scale: 1, transformOrigin: '50% 50%', duration: 0.35, ease: 'back.out(3)' }, 0);
         break;
     }
     return t;
@@ -308,6 +364,7 @@ export function mountPuppet(svg: SVGSVGElement, start: Anim = 'idle', opts: { fo
     reset();
     const pose = POSES[FACE[state]];
     setFace(pose);
+    showProps(state);
     if (pose.tilt) gsap.set(head, { rotation: pose.tilt, svgOrigin: HEAD });
     if (reduced()) return;
     tl = build(state);

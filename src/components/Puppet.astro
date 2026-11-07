@@ -2,13 +2,15 @@
 // José as a vector puppet built from his own PSD layers (see PuppetSprite.astro).
 // `pose` sets the expression that renders without JavaScript; scripts/puppet.ts animates it.
 import { POSES, type Pose } from '../scripts/poses';
+import PuppetProps from './PuppetProps.astro';
 interface Props {
   pose?: Pose;
   class?: string;
   label?: string;
   live?: boolean; // animate (idle loop, blinks); false keeps a still pose
+  props?: boolean; // carry the items for worlds and phases (headset, laptop, bulb…)
 }
-const { pose = 'calm', class: cls, label, live = true } = Astro.props;
+const { pose = 'calm', class: cls, label, live = true, props = false } = Astro.props;
 const p = POSES[pose];
 const show = (on: boolean) => (on ? undefined : 'none');
 const lensFrame = p.lens === 'closed' ? 0 : p.lens;
@@ -42,8 +44,10 @@ const lensFrame = p.lens === 'closed' ? 0 : p.lens;
       </g>
       <use href="#pp-nose" />
       <use href="#pp-glasses" />
+      {props && <PuppetProps part="head" />}
       <g class="pp-phones" display={show(p.phones)}><use href="#pp-headphones-0" /></g>
     </g>
     <g class="pp-hands" display={show(p.hands)}><use href="#pp-hands-0" /></g>
+    {props && <PuppetProps part="body" />}
   </g>
 </svg>

@@ -48,7 +48,7 @@ const clouds = [
       <span class="line l2"><span class="line-in">{site.name.last}</span></span>
     </h1>
     <div class="hero-foot">
-      <p class="lead hero-tag">{site.tagline}</p>
+      <p class="lead hero-tag"><span>{site.tagline}</span></p>
       <a class="btn" href="#quien-soy">{ui.start} <span class="arrow" aria-hidden="true">↓</span></a>
     </div>
   </div>
@@ -265,6 +265,123 @@ const clouds = [
     color: var(--paper);
   }
 
+  /* ---------- The name's materials (cycled by name-skins.ts) ---------- */
+
+  .line {
+    position: relative;
+  }
+
+  /* After the intro the lines stop clipping, so shadows and extrusions can show. */
+  .hero-name.is-ready .line {
+    overflow: visible;
+  }
+
+  .hero-name.swap .line-in,
+  .hero-name.swap :global(.name-px) {
+    animation: skin-swap 0.42s var(--ease-spring);
+  }
+
+  @keyframes skin-swap {
+    0% { scale: 1.06 0.86; }
+    100% { scale: 1 1; }
+  }
+
+  .line-in {
+    transform-origin: 0 80%;
+  }
+
+  :global(.name-px) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    image-rendering: pixelated;
+    pointer-events: none;
+    display: none;
+    transform-origin: 0 80%;
+  }
+
+  .hero-name[data-skin='pixel'] :global(.name-px) {
+    display: block;
+  }
+
+  .hero-name[data-skin='pixel'] .line-in {
+    color: transparent;
+  }
+
+  /* Plasticine: soft clay colours, a fingerprinted surface and a squashy extrusion. */
+  .hero-name[data-skin='clay'] .line-in {
+    color: transparent;
+    background:
+      radial-gradient(120% 70% at 30% 18%, #ffffff7a, #ffffff00 55%),
+      linear-gradient(#ffffff00 55%, #00000030),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+      var(--clay);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter:
+      drop-shadow(0 3px 0 var(--clay-dark))
+      drop-shadow(0 3px 0 var(--clay-dark))
+      drop-shadow(0 5px 6px #0000004d);
+    animation: clay-wobble 1.6s ease-in-out infinite;
+  }
+
+  .hero-name[data-skin='clay'] .line:first-child .line-in {
+    --clay: #f08a4b;
+    --clay-dark: #b8562a;
+  }
+
+  .hero-name[data-skin='clay'] .line:nth-child(2) .line-in {
+    --clay: #3fa66b;
+    --clay-dark: #23704a;
+  }
+
+  @keyframes clay-wobble {
+    0%, 100% { scale: 1 1; }
+    50% { scale: 1.012 0.985; }
+  }
+
+  /* Wireframe: outlined letters with a mesh inside and a depth copy behind, like a 3D viewport. */
+  .hero-name[data-skin='wire'] .line-in {
+    color: transparent;
+    -webkit-text-stroke: max(2px, 0.018em) var(--wire);
+    background: repeating-linear-gradient(90deg, var(--wire-mesh) 0 1px, #0000 1px 0.16em),
+      repeating-linear-gradient(0deg, var(--wire-mesh) 0 1px, #0000 1px 0.16em);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0.05em 0.05em 0 var(--wire-depth));
+  }
+
+  .hero-name[data-skin='wire'] .line:first-child .line-in {
+    --wire: #ffffff;
+    --wire-mesh: #ffffff59;
+    --wire-depth: #2a2a2e66;
+  }
+
+  .hero-name[data-skin='wire'] .line:nth-child(2) .line-in {
+    --wire: #2a2a2e;
+    --wire-mesh: #2a2a2e47;
+    --wire-depth: #ffffff80;
+  }
+
+  /* Glitch: split colour channels that jump for a moment. */
+  .hero-name[data-skin='glitch'] .line-in {
+    text-shadow: -0.04em 0 #ff2d55, 0.04em 0 #22d3ee;
+    animation: glitch 0.9s steps(1) infinite;
+  }
+
+  .hero-name[data-skin='glitch'] .line:nth-child(2) .line-in {
+    animation-delay: -0.3s;
+  }
+
+  @keyframes glitch {
+    0% { translate: 0 0; clip-path: inset(0 0 0 0); }
+    12% { translate: -0.03em 0; clip-path: inset(10% 0 55% 0); }
+    18% { translate: 0.04em 0; clip-path: inset(60% 0 8% 0); }
+    24% { translate: 0 0; clip-path: inset(0 0 0 0); }
+    62% { translate: 0.02em 0; text-shadow: 0.05em 0 #ff2d55, -0.05em 0 #22d3ee; }
+    68% { translate: 0 0; text-shadow: -0.04em 0 #ff2d55, 0.04em 0 #22d3ee; }
+  }
+
   .hero-foot {
     display: flex;
     flex-direction: column;
@@ -274,8 +391,19 @@ const clouds = [
     margin-top: 40px;
   }
 
+  /* The subtitle sits on white highlighter strips so it never gets lost on the sky. */
   .hero-tag {
-    font-weight: 500;
+    font-weight: 700;
+    line-height: 1.55;
+  }
+
+  .hero-tag span {
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.12em 0.4em;
+    border-radius: 0.3em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   .hero-char {
@@ -396,5 +524,7 @@ const clouds = [
 
 <script>
   import { initCharacter } from '../scripts/character';
+  import { initNameSkins } from '../scripts/name-skins';
   initCharacter();
+  initNameSkins();
 </script>

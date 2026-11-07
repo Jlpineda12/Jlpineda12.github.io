@@ -42,7 +42,7 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
         </button>
       ))}
       <div class="traveler" aria-hidden="true">
-        <div class="token"><Puppet pose="calm" /></div>
+        <div class="token"><Puppet pose="calm" props /></div>
       </div>
     </div>
   </div>
@@ -226,7 +226,7 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
     position: absolute;
     left: 0;
     top: 0;
-    width: 7.5%;
+    width: 10%;
     aspect-ratio: 1;
     pointer-events: none;
     z-index: 2;
@@ -445,7 +445,7 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
     }
 
     .traveler {
-      width: 15%;
+      width: 20%;
     }
 
     .feature-media,
@@ -495,14 +495,10 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
     const puppet = mountPuppet(canvas, 'idle');
     let active = 0;
 
-    // Each world gets its own reaction when José lands on it.
-    const REACT: Record<string, Anim> = { juegos: 'play', vr: 'vr', '3d': 'build', software: 'code' };
-    let calm = 0;
-    const react = (i: number, ms = 2600) => {
-      puppet.play(REACT[tabs[i].dataset.world || ''] || 'happy');
-      clearTimeout(calm);
-      calm = window.setTimeout(() => puppet.play('idle'), ms);
-    };
+    // In each world José does what that world is about, with its item, for as long as he stays:
+    // games with a coin, VR with a headset, 3D with a spinning model, software on a laptop.
+    const REACT: Record<string, Anim> = { juegos: 'play', vr: 'vr', '3d': 'sculpt', software: 'code' };
+    const react = (i: number) => puppet.play(REACT[tabs[i].dataset.world || ''] || 'happy');
 
     // Without the script every panel shows; with it, only the active world.
     panels.forEach((p, i) => (p.hidden = i !== 0));
@@ -592,7 +588,7 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
     new IntersectionObserver((entries) => {
       const on = entries[0].isIntersecting;
       panels[active].querySelectorAll('video').forEach((v) => (on && !reduced ? v.play().catch(() => {}) : v.pause()));
-      if (on && puppet.current() === 'idle' && !reduced) react(active);
+      if (on && !reduced) react(active);
     }, { threshold: 0.25 }).observe(section);
 
     const ready = () => requestAnimationFrame(place);
