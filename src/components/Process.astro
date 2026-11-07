@@ -22,7 +22,6 @@ const doing: Record<string, string> = ui.doing;
         <article class:list={['stop', { low: i % 2 === 0 }]} data-pose={s.pose} data-doing={doing[s.pose]}>
           <div class="stop-art" style={`--delay:${-i * 1.3}s`}>
             <img class="stop-island" src={`${base}world/${s.island}.webp`} width="900" height="960" loading="lazy" alt={alts[s.island]} />
-            <span class="badge" aria-hidden="true"><Puppet pose={s.pose} live={false} /></span>
           </div>
           <div class="stop-text">
             <h3 class="stop-name">{s.name}</h3>
@@ -135,29 +134,6 @@ const doing: Record<string, string> = ui.doing;
     height: auto;
   }
 
-  /* The phase pose in a round badge, so the bust never floats with a cut edge. Shown on phones. */
-  .badge {
-    display: none;
-    position: absolute;
-    left: -6%;
-    top: 4%;
-    width: 38%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    overflow: hidden;
-    background: var(--paper);
-    border: 4px solid var(--ink);
-  }
-
-  .badge :global(.pp) {
-    position: absolute;
-    left: 50%;
-    bottom: -18%;
-    width: 112%;
-    height: auto;
-    translate: -50% 0;
-  }
-
   .stop-name {
     color: var(--deep);
     font-weight: 800;
@@ -238,61 +214,69 @@ const doing: Record<string, string> = ui.doing;
     animation: drift 30s ease-in-out infinite;
   }
 
+  /* Phones and tablets take the same trip, sized down: one phase per screen, José below them. */
   @media (max-width: 900px) {
-    .pin {
-      height: auto;
-      overflow: visible;
-      padding-block: 24px 56px;
-    }
-
     .track {
-      flex-direction: column;
-      align-items: stretch;
-      width: auto;
-      gap: 64px;
-      padding: 0 var(--margin);
+      gap: 14vw;
     }
 
-    .route,
-    .walker,
-    .hint,
-    .p-cloud {
-      display: none;
+    .intro {
+      width: 80vw;
+      gap: 18px;
     }
 
-    .intro,
     .stop,
-    .outro {
-      width: auto;
-      min-width: 0;
-      margin: 0;
-      padding: 0;
-      align-self: stretch;
-    }
-
     .stop.low {
-      margin: 0;
+      width: 74vw;
+      min-width: 0;
+      align-self: center;
+      margin: 0 0 140px;
     }
 
     .stop-art {
-      width: min(72%, 320px);
-    }
-
-    .stop:not(.low) .stop-art {
-      margin-left: auto;
-    }
-
-    .badge {
-      display: block;
-      left: 0;
+      width: 54%;
     }
 
     .stop-name {
-      font-size: 30px;
+      font-size: 28px;
+    }
+
+    .stop-title {
+      font-size: 19px;
+    }
+
+    .stop p:last-child {
+      font-size: 16px;
+    }
+
+    .outro {
+      width: 78vw;
+      padding-right: 14vw;
     }
 
     .outro-island {
-      width: min(60%, 260px);
+      width: 56%;
+    }
+
+    .walker {
+      left: 4vw;
+      bottom: 76px;
+      width: 88px;
+    }
+
+    .walker-say {
+      font-size: 14px;
+      padding: 8px 12px;
+    }
+
+    .p-cloud:first-of-type {
+      width: 26vw !important;
+    }
+  }
+
+  @media (max-width: 900px) and (max-height: 700px) {
+    .stop-art {
+      width: 44%;
     }
   }
 </style>
@@ -303,6 +287,8 @@ const doing: Record<string, string> = ui.doing;
   import { mountPuppet, type Anim } from '../scripts/puppet';
 
   gsap.registerPlugin(ScrollTrigger);
+  // The phone address bar showing or hiding should not restart the pinned trip.
+  ScrollTrigger.config({ ignoreMobileResize: true });
   const section = document.querySelector<HTMLElement>('.process');
   const track = section?.querySelector<HTMLElement>('.track');
   const svg = section?.querySelector<SVGSVGElement>('.route');
@@ -315,7 +301,7 @@ const doing: Record<string, string> = ui.doing;
 
   if (section && track && svg && bg && fg && canvas && say) {
     const mm = gsap.matchMedia();
-    mm.add('(min-width: 901px)', () => {
+    mm.add('all', () => {
       const puppet = mountPuppet(canvas, 'idle');
       let len = 0;
       let current: HTMLElement | null = null;
@@ -343,9 +329,21 @@ const doing: Record<string, string> = ui.doing;
       };
       build();
 
+      // On phones the trip settles with one phase centred on screen.
+      const narrow = () => window.innerWidth < 901;
+      let snaps: number[] = [];
+      const measureSnaps = () => {
+        const dist = track.scrollWidth - window.innerWidth;
+        const x0 = Number(gsap.getProperty(track, 'x')) || 0;
+        snaps = [0, ...stops.map((st) => {
+          const r = st.getBoundingClientRect();
+          return (r.left - x0 + r.width / 2 - window.innerWidth / 2) / dist;
+        }), 1];
+      };
+
       // Which phase is passing the walker right now.
       const nearest = () => {
-        const x = window.innerWidth * 0.32;
+        const x = window.innerWidth * (narrow() ? 0.5 : 0.32);
         let best: HTMLElement | null = null;
         let dist = Infinity;
         for (const s of stops) {
@@ -353,7 +351,7 @@ const doing: Record<string, string> = ui.doing;
           const d = Math.abs(r.left + r.width / 2 - x);
           if (d < dist) { dist = d; best = s; }
         }
-        return dist < window.innerWidth * 0.2 ? best : null;
+        return dist < window.innerWidth * (window.innerWidth < 901 ? 0.42 : 0.2) ? best : null;
       };
 
       const setSay = (text: string) => {
@@ -387,7 +385,16 @@ const doing: Record<string, string> = ui.doing;
           start: 'top top',
           end: () => `+=${track.scrollWidth - window.innerWidth}`,
           invalidateOnRefresh: true,
-          onRefresh: build,
+          onRefresh: () => { build(); measureSnaps(); },
+          snap: {
+            snapTo: (v: number) => {
+              if (!narrow() || !snaps.length) return v;
+              return snaps.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+            },
+            duration: { min: 0.2, max: 0.6 },
+            delay: 0.08,
+            ease: 'power2.inOut',
+          },
           onUpdate: (self) => {
             fg.style.strokeDashoffset = `${len * (1 - self.progress)}`;
             // José walks while the page moves, and acts out each phase when it stops.

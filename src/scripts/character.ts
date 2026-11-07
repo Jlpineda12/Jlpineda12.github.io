@@ -11,8 +11,8 @@ export function initCharacter() {
   const bubble = document.querySelector<HTMLElement>('.bubble');
   if (!button || !svg || !bubble) return;
 
+  // The same greeting on every device; each tap or click says the next line.
   const LINES: string[] = JSON.parse(bubble.dataset.lines || '["¡Hola!"]');
-  if (TOUCH) LINES[0] = bubble.dataset.touch || LINES[0];
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const p = mountPuppet(svg, 'happy', { follow: true });
   let line = 0;
