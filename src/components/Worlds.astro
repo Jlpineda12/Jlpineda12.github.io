@@ -1,0 +1,595 @@
+---
+import Puppet from './Puppet.astro';
+import { getData, t, type Lang } from '../i18n';
+import Divider from './Divider.astro';
+import Media from './Media.astro';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { worlds, projects } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const first = worlds[0];
+const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
+  juegos: { d: [13, 56], m: [27, 25] },
+  vr: { d: [37, 36], m: [73, 33] },
+  '3d': { d: [62, 58], m: [29, 69] },
+  software: { d: [87, 38], m: [73, 80] },
+};
+---
+<section class="worlds on-dark" id="mundos" aria-labelledby="worlds-title"
+  style={`--w-bg:${first.bg};--w-ink:${first.ink};--w-accent:${first.accent};--w-soft:${first.soft}`}>
+  <svg class="edge" viewBox="0 0 1440 90" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path d="M0,90 L0,52 C120,20 220,70 360,48 C500,26 560,72 720,52 C880,32 960,6 1110,34 C1240,58 1330,30 1440,40 L1440,90 Z" />
+  </svg>
+
+  <div class="wrap grid worlds-head">
+    <h2 class="section-head reveal" id="worlds-title">{ui.worldsTitle}</h2>
+    <p class="lead reveal" style="--d:80ms">{ui.worldsLead}</p>
+  </div>
+
+  <div class="wrap">
+    <div class="map" role="tablist" aria-label={ui.worldsTabs}>
+      <svg class="map-route" aria-hidden="true"><path /></svg>
+      <img class="map-cloud" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:22%;top:6%;width:11%" />
+      <img class="map-cloud" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:70%;top:72%;width:9%;animation-delay:-12s" />
+      {worlds.map((w, i) => (
+        <button class:list={['island', { 'is-active': i === 0 }]} type="button" role="tab" id={`tab-${w.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`world-${w.id}`} tabindex={i === 0 ? 0 : -1}
+          data-world={w.id} data-bg={w.bg} data-ink={w.ink} data-accent={w.accent} data-soft={w.soft}
+          style={`--x:${pos[w.id].d[0]}%;--y:${pos[w.id].d[1]}%;--mx:${pos[w.id].m[0]}%;--my:${pos[w.id].m[1]}%;--float:${-i * 1.7}s`}>
+          <img src={`${base}world/${w.island}.webp`} width="900" height="960" alt="" loading="lazy" />
+          <span class="island-name">{w.name}</span>
+        </button>
+      ))}
+      <div class="traveler" aria-hidden="true">
+        <div class="token"><Puppet pose="calm" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panels wrap">
+    {worlds.map((w, i) => {
+      const list = projects.filter((p) => p.world === w.id);
+      const [lead, ...rest] = list;
+      return (
+        <div class:list={['panel', { 'is-active': i === 0 }]} id={`world-${w.id}`} role="tabpanel"
+          aria-labelledby={`tab-${w.id}`} data-world={w.id}>
+          <div class="panel-head">
+            <h3 class="panel-title display">{w.name}</h3>
+            <p class="panel-blurb">{w.blurb}</p>
+            <p class="harmony small"><span class="sw" style={`background:${w.bg}`}></span><span class="sw" style={`background:${w.accent}`}></span>{w.harmony}</p>
+          </div>
+
+          {lead && (
+            <article class="feature">
+              <div class="feature-media"><Media p={lead} lang={lang} feature /></div>
+              <div class="feature-text">
+                <h4 class="feature-name">{lead.name}</h4>
+                <p class="meta">{lead.kind}{lead.year && ` · ${lead.year}`}{lead.status && <span class="status">{lead.status}</span>}</p>
+                <p>{lead.summary}</p>
+                <ul class="stack">{lead.stack.map((s) => <li>{s}</li>)}</ul>
+                <a class="btn btn-accent" href={lead.url} target="_blank" rel="noopener">{lead.linkLabel} <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+          )}
+
+          {rest.length > 0 && (
+            <ul class:list={['more', `n${rest.length}`]}>
+              {rest.map((p) => (
+                <li class="mini">
+                  <Media p={p} lang={lang} />
+                  <div>
+                    <h4 class="mini-name">{p.name}</h4>
+                    <p class="meta">{p.kind}{p.year && ` · ${p.year}`}{p.status && <span class="status">{p.status}</span>}</p>
+                    <p class="mini-summary">{p.summary}</p>
+                    <a class="link" href={p.url} target="_blank" rel="noopener">{p.linkLabel} <span aria-hidden="true">↗</span></a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    })}
+  </div>
+  <div class="worlds-end"><Divider shape="clouds" color="var(--sky-light)" bg="transparent" /></div>
+</section>
+
+<style>
+  .worlds {
+    position: relative;
+    background: var(--w-bg);
+    color: var(--w-ink);
+    transition: background-color 0.8s var(--ease-out);
+  }
+
+  .worlds-end {
+    margin-top: var(--section);
+  }
+
+  .edge {
+    display: block;
+    width: 100%;
+    height: clamp(40px, 6vw, 90px);
+    margin-top: calc(-1 * clamp(40px, 6vw, 90px) + 1px);
+    position: relative;
+    z-index: 1;
+  }
+
+  .edge path {
+    fill: var(--w-bg);
+    transition: fill 0.8s var(--ease-out);
+  }
+
+  .worlds-head {
+    padding-top: clamp(40px, 5vw, 72px);
+    align-items: end;
+    row-gap: 16px;
+  }
+
+  .worlds-head h2 {
+    grid-column: 1 / span 6;
+  }
+
+  .worlds-head p {
+    grid-column: 8 / span 5;
+    max-width: 34ch;
+  }
+
+  /* The map */
+  .map {
+    position: relative;
+    aspect-ratio: 16 / 7;
+    margin-top: clamp(24px, 4vw, 56px);
+  }
+
+  .map-route {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .map-route path {
+    fill: none;
+    stroke: var(--w-ink);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-dasharray: 0.1 22;
+    opacity: 0.85;
+  }
+
+  .map-cloud {
+    position: absolute;
+    height: auto;
+    pointer-events: none;
+    animation: drift 34s ease-in-out infinite;
+  }
+
+  .island {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 21%;
+    translate: -50% -50%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: inherit;
+    transition: transform 0.5s var(--ease-spring), filter 0.4s;
+    filter: saturate(0.75);
+  }
+
+  .island img {
+    width: 100%;
+    height: auto;
+    animation: float 6s ease-in-out infinite;
+    animation-delay: var(--float);
+  }
+
+  .island:hover {
+    transform: translateY(-8px) scale(1.04);
+    filter: none;
+  }
+
+  .island.is-active {
+    transform: scale(1.12);
+    filter: none;
+  }
+
+  .island-name {
+    position: absolute;
+    left: 50%;
+    bottom: 6%;
+    translate: -50% 0;
+    white-space: nowrap;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    background: var(--w-ink);
+    color: var(--w-bg);
+    font-weight: 800;
+    font-size: clamp(13px, 1.1vw, 16px);
+    transition: background-color 0.3s, color 0.3s, transform 0.3s var(--ease-spring);
+  }
+
+  .island.is-active .island-name {
+    background: var(--w-accent);
+    color: var(--ink);
+    transform: scale(1.06);
+  }
+
+  /* José travels as a round game token, with a pointer under it. */
+  .traveler {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 7.5%;
+    aspect-ratio: 1;
+    pointer-events: none;
+    z-index: 2;
+    will-change: transform;
+  }
+
+  .token {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--w-accent);
+    border: 4px solid var(--w-ink);
+    transition: background-color 0.6s;
+  }
+
+  .traveler::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 18px;
+    height: 12px;
+    translate: -50% -2px;
+    background: var(--w-ink);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+
+  .traveler :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -26%;
+    width: 128%;
+    height: auto;
+    aspect-ratio: 420 / 520;
+    translate: -50% 0;
+  }
+
+  /* Panels */
+  .panels {
+    margin-top: clamp(32px, 4vw, 64px);
+  }
+
+  .panel[hidden] {
+    display: none;
+  }
+
+  .panel-head {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    row-gap: 10px;
+    align-items: end;
+    margin-bottom: 40px;
+  }
+
+  .panel-title {
+    grid-column: 1 / span 7;
+    font-size: clamp(40px, 6vw, 104px);
+    font-stretch: 125%;
+  }
+
+  .panel-blurb {
+    grid-column: 8 / span 5;
+    font-size: var(--step-lead);
+    line-height: 1.3;
+  }
+
+  .harmony {
+    grid-column: 8 / span 5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+
+  .sw {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid var(--w-ink);
+  }
+
+  .sw + .sw {
+    margin-left: -12px;
+    margin-right: 6px;
+  }
+
+  .feature {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    row-gap: 24px;
+    align-items: center;
+  }
+
+  .feature-media {
+    grid-column: 1 / span 7;
+  }
+
+  .feature-text {
+    grid-column: 9 / span 4;
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+  }
+
+  .meta {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status {
+    padding: 3px 10px;
+    border-radius: var(--radius);
+    background: var(--w-accent);
+    color: var(--ink);
+    font-size: 13px;
+  }
+
+  .feature-name {
+    font-size: clamp(32px, 3.6vw, 56px);
+    font-weight: 800;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .stack li {
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    background: var(--w-soft);
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.8s;
+  }
+
+  :global(.btn-accent) {
+    background: var(--w-accent, var(--red)) !important;
+    color: var(--ink) !important;
+  }
+
+  .more {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(24px, 3vw, 48px) var(--gap);
+    margin-top: clamp(56px, 6vw, 96px);
+  }
+
+  .mini {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+  }
+
+  .more.n1 {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .more.n1 .mini {
+    grid-column: 4 / span 9;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--gap);
+  }
+
+  .mini-name {
+    font-size: clamp(24px, 2vw, 32px);
+    font-weight: 800;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    line-height: 1.05;
+    margin: 4px 0 6px;
+  }
+
+  .mini .meta {
+    margin-bottom: 8px;
+  }
+
+  .mini-summary {
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 900px) {
+    .worlds-head h2,
+    .worlds-head p,
+    .panel-title,
+    .panel-blurb,
+    .harmony {
+      grid-column: 1 / -1;
+    }
+
+    .map {
+      aspect-ratio: 1 / 1.15;
+    }
+
+    .island {
+      left: var(--mx);
+      top: var(--my);
+      width: 44%;
+    }
+
+    .island.is-active {
+      transform: scale(1.06);
+    }
+
+    .traveler {
+      width: 15%;
+    }
+
+    .feature-media,
+    .feature-text {
+      grid-column: 1 / -1;
+    }
+
+    .more,
+    .more.n1 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .more.n1 .mini {
+      grid-column: 1;
+    }
+
+    .mini,
+    .more.n1 .mini {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mini-name {
+      font-size: 22px;
+    }
+
+    .mini-summary {
+      font-size: 16px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { mountPuppet } from '../scripts/puppet';
+
+  const section = document.querySelector<HTMLElement>('.worlds');
+  const map = section?.querySelector<HTMLElement>('.map');
+  const traveler = section?.querySelector<HTMLElement>('.traveler');
+  const canvas = traveler?.querySelector<SVGSVGElement>('svg.pp');
+  const tabs = [...(section?.querySelectorAll<HTMLButtonElement>('.island') ?? [])];
+  const panels = [...(section?.querySelectorAll<HTMLElement>('.panel') ?? [])];
+  const route = section?.querySelector<SVGPathElement>('.map-route path');
+  const routeSvg = section?.querySelector<SVGSVGElement>('.map-route');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (section && map && traveler && canvas && tabs.length) {
+    const puppet = mountPuppet(canvas, 'idle');
+    let active = 0;
+
+    // Without the script every panel shows; with it, only the active world.
+    panels.forEach((p, i) => (p.hidden = i !== 0));
+
+    // Where José's token hovers: over the left side of the island, like a marker on a board.
+    const spot = (i: number) => {
+      const m = map.getBoundingClientRect();
+      const r = tabs[i].querySelector('img')!.getBoundingClientRect();
+      const w = traveler.offsetWidth;
+      return { x: r.left - m.left + r.width * 0.16 - w / 2, y: r.top - m.top + r.height * 0.5 - w };
+    };
+
+    const grass = (i: number) => {
+      const m = map.getBoundingClientRect();
+      const r = tabs[i].querySelector('img')!.getBoundingClientRect();
+      return { x: r.left - m.left + r.width / 2, y: r.top - m.top + r.height * 0.74 };
+    };
+
+    const drawRoute = () => {
+      if (!route || !routeSvg) return;
+      const m = map.getBoundingClientRect();
+      const pts = tabs.map((_, i) => grass(i));
+      let d = `M${pts[0].x},${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i];
+        d += ` Q${(a.x + b.x) / 2},${Math.max(a.y, b.y) + m.height * 0.12} ${b.x},${b.y}`;
+      }
+      routeSvg.setAttribute('viewBox', `0 0 ${m.width} ${m.height}`);
+      route.setAttribute('d', d);
+    };
+
+    const place = () => {
+      const s = spot(active);
+      gsap.set(traveler, { x: s.x, y: s.y });
+      drawRoute();
+    };
+
+    const setColors = (t: HTMLButtonElement) => {
+      section.style.setProperty('--w-bg', t.dataset.bg!);
+      section.style.setProperty('--w-ink', t.dataset.ink!);
+      section.style.setProperty('--w-accent', t.dataset.accent!);
+      section.style.setProperty('--w-soft', t.dataset.soft!);
+    };
+
+    const show = (i: number, focus = false) => {
+      if (i === active) return;
+      const from = spot(active);
+      const to = spot(i);
+      tabs.forEach((t, k) => {
+        t.classList.toggle('is-active', k === i);
+        t.setAttribute('aria-selected', String(k === i));
+        t.tabIndex = k === i ? 0 : -1;
+      });
+      if (focus) tabs[i].focus();
+      setColors(tabs[i]);
+      panels.forEach((p, k) => {
+        p.hidden = k !== i;
+        p.classList.toggle('is-active', k === i);
+        p.querySelectorAll('video').forEach((v) => (k === i && !reduced ? v.play().catch(() => {}) : v.pause()));
+      });
+      if (!reduced) {
+        gsap.from(panels[i].children, { y: 28, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' });
+        const dist = Math.hypot(to.x - from.x, to.y - from.y);
+        puppet.play('travel');
+        gsap.timeline({ onComplete: () => { puppet.play('happy'); setTimeout(() => puppet.play('idle'), 1600); } })
+          .to(traveler, { x: to.x, duration: 0.5 + dist / 900, ease: 'power1.inOut' }, 0)
+          .to(traveler, { keyframes: [
+            { y: Math.min(from.y, to.y) - map.clientHeight * 0.18, duration: (0.5 + dist / 900) / 2, ease: 'power2.out' },
+            { y: to.y, duration: (0.5 + dist / 900) / 2, ease: 'bounce.out' },
+          ] }, 0);
+      } else {
+        gsap.set(traveler, { x: to.x, y: to.y });
+      }
+      active = i;
+    };
+
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => show(i));
+      t.addEventListener('keydown', (e) => {
+        const n = tabs.length;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); show((active + 1) % n, true); }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); show((active - 1 + n) % n, true); }
+      });
+    });
+
+    // Play the active world's covers only while the section is on screen.
+    new IntersectionObserver((entries) => {
+      const on = entries[0].isIntersecting;
+      panels[active].querySelectorAll('video').forEach((v) => (on && !reduced ? v.play().catch(() => {}) : v.pause()));
+      if (on && puppet.current() === 'idle' && !reduced) { puppet.play('happy'); setTimeout(() => puppet.play('idle'), 1800); }
+    }, { threshold: 0.25 }).observe(section);
+
+    const ready = () => requestAnimationFrame(place);
+    window.addEventListener('load', ready);
+    window.addEventListener('resize', ready);
+    tabs.forEach((t) => t.querySelector('img')?.addEventListener('load', ready));
+    ready();
+  }
+</script>

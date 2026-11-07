@@ -1,0 +1,516 @@
+---
+import Puppet from './Puppet.astro';
+import { getData, t, achievements, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { site, softSkills } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
+---
+<section class="about wrap" id="quien-soy" aria-labelledby="about-title">
+  <div class="grid about-top">
+    <div class="about-intro">
+      <h2 class="section-head reveal" id="about-title">{ui.aboutTitle}</h2>
+      <p class="statement reveal" style="--d:80ms"><strong>{ui.aboutLead}</strong> {ui.aboutRest}</p>
+
+      <div class="trophies">
+        <h3 class="mini-head reveal">{ui.achievements}</h3>
+        <ul>
+          {achievements[lang].map((a, i) => (
+            <li class="trophy reveal" style={`--d:${120 + i * 90}ms`}>
+              <span class="cup" aria-hidden="true"><span class="star"></span></span>
+              <span class="trophy-text">
+                <strong>{a.title}</strong>
+                <span>{a.text}</span>
+              </span>
+              <span class="unlock" aria-hidden="true">{ui.unlocked}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <article class="card reveal" style="--d:120ms" aria-label={ui.card}>
+      <div class="card-art">
+        <Puppet pose="calm" class="card-puppet" label={ui.cardCanvas} />
+      </div>
+      <div class="emotes" role="group" aria-label={ui.emotes}>
+        <p class="emotes-head">{ui.emotes}</p>
+        <div class="emote-row">
+          {emotes.map((e) => (
+            <button type="button" class="emote" data-emote={e} aria-pressed="false">
+              <span class="emote-face"><Puppet pose={e} live={false} /></span>
+              <span>{ui.emote[e]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <dl class="card-plate">
+        <div class="plate-name"><dt class="sr">{ui.player}</dt><dd>{site.name.first} {site.name.last}</dd></div>
+        <div><dt>{ui.klass}</dt><dd>{site.role}</dd></div>
+        {site.facts.map((f) => <div><dt>{f.label}</dt><dd>{f.value}</dd></div>)}
+      </dl>
+    </article>
+  </div>
+
+  <div class="grid about-bottom">
+    <div class="drives">
+      <h3 class="mini-head reveal">{ui.drivesTitle}</h3>
+      <ul>
+        {ui.drives.map((d, i) => (
+          <li class="drive reveal" style={`--d:${i * 90}ms`} data-anim={d.anim} tabindex="0">
+            <span class="drive-face"><Puppet pose={d.anim === 'happy' ? 'happy' : d.anim === 'idea' ? 'idea' : 'think'} /></span>
+            <span class="drive-text"><strong>{d.title}</strong><span>{d.text}</span></span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="about-more reveal" style="--d:120ms">
+      <p class="lead">{ui.moreLead}</p>
+      <p>{ui.moreText}</p>
+      <div class="perks">
+        <h3 class="mini-head">{ui.perks}</h3>
+        <ul>{softSkills.map((s) => <li>{s}</li>)}</ul>
+      </div>
+      <a class="btn" href="#mundos">{ui.visitWorlds} <span class="arrow" aria-hidden="true">↓</span></a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    position: relative;
+    background: var(--peach);
+    padding-top: clamp(40px, 5vw, 80px);
+    padding-bottom: var(--section);
+  }
+
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .about-top {
+    align-items: start;
+    row-gap: 48px;
+  }
+
+  .about-intro {
+    grid-column: 1 / span 7;
+    display: grid;
+    gap: 36px;
+  }
+
+  .statement {
+    font-size: clamp(22px, 2.3vw, 34px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    max-width: 40ch;
+  }
+
+  .statement strong {
+    font-weight: 800;
+  }
+
+  .mini-head {
+    font-size: var(--step-small);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  /* Achievements: real milestones, each a trophy that unlocks as it scrolls into view. */
+  .trophies ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .trophy {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 20px;
+    background: var(--paper);
+    transition: transform 0.3s var(--ease-spring);
+  }
+
+  .trophy:hover {
+    transform: translateY(-3px) rotate(-0.6deg);
+  }
+
+  .cup {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #f2c14e;
+    border: 3px solid #e2a53a;
+  }
+
+  .star {
+    width: 20px;
+    height: 20px;
+    background: var(--paper);
+    clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+
+  :global(.js) .trophy.reveal.is-in .cup {
+    animation: unlock 0.7s var(--ease-spring) both;
+    animation-delay: calc(var(--d, 0ms) + 200ms);
+  }
+
+  @keyframes unlock {
+    0% { transform: scale(0.4) rotate(-40deg); }
+    100% { transform: none; }
+  }
+
+  .trophy-text {
+    display: grid;
+    gap: 2px;
+    line-height: 1.25;
+  }
+
+  .trophy-text strong {
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .trophy-text span {
+    font-size: 15px;
+  }
+
+  .unlock {
+    position: absolute;
+    right: 10px;
+    top: -10px;
+    padding: 3px 10px;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: #f2c14e;
+    font-size: 13px;
+    font-weight: 800;
+    visibility: hidden;
+  }
+
+  :global(.js) .trophy.reveal.is-in .unlock {
+    animation: flash 2.2s var(--ease-out) both;
+    animation-delay: calc(var(--d, 0ms) + 260ms);
+  }
+
+  @keyframes flash {
+    0% { visibility: visible; transform: translateY(6px) scale(0.8); }
+    15% { visibility: visible; transform: none; }
+    85% { visibility: visible; transform: none; }
+    100% { visibility: hidden; transform: translateY(-6px); }
+  }
+
+  /* The player card: José on sky blue, the complement of the peach ground. */
+  .card {
+    grid-column: 9 / span 4;
+    background: var(--sky);
+    border-radius: 32px;
+    overflow: hidden;
+    transform: rotate(1.5deg);
+    transition: transform 0.5s var(--ease-spring);
+  }
+
+  .card:hover {
+    transform: rotate(0deg) translateY(-6px);
+  }
+
+  .card-art {
+    position: relative;
+    aspect-ratio: 420 / 430;
+    overflow: hidden;
+  }
+
+  .card-art :global(.card-puppet) {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    height: 98%;
+    width: auto;
+    max-width: none;
+    aspect-ratio: 420 / 520;
+    translate: -50% 0;
+  }
+
+
+  .emotes {
+    padding: 12px 14px 14px;
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .emotes-head {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .emote-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .emote {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 6px 2px 8px;
+    border: 0;
+    border-radius: 14px;
+    background: #ffffff14;
+    color: inherit;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.1;
+    transition: transform 0.25s var(--ease-spring), background-color 0.2s;
+  }
+
+  .emote-face {
+    position: relative;
+    display: block;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--peach);
+  }
+
+  .emote-face :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -38%;
+    width: 150%;
+    height: auto;
+    translate: -50% 0;
+  }
+
+  .emote:hover {
+    transform: translateY(-3px);
+    background: #ffffff26;
+  }
+
+  .emote[aria-pressed='true'] {
+    background: var(--red);
+  }
+
+  .card-plate {
+    margin: 0;
+    padding: 18px 20px 22px;
+    background: var(--paper);
+    display: grid;
+    gap: 9px;
+  }
+
+  .card-plate div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 15px;
+  }
+
+  .card-plate dt {
+    font-weight: 700;
+  }
+
+  .card-plate dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  .plate-name dd {
+    font-size: 22px;
+    font-weight: 900;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--red);
+  }
+
+  .about-bottom {
+    margin-top: clamp(48px, 6vw, 96px);
+    align-items: center;
+    row-gap: 40px;
+  }
+
+  /* What drives me: three round portraits that come alive on hover or focus. */
+  .drives {
+    grid-column: 1 / span 7;
+  }
+
+  .drives ul {
+    display: grid;
+    gap: 16px;
+  }
+
+  .drive {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 14px 24px 14px 14px;
+    border-radius: var(--radius);
+    background: var(--paper);
+    outline: none;
+    transition: transform 0.35s var(--ease-spring), background-color 0.3s, color 0.3s;
+  }
+
+  .drive:nth-child(2) {
+    margin-left: clamp(0px, 6vw, 90px);
+  }
+
+  .drive:nth-child(3) {
+    margin-left: clamp(0px, 12vw, 180px);
+  }
+
+  .drive:hover,
+  .drive:focus-visible {
+    transform: translateX(10px) rotate(-0.8deg);
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .drive-face {
+    position: relative;
+    display: block;
+    width: clamp(84px, 8vw, 118px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  .drive:nth-child(1) .drive-face { background: var(--red); }
+  .drive:nth-child(2) .drive-face { background: var(--sky); }
+  .drive:nth-child(3) .drive-face { background: #2f6e4a; }
+
+  .drive-face :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -26%;
+    width: 128%;
+    height: auto;
+    translate: -50% 0;
+  }
+
+  .drive-text {
+    display: grid;
+    gap: 4px;
+  }
+
+  .drive-text strong {
+    font-size: clamp(22px, 2vw, 30px);
+    font-weight: 900;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .drive-text span {
+    font-size: 17px;
+  }
+
+  .about-more {
+    grid-column: 8 / span 5;
+    display: grid;
+    gap: 20px;
+    justify-items: start;
+    max-width: 44ch;
+  }
+
+  .perks ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .perks li {
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    background: var(--paper);
+    font-weight: 600;
+    font-size: 15px;
+    transition: transform 0.3s var(--ease-spring), background-color 0.2s, color 0.2s;
+  }
+
+  .perks li:hover {
+    transform: translateY(-3px) rotate(-2deg);
+    background: var(--red);
+    color: var(--on-dark);
+  }
+
+  @media (max-width: 1100px) {
+    .trophies ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .about-intro,
+    .card,
+    .drives,
+    .about-more {
+      grid-column: 1 / -1;
+    }
+
+    .card {
+      width: min(100%, 400px);
+      justify-self: center;
+      transform: rotate(1deg);
+    }
+
+    .statement {
+      font-size: 22px;
+    }
+
+    .drive:nth-child(n) {
+      margin-left: 0;
+    }
+  }
+</style>
+
+<script>
+  import { mountPuppet, type Anim } from '../scripts/puppet';
+
+  // Emote buttons drive the puppet; pressing the active one sends him back to idle.
+  const canvas = document.querySelector<SVGSVGElement>('svg.card-puppet');
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('.emote')];
+  if (canvas && buttons.length) {
+    const p = mountPuppet(canvas, 'idle');
+    buttons.forEach((b) => b.addEventListener('click', () => {
+      const on = b.getAttribute('aria-pressed') === 'true';
+      buttons.forEach((o) => o.setAttribute('aria-pressed', 'false'));
+      if (on) return p.play('idle');
+      b.setAttribute('aria-pressed', 'true');
+      p.play(b.dataset.emote as Anim);
+    }));
+  }
+
+  // Each "what drives me" portrait comes alive while hovered or focused.
+  document.querySelectorAll<HTMLElement>('.drive').forEach((li) => {
+    const svg = li.querySelector<SVGSVGElement>('svg.pp');
+    if (!svg) return;
+    const d = mountPuppet(svg, 'idle');
+    const on = () => d.play(li.dataset.anim as Anim);
+    const off = () => d.play('idle');
+    li.addEventListener('mouseenter', on);
+    li.addEventListener('focus', on);
+    li.addEventListener('mouseleave', off);
+    li.addEventListener('blur', off);
+  });
+</script>

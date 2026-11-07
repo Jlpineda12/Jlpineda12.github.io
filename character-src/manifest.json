@@ -1,0 +1,722 @@
+{
+ "neck": {
+  "file": "neck.svg",
+  "bbox": [
+   668,
+   1531,
+   1009,
+   1685
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": true
+ },
+ "shirt": {
+  "file": "shirt.svg",
+  "bbox": [
+   488,
+   1614,
+   1191,
+   1779
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": true
+ },
+ "neck-shadow": {
+  "file": "neck-shadow.svg",
+  "bbox": [
+   667,
+   1533,
+   1007,
+   1599
+  ],
+  "opacity": 46,
+  "blend": "mul ",
+  "visible": true
+ },
+ "ears": {
+  "file": "ears.svg",
+  "bbox": [
+   418,
+   1121,
+   1234,
+   1285
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": true
+ },
+ "ear-shade": {
+  "file": "ear-shade.svg",
+  "bbox": [
+   469,
+   1120,
+   1180,
+   1285
+  ],
+  "opacity": 61,
+  "blend": "smud",
+  "visible": true
+ },
+ "face": {
+  "file": "face.svg",
+  "bbox": [
+   494,
+   985,
+   1150,
+   1539
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": true
+ },
+ "hair": {
+  "file": "hair.svg",
+  "bbox": [
+   490,
+   706,
+   1153,
+   1143
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": true
+ },
+ "mouth-alt": {
+  "file": "mouth-alt.svg",
+  "bbox": [
+   699,
+   1344,
+   957,
+   1472
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": false
+ },
+ "nose": {
+  "file": "nose.svg",
+  "bbox": [
+   791,
+   1237,
+   873,
+   1342
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": true
+ },
+ "glasses": {
+  "file": "glasses.svg",
+  "bbox": [
+   513,
+   1109,
+   1138,
+   1291
+  ],
+  "opacity": 255,
+  "blend": "norm",
+  "visible": true
+ },
+ "lenses": {
+  "frames": [
+   {
+    "file": "lenses-00.svg",
+    "bbox": [
+     570,
+     1129,
+     1098,
+     1273
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "lenses-01.svg",
+    "bbox": [
+     570,
+     1143,
+     1081,
+     1269
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "lenses-02.svg",
+    "bbox": [
+     570,
+     1149,
+     1081,
+     1269
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "lenses-03.svg",
+    "bbox": [
+     570,
+     1160,
+     1081,
+     1269
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "lenses-04.svg",
+    "bbox": [
+     570,
+     1173,
+     1081,
+     1269
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "lenses-05.svg",
+    "bbox": [
+     570,
+     1185,
+     1081,
+     1269
+    ],
+    "opacity": 255
+   }
+  ]
+ },
+ "pupils": {
+  "frames": [
+   {
+    "file": "pupils-00.svg",
+    "bbox": [
+     671,
+     1147,
+     988,
+     1255
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "pupils-01.svg",
+    "bbox": [
+     671,
+     1147,
+     988,
+     1255
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "pupils-02.svg",
+    "bbox": [
+     671,
+     1174,
+     988,
+     1255
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "pupils-03.svg",
+    "bbox": [
+     213,
+     823,
+     986,
+     1254
+    ],
+    "opacity": 255
+   }
+  ]
+ },
+ "mouth": {
+  "frames": [
+   {
+    "file": "mouth-00.svg",
+    "bbox": [
+     699,
+     1342,
+     961,
+     1471
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-01.svg",
+    "bbox": [
+     696,
+     1344,
+     957,
+     1468
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-02.svg",
+    "bbox": [
+     696,
+     1356,
+     959,
+     1468
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-03.svg",
+    "bbox": [
+     696,
+     1372,
+     960,
+     1465
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-04.svg",
+    "bbox": [
+     696,
+     1382,
+     963,
+     1453
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-05.svg",
+    "bbox": [
+     694,
+     1392,
+     963,
+     1442
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-06.svg",
+    "bbox": [
+     698,
+     1399,
+     970,
+     1434
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-07.svg",
+    "bbox": [
+     698,
+     1396,
+     967,
+     1444
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-08.svg",
+    "bbox": [
+     696,
+     1399,
+     943,
+     1434
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-09.svg",
+    "bbox": [
+     713,
+     1402,
+     922,
+     1436
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-10.svg",
+    "bbox": [
+     725,
+     1408,
+     909,
+     1436
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-11.svg",
+    "bbox": [
+     744,
+     1413,
+     880,
+     1443
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-12.svg",
+    "bbox": [
+     758,
+     1416,
+     887,
+     1456
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "mouth-13.svg",
+    "bbox": [
+     769,
+     1415,
+     896,
+     1469
+    ],
+    "opacity": 255
+   }
+  ]
+ },
+ "hands": {
+  "frames": [
+   {
+    "file": "hands-00.svg",
+    "bbox": [
+     569,
+     1679,
+     1099,
+     1847
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-01.svg",
+    "bbox": [
+     569,
+     1679,
+     1099,
+     1847
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-02.svg",
+    "bbox": [
+     569,
+     1679,
+     1099,
+     1847
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-03.svg",
+    "bbox": [
+     569,
+     1679,
+     1099,
+     1847
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-04.svg",
+    "bbox": [
+     569,
+     1679,
+     1099,
+     1847
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-05.svg",
+    "bbox": [
+     569,
+     1724,
+     1099,
+     1891
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-06.svg",
+    "bbox": [
+     569,
+     1770,
+     1099,
+     1937
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-07.svg",
+    "bbox": [
+     569,
+     1816,
+     1099,
+     1984
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-08.svg",
+    "bbox": [
+     569,
+     1848,
+     1099,
+     2015
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-09.svg",
+    "bbox": [
+     569,
+     1929,
+     1099,
+     2097
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-10.svg",
+    "bbox": [
+     569,
+     2003,
+     1099,
+     2171
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-11.svg",
+    "bbox": [
+     569,
+     2121,
+     1099,
+     2288
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-12.svg",
+    "bbox": [
+     569,
+     2217,
+     1099,
+     2385
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-13.svg",
+    "bbox": [
+     569,
+     2310,
+     1099,
+     2477
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-14.svg",
+    "bbox": [
+     569,
+     2352,
+     1099,
+     2519
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "hands-15.svg",
+    "bbox": [
+     569,
+     2440,
+     1099,
+     2608
+    ],
+    "opacity": 255
+   }
+  ]
+ },
+ "headphones": {
+  "frames": [
+   {
+    "file": "headphones-00.svg",
+    "bbox": [
+     391,
+     724,
+     1277,
+     1568
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-01.svg",
+    "bbox": [
+     391,
+     724,
+     1277,
+     1568
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-02.svg",
+    "bbox": [
+     391,
+     724,
+     1277,
+     1568
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-03.svg",
+    "bbox": [
+     391,
+     724,
+     1277,
+     1568
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-04.svg",
+    "bbox": [
+     391,
+     694,
+     1277,
+     1538
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-05.svg",
+    "bbox": [
+     391,
+     650,
+     1277,
+     1494
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-06.svg",
+    "bbox": [
+     391,
+     616,
+     1277,
+     1460
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-07.svg",
+    "bbox": [
+     391,
+     576,
+     1277,
+     1420
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-08.svg",
+    "bbox": [
+     391,
+     460,
+     1277,
+     1304
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-09.svg",
+    "bbox": [
+     391,
+     350,
+     1277,
+     1194
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-10.svg",
+    "bbox": [
+     391,
+     251,
+     1277,
+     1095
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-11.svg",
+    "bbox": [
+     391,
+     130,
+     1277,
+     974
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-12.svg",
+    "bbox": [
+     391,
+     24,
+     1277,
+     868
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-13.svg",
+    "bbox": [
+     391,
+     -56,
+     1277,
+     788
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-14.svg",
+    "bbox": [
+     391,
+     -202,
+     1277,
+     642
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-15.svg",
+    "bbox": [
+     391,
+     -373,
+     1277,
+     471
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-16.svg",
+    "bbox": [
+     391,
+     -575,
+     1277,
+     269
+    ],
+    "opacity": 255
+   },
+   {
+    "file": "headphones-17.svg",
+    "bbox": [
+     410,
+     -842,
+     1296,
+     2
+    ],
+    "opacity": 255
+   }
+  ]
+ }
+}

@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from './Hero.astro';
+import Divider from './Divider.astro';
+import About from './About.astro';
+import Worlds from './Worlds.astro';
+import Process from './Process.astro';
+import Inventory from './Inventory.astro';
+import Contact from './Contact.astro';
+import Footer from './Footer.astro';
+import Journey from './Journey.astro';
+import PuppetSprite from './PuppetSprite.astro';
+import type { Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+---
+<Base lang={lang}>
+  <PuppetSprite />
+  <Hero lang={lang} />
+  <main id="contenido">
+    <Divider shape="clouds" color="var(--peach)" bg="transparent" overlap />
+    <About lang={lang} />
+    <Worlds lang={lang} />
+    <Process lang={lang} />
+    <Divider shape="hills" color="var(--paper)" bg="var(--sky-light)" />
+    <Inventory lang={lang} />
+    <Divider shape="night" color="var(--deep)" bg="var(--paper)" />
+    <Contact lang={lang} />
+    <Divider shape="wave" color="var(--ink)" bg="var(--deep)" />
+  </main>
+  <Footer lang={lang} />
+  <Journey lang={lang} />
+</Base>
+
+<script>
+  import { initMotion } from '../scripts/motion';
+  initMotion();
+</script>

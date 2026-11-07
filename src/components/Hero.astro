@@ -1,0 +1,421 @@
+---
+import Puppet from './Puppet.astro';
+import { getData, homeUrl, t, type Lang } from '../i18n';
+import LangSwitch from './LangSwitch.astro';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { site } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const clouds = [
+  { x: '6%', y: '58%', w: 'clamp(140px, 16vw, 260px)', d: '46s', drift: '60px' },
+  { x: '44%', y: '12%', w: 'clamp(110px, 11vw, 190px)', d: '38s', drift: '-50px' },
+  { x: '30%', y: '80%', w: 'clamp(90px, 9vw, 150px)', d: '30s', drift: '40px' },
+];
+---
+<section class="hero" id="inicio" aria-labelledby="hero-title">
+  {clouds.map((c) => (
+    <img class="cloud" src={`${base}world/nube.webp`} alt="" width="390" height="165" aria-hidden="true"
+      style={`left:${c.x};top:${c.y};width:${c.w};animation-duration:${c.d};--drift:${c.drift}`} />
+  ))}
+
+
+  <header class="nav wrap">
+    <a class="id" href="#inicio" aria-label={`José Luis Pineda, ${ui.home}`}>
+      <span class="id-face" aria-hidden="true">
+        <Puppet pose="calm" live={false} class="f-calm" />
+        <Puppet pose="celebrate" live={false} class="f-joy" />
+      </span>
+      <span class="id-text">
+        <span class="id-name">José Luis</span>
+        <span class="id-status"><span class="dot" aria-hidden="true"></span>{ui.available}</span>
+      </span>
+    </a>
+    <nav aria-label={ui.chapters}>
+      <ul>
+        <li class="hide-sm"><a href="#quien-soy">{ui.navAbout}</a></li>
+        <li class="hide-sm"><a href="#mundos">{ui.navWorlds}</a></li>
+        <li class="hide-sm"><a href="#como-trabajo">{ui.navProcess}</a></li>
+        <li class="li-lang"><LangSwitch lang={lang} /></li>
+        <li><a class="nav-cta" href="#contacto">{ui.writeMe}</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="hero-body wrap">
+    <h1 class="hero-name display" id="hero-title">
+      <span class="line"><span class="line-in">{site.name.first}</span></span>
+      <span class="line l2"><span class="line-in">{site.name.last}</span></span>
+    </h1>
+    <div class="hero-foot">
+      <p class="lead hero-tag">{site.tagline}</p>
+      <a class="btn" href="#quien-soy">{ui.start} <span class="arrow" aria-hidden="true">↓</span></a>
+      <p class="keys small">{ui.keysA} <kbd>Enter</kbd> {ui.keysB}</p>
+    </div>
+  </div>
+
+  <div class="hero-char">
+    <p class="bubble" aria-live="polite" data-lines={JSON.stringify(ui.bubbles)} data-touch={ui.bubbleTouch}><span>{ui.bubbleTouch}</span></p>
+    <button class="character" type="button" aria-label={ui.charLabel}>
+      <Puppet pose="happy" label={ui.charAlt} />
+    </button>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    background: var(--sky);
+    color: var(--ink);
+    overflow: hidden;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .keys {
+    font-weight: 600;
+  }
+
+  kbd {
+    display: inline-block;
+    min-width: 2.2em;
+    padding: 3px 9px 5px;
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 800;
+    box-shadow: inset 0 -4px 0 #c9cfee;
+    text-align: center;
+  }
+
+  @media (pointer: coarse) {
+    .keys {
+      display: none;
+    }
+  }
+
+  .cloud {
+    position: absolute;
+    z-index: -1;
+    height: auto;
+    animation: drift 40s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 22px;
+    font-size: 15px;
+    font-weight: 600;
+    position: relative;
+    z-index: 3;
+  }
+
+  .nav ul {
+    display: flex;
+    gap: clamp(16px, 2.4vw, 36px);
+    align-items: center;
+  }
+
+  .nav a {
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+    padding: 10px 0;
+  }
+
+  .nav ul a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    height: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.3s var(--ease-out);
+  }
+
+  .nav ul a:hover::after,
+  .nav ul a:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* The header's ID card: José's face, his name and whether he is available. */
+  .id {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+  }
+
+  .id-face {
+    display: block;
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    flex: none;
+    transition: transform 0.4s var(--ease-spring);
+  }
+
+  .id-face :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -30%;
+    width: 140%;
+    max-width: none;
+    height: auto;
+    translate: -50% 0;
+    transition: opacity 0.15s;
+  }
+
+  .id-face :global(.f-joy) {
+    opacity: 0;
+  }
+
+  .id:hover .id-face {
+    transform: rotate(-8deg) scale(1.08);
+  }
+
+  .id:hover .id-face :global(.f-joy) {
+    opacity: 1;
+  }
+
+  .id:hover .id-face :global(.f-calm) {
+    opacity: 0;
+  }
+
+  .id-text {
+    display: grid;
+    line-height: 1.15;
+  }
+
+  .id-name {
+    font-weight: 900;
+    font-stretch: 125%;
+    font-size: 18px;
+    text-transform: uppercase;
+  }
+
+  .id-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #3fbf6f;
+    box-shadow: 0 0 0 0 #3fbf6f;
+    animation: live 2s ease-out infinite;
+  }
+
+  @keyframes live {
+    0% { box-shadow: 0 0 0 0 #3fbf6faa; }
+    100% { box-shadow: 0 0 0 10px #3fbf6f00; }
+  }
+
+  .nav-cta {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px !important;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 800;
+    transition: transform 0.25s var(--ease-spring), background-color 0.2s !important;
+  }
+
+  .nav-cta:hover {
+    transform: translateY(-2px);
+    background: var(--red);
+  }
+
+  .nav ul li:last-child a::after,
+  .li-lang a::after {
+    display: none;
+  }
+
+  .hero-body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 12vh;
+    padding-bottom: 40px;
+    pointer-events: none;
+  }
+
+  .hero-body > * {
+    pointer-events: auto;
+  }
+
+  .hero-name {
+    font-size: clamp(64px, 9.6vw, 190px);
+    max-width: 66vw;
+  }
+
+  .line {
+    display: block;
+    overflow: hidden;
+    padding: 0.14em 0 0.06em;
+    margin: -0.14em 0 -0.06em;
+    white-space: nowrap;
+  }
+
+  .line-in {
+    display: inline-block;
+  }
+
+  .line:first-child {
+    color: var(--paper);
+  }
+
+  .hero-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    max-width: 30ch;
+    margin-top: 40px;
+  }
+
+  .hero-tag {
+    font-weight: 500;
+  }
+
+  .hero-char {
+    position: absolute;
+    z-index: 1;
+    right: clamp(8px, 5vw, 100px);
+    /* The shirt's flat bottom edge sits on the bottom of the hero (under the clouds). */
+    height: 64%;
+    bottom: clamp(24px, 3.4vw, 52px);
+    aspect-ratio: 920 / 1140;
+  }
+
+  .character {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform-origin: 50% 85%;
+    transition: transform 0.5s var(--ease-spring);
+  }
+
+  .character :global(.pp) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .character:focus-visible {
+    outline-offset: -12px;
+    border-radius: 40px;
+  }
+
+  .bubble {
+    position: absolute;
+    z-index: 2;
+    left: 4%;
+    top: 40%;
+    translate: -100% 0;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 12px 18px;
+    border-radius: 22px 22px 4px 22px;
+    font-weight: 700;
+    font-size: 16px;
+    white-space: nowrap;
+    transform-origin: 100% 100%;
+    transition: transform 0.4s var(--ease-spring), opacity 0.3s;
+  }
+
+  :global(.js) .bubble {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  :global(.js) .bubble.is-on {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (max-width: 760px) {
+    .hide-sm {
+      display: none;
+    }
+
+    .hero-body {
+      padding-top: 7svh;
+      padding-bottom: 28px;
+    }
+
+    .hero-name {
+      font-size: 11.2vw;
+      max-width: none;
+    }
+
+    .hero-foot {
+      max-width: 62%;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .hero-tag {
+      font-size: 18px;
+    }
+
+    .btn {
+      padding: 0 20px;
+    }
+
+    .hero-char {
+      right: -4vw;
+      height: 48%;
+      bottom: 0;
+    }
+
+    .bubble {
+      left: auto;
+      right: 62%;
+      top: 36%;
+      translate: 0 0;
+      font-size: 14px;
+      padding: 10px 14px;
+      white-space: normal;
+      width: max-content;
+      max-width: 44vw;
+    }
+  }
+</style>
+
+<script>
+  import { initCharacter } from '../scripts/character';
+  initCharacter();
+</script>

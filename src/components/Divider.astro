@@ -1,0 +1,109 @@
+---
+// Organic edges between chapters instead of straight cuts: clouds, hills, waves or a night horizon.
+// `color` is the next section's colour, `bg` the previous one's.
+interface Props {
+  shape: 'clouds' | 'hills' | 'wave' | 'night';
+  color: string;
+  bg: string;
+  overlap?: boolean; // sit over the end of the previous section instead of after it
+}
+const { shape, color, bg, overlap = false } = Astro.props;
+
+// Clouds: a row of overlapping bumps of different sizes.
+function clouds(seed: number) {
+  let x = -40;
+  let d = 'M0,140 L-40,140';
+  let i = seed;
+  while (x < 1480) {
+    const r = 34 + ((i * 37) % 44);
+    const y = 82 - ((i * 23) % 30);
+    d += ` L${x},${y + r * 0.2} A${r},${r} 0 0 1 ${x + r * 1.6},${y + r * 0.2}`;
+    x += r * 1.35;
+    i++;
+  }
+  return d + ' L1480,140 Z';
+}
+---
+<div class:list={['divider', { overlap }]} aria-hidden="true" style={`--next:${color};--prev:${bg}`} data-shape={shape}>
+  {shape === 'clouds' && (
+    <svg viewBox="0 0 1440 140" preserveAspectRatio="xMidYMax slice">
+      <path class="back" d={clouds(3)} />
+      <path class="front" d={clouds(7)} transform="translate(0 22)" />
+    </svg>
+  )}
+  {shape === 'hills' && (
+    <svg viewBox="0 0 1440 140" preserveAspectRatio="xMidYMax slice">
+      <path class="back" d="M0,140 L0,70 C160,10 330,20 480,62 C640,104 760,40 920,30 C1080,20 1240,72 1440,50 L1440,140 Z" />
+      <path class="front" d="M0,140 L0,96 C200,60 320,118 520,96 C720,74 820,52 1000,80 C1180,108 1300,72 1440,86 L1440,140 Z" />
+    </svg>
+  )}
+  {shape === 'wave' && (
+    <svg viewBox="0 0 1440 140" preserveAspectRatio="xMidYMax slice">
+      <path class="back" d="M0,140 L0,60 C180,110 360,10 540,60 C720,110 900,10 1080,60 C1260,110 1350,40 1440,56 L1440,140 Z" />
+      <path class="front" d="M0,140 L0,92 C200,52 380,122 600,90 C820,58 980,124 1200,96 C1320,80 1390,86 1440,92 L1440,140 Z" />
+    </svg>
+  )}
+  {shape === 'night' && (
+    <svg viewBox="0 0 1440 140" preserveAspectRatio="xMidYMax slice">
+      <path class="back" d="M0,140 L0,90 L140,40 L260,96 L420,20 L600,100 L760,52 L900,104 L1080,28 L1240,96 L1360,60 L1440,84 L1440,140 Z" />
+      <path class="front" d="M0,140 L0,112 L180,78 L340,120 L520,74 L700,118 L880,84 L1060,122 L1240,82 L1440,116 L1440,140 Z" />
+    </svg>
+  )}
+</div>
+
+<style>
+  .divider {
+    position: relative;
+    background: var(--prev);
+    height: clamp(56px, 8vw, 120px);
+    margin-bottom: -1px;
+    overflow: hidden;
+  }
+
+  .overlap {
+    z-index: 3;
+    margin-top: calc(-1 * clamp(56px, 8vw, 120px));
+  }
+
+  svg {
+    position: absolute;
+    left: -4%;
+    bottom: 0;
+    width: 108%;
+    height: 100%;
+  }
+
+  @media (max-width: 760px) {
+    .divider {
+      height: 64px;
+    }
+
+    .overlap {
+      margin-top: -64px;
+    }
+  }
+
+  .front {
+    fill: var(--next);
+  }
+
+  .back {
+    fill: color-mix(in oklab, var(--next) 55%, var(--prev));
+    animation: sway 16s ease-in-out infinite;
+  }
+
+  .divider[data-shape='clouds'] .back {
+    fill: #ffffff;
+  }
+
+  @keyframes sway {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-2.5%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .back {
+      animation: none;
+    }
+  }
+</style>

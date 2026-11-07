@@ -1,0 +1,15 @@
+{
+  "name": "portfolio-jose-luis-pineda",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node node_modules/astro/astro.js dev",
+    "build": "node node_modules/astro/astro.js build && find dist -name '._*' -delete",
+    "preview": "node node_modules/astro/astro.js preview"
+  },
+  "dependencies": {
+    "astro": "^5.18.2",
+    "gsap": "3.13"
+  }
+}

@@ -1,0 +1,117 @@
+---
+// GitHub and LinkedIn as icon buttons. `big` is the footer version (icon, name and handle);
+// the small one sits under the email in Contact.
+import { getData, type Lang } from '../i18n';
+interface Props { lang: Lang; big?: boolean; dark?: boolean }
+const { lang, big = false, dark = false } = Astro.props;
+const { site } = getData(lang);
+
+const ICONS: Record<string, { box: string; d: string }> = {
+  github: {
+    box: '0 0 16 16',
+    d: 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z',
+  },
+  linkedin: {
+    box: '0 0 24 24',
+    d: 'M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zm1.78 13.02H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z',
+  },
+};
+---
+<ul class:list={['social', { big, dark }]}>
+  {site.socials.map((s) => (
+    <li>
+      <a href={s.url} rel="me noopener" target="_blank" class={`social-${s.icon}`} aria-label={big ? undefined : s.label}>
+        <svg class="social-icon" viewBox={ICONS[s.icon].box} aria-hidden="true"><path d={ICONS[s.icon].d} fill="currentColor" /></svg>
+        {big ? (
+          <span class="social-text"><span class="social-name">{s.label}</span><span class="social-handle">{s.handle}</span></span>
+        ) : (
+          <span class="social-name">{s.label}</span>
+        )}
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .social a {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 8px 18px 8px 10px;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.25s var(--ease-spring), background-color 0.2s, color 0.2s;
+  }
+
+  .social-icon {
+    width: 30px;
+    height: 30px;
+    padding: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    flex: none;
+    transition: background-color 0.2s;
+  }
+
+  .social a:hover,
+  .social a:focus-visible {
+    transform: translateY(-3px) rotate(-2deg);
+  }
+
+  .social-github:hover .social-icon,
+  .social-github:focus-visible .social-icon {
+    background: #24292f;
+  }
+
+  .social-linkedin:hover .social-icon,
+  .social-linkedin:focus-visible .social-icon {
+    background: #0a66c2;
+  }
+
+  /* Footer version: bigger cards with the handle under the name. */
+  .big {
+    gap: 16px;
+  }
+
+  .big a {
+    gap: 14px;
+    padding: 10px 26px 10px 10px;
+  }
+
+  .big .social-icon {
+    width: 52px;
+    height: 52px;
+    padding: 12px;
+  }
+
+  .social-text {
+    display: grid;
+    line-height: 1.15;
+  }
+
+  .big .social-name {
+    font-size: clamp(18px, 1.5vw, 22px);
+  }
+
+  .social-handle {
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.72;
+  }
+
+  .dark a:hover,
+  .dark a:focus-visible {
+    background: #f2c14e;
+  }
+</style>

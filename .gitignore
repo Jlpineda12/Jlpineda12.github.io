@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+._*
+.DS_Store
+.taste-skill/
+blender/*.blend1
+# Heavy sources stay local (GitHub rejects files over 100 MB); the site uses what scripts extract from them.
+*.psd
+*.psb
+Carita.MP4
+.claude/

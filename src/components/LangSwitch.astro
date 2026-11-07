@@ -1,0 +1,82 @@
+---
+// ES | EN switch: a small two-sided toggle. The link keeps the chapter you are in.
+import { homeUrl, t, type Lang } from '../i18n';
+interface Props { lang: Lang; dark?: boolean }
+const { lang, dark = false } = Astro.props;
+const other: Lang = lang === 'es' ? 'en' : 'es';
+---
+<a class:list={['lang-switch', { dark }]} href={homeUrl(other)} hreflang={other} lang={other}
+  aria-label={t(lang).switchTo} data-lang-switch>
+  <span class:list={['opt', { on: lang === 'es' }]}>ES</span>
+  <span class:list={['opt', { on: lang === 'en' }]}>EN</span>
+  <span class="knob" aria-hidden="true" style={`--x:${lang === 'es' ? 0 : 1}`}></span>
+</a>
+
+<style>
+  .lang-switch {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    width: 84px;
+    height: 40px;
+    padding: 4px;
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 900;
+    font-size: 13px;
+    text-decoration: none;
+    isolation: isolate;
+  }
+
+  .lang-switch.dark {
+    background: #ffffff1f;
+    color: var(--on-dark);
+  }
+
+  .opt {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    transition: color 0.3s;
+  }
+
+  .opt.on {
+    color: var(--paper);
+  }
+
+  .knob {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: var(--radius);
+    background: var(--red);
+    transform: translateX(calc(var(--x) * 100%));
+    transition: transform 0.35s var(--ease-spring);
+  }
+
+  .lang-switch:hover .knob {
+    transform: translateX(calc((1 - var(--x)) * 100%));
+  }
+
+  .lang-switch:hover .opt.on {
+    color: inherit;
+  }
+
+  .lang-switch:hover .opt:not(.on) {
+    color: var(--paper);
+  }
+</style>
+
+<script>
+  // Keep the chapter: carry the current #hash over to the other language.
+  document.querySelectorAll<HTMLAnchorElement>('[data-lang-switch]').forEach((a) => {
+    a.addEventListener('click', () => {
+      const hash = location.hash || '';
+      if (hash) a.href = a.href.split('#')[0] + hash;
+    });
+  });
+</script>

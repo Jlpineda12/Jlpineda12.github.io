@@ -1,0 +1,49 @@
+---
+// José as a vector puppet built from his own PSD layers (see PuppetSprite.astro).
+// `pose` sets the expression that renders without JavaScript; scripts/puppet.ts animates it.
+import { POSES, type Pose } from '../scripts/poses';
+interface Props {
+  pose?: Pose;
+  class?: string;
+  label?: string;
+  live?: boolean; // animate (idle loop, blinks); false keeps a still pose
+}
+const { pose = 'calm', class: cls, label, live = true } = Astro.props;
+const p = POSES[pose];
+const show = (on: boolean) => (on ? undefined : 'none');
+const lensFrame = p.lens === 'closed' ? 0 : p.lens;
+---
+<svg class:list={['pp', cls]} viewBox="380 640 920 1140" data-puppet={live ? pose : undefined} data-pose={pose}
+  role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} overflow="visible">
+  <g class="pp-rig">
+    <g class="pp-body">
+      <use href="#pp-neck" />
+      <use href="#pp-shirt" />
+      <use href="#pp-neck-shadow" style="mix-blend-mode:multiply;opacity:.46" />
+    </g>
+    <g class="pp-head" transform={p.tilt ? `rotate(${p.tilt} 838 1525)` : undefined}>
+      <use href="#pp-ears" />
+      <use href="#pp-ear-shade" style="mix-blend-mode:exclusion;opacity:.6" />
+      <use href="#pp-face" />
+      <use href="#pp-hair" />
+      <g class="pp-eyes" display={show(p.lens !== 'closed')}>
+        <g class="pp-lens">
+          {[0, 1, 2, 3, 4, 5].map((f) => <use href={`#pp-lenses-${f}`} data-f={f} display={show(f === lensFrame)} />)}
+        </g>
+        <g class="pp-pupils" clip-path={`url(#pp-lens-clip-${lensFrame})`}>
+          <g class="pp-look" transform={p.look ? `translate(${p.look[0]} ${p.look[1]})` : undefined}>
+            <use href="#pp-pupils-0" />
+          </g>
+        </g>
+      </g>
+      <g class="pp-closed" display={show(p.lens === 'closed')}><use href="#pp-closed" /></g>
+      <g class="pp-mouth">
+        {Array.from({ length: 14 }, (_, f) => <use href={`#pp-mouth-${f}`} data-f={f} display={show(f === p.mouth)} />)}
+      </g>
+      <use href="#pp-nose" />
+      <use href="#pp-glasses" />
+      <g class="pp-phones" display={show(p.phones)}><use href="#pp-headphones-0" /></g>
+    </g>
+    <g class="pp-hands" display={show(p.hands)}><use href="#pp-hands-0" /></g>
+  </g>
+</svg>

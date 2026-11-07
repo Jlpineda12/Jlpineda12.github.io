@@ -1,0 +1,274 @@
+---
+import Puppet from './Puppet.astro';
+import SocialLinks from './SocialLinks.astro';
+import { getData, t, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { site } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const [user, domain] = site.email.split('@');
+const subject = encodeURIComponent(ui.subject);
+---
+<section class="contact on-dark wrap" id="contacto" aria-labelledby="contact-title">
+  <div class="stars" aria-hidden="true">
+    {Array.from({ length: 14 }, (_, i) => (
+      <span style={`left:${(i * 37) % 97}%;top:${(i * 53) % 70 + 4}%;animation-delay:${-(i % 5) * 0.7}s`}></span>
+    ))}
+  </div>
+
+  <div class="contact-top">
+    <h2 class="contact-title" id="contact-title">{ui.contactTitle}</h2>
+    <div class="scene">
+      <img class="contact-island" src={`${base}world/contacto.webp`} width="787" height="742" loading="lazy"
+        alt={ui.mailAlt} />
+      <div class="sleeper" aria-hidden="true">
+        <div class="moon"><Puppet pose="sleep" /></div>
+        <span class="zzz"><span>z</span><span>z</span><span>Z</span></span>
+      </div>
+    </div>
+  </div>
+  <p class="wake small" aria-live="polite" data-asleep={ui.asleep} data-awake={ui.awake}>{ui.asleep}</p>
+
+  <a class="email display" href={`mailto:${site.email}?subject=${subject}`} data-fit>
+    <span class="email-in">{user}<span class="at">@</span><wbr />{domain}</span>
+  </a>
+
+  <div class="contact-foot">
+    <p class="small">{ui.reply}</p>
+    <SocialLinks lang={lang} />
+  </div>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    min-height: 100svh;
+    background: var(--deep);
+    color: var(--on-dark);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto;
+    padding-top: clamp(80px, 10vw, 140px);
+    padding-bottom: 32px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .stars span {
+    position: absolute;
+    z-index: -1;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f2c14e;
+    animation: twinkle 2.4s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { transform: scale(0.5); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 1; }
+  }
+
+  .contact-top {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    align-items: start;
+  }
+
+  .contact-title {
+    grid-column: 1 / span 6;
+    font-size: clamp(24px, 2.4vw, 36px);
+    font-weight: 700;
+    line-height: 1.2;
+    max-width: 22ch;
+  }
+
+  .scene {
+    grid-column: 8 / span 5;
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    justify-self: end;
+    animation: float 6.5s ease-in-out infinite;
+  }
+
+  .contact-island {
+    width: 100%;
+    height: auto;
+  }
+
+  /* José sleeps inside the moon, above the island. */
+  .sleeper {
+    position: absolute;
+    left: -8%;
+    top: -14%;
+    width: 36%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: visible;
+  }
+
+  .moon {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f2c14e;
+    transition: background-color 0.5s;
+  }
+
+  .contact.is-awake .moon {
+    background: var(--peach);
+  }
+
+  .sleeper :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -24%;
+    width: 124%;
+    height: auto;
+    aspect-ratio: 420 / 520;
+    translate: -50% 0;
+  }
+
+  .zzz {
+    position: absolute;
+    right: -22%;
+    top: -6%;
+    font-weight: 900;
+    color: #f2c14e;
+    transition: opacity 0.3s;
+  }
+
+  .zzz span {
+    display: inline-block;
+    font-size: 18px;
+    animation: zzz 2.4s ease-in-out infinite;
+  }
+
+  .zzz span:nth-child(2) { font-size: 24px; animation-delay: 0.4s; }
+  .zzz span:nth-child(3) { font-size: 32px; animation-delay: 0.8s; }
+
+  @keyframes zzz {
+    0% { transform: translateY(8px); opacity: 0; }
+    40% { opacity: 1; }
+    100% { transform: translateY(-22px); opacity: 0; }
+  }
+
+  .contact.is-awake .zzz {
+    opacity: 0;
+  }
+
+  .wake {
+    margin-top: 16px;
+    color: #c9cfee;
+  }
+
+  .email {
+    display: block;
+    margin-top: 32px;
+    font-size: clamp(36px, 7.4vw, 140px);
+    font-stretch: 125%;
+    text-decoration: none;
+    line-height: 1;
+    white-space: nowrap;
+    transition: color 0.25s;
+  }
+
+  .email:hover {
+    color: #f2c14e;
+  }
+
+  .email-in {
+    display: inline-block;
+    transition: transform 0.4s var(--ease-spring);
+  }
+
+  .email:hover .email-in {
+    transform: translateX(10px);
+  }
+
+  .contact-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 16px;
+    margin-top: 12vh;
+    font-size: 15px;
+  }
+
+  @media (max-width: 900px) {
+    .contact {
+      min-height: 0;
+      grid-template-rows: auto;
+    }
+
+    .contact-foot {
+      margin-top: 64px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .contact-title {
+      grid-column: 1 / -1;
+      font-size: 22px;
+    }
+
+    .scene {
+      grid-column: 1 / -1;
+      max-width: 320px;
+      margin-top: 72px;
+      justify-self: start;
+    }
+
+    .sleeper {
+      left: 0;
+      top: -20%;
+    }
+
+    .email {
+      white-space: normal;
+      font-size: 6.4vw;
+    }
+
+    .contact-foot {
+      flex-direction: column;
+      align-items: start;
+      margin-top: 48px;
+    }
+  }
+</style>
+
+<script>
+  import { mountPuppet } from '../scripts/puppet';
+
+  // José sleeps until someone goes for the email, then wakes up with the controller.
+  const section = document.querySelector<HTMLElement>('.contact');
+  const canvas = section?.querySelector<SVGSVGElement>('.sleeper svg.pp');
+  const email = section?.querySelector<HTMLElement>('.email');
+  const note = section?.querySelector<HTMLElement>('.wake');
+  if (section && canvas && email && note) {
+    const p = mountPuppet(canvas, 'sleep');
+    let t = 0;
+    const wake = () => {
+      clearTimeout(t);
+      section.classList.add('is-awake');
+      p.play('happy');
+      note.textContent = note.dataset.awake || '';
+    };
+    const sleep = () => {
+      t = window.setTimeout(() => {
+        section.classList.remove('is-awake');
+        p.play('sleep');
+        note.textContent = note.dataset.asleep || '';
+      }, 2200);
+    };
+    email.addEventListener('pointerenter', wake);
+    email.addEventListener('focus', wake);
+    email.addEventListener('pointerleave', sleep);
+    email.addEventListener('blur', sleep);
+    section.querySelector('.scene')?.addEventListener('click', () => (section.classList.contains('is-awake') ? sleep() : wake()));
+  }
+</script>

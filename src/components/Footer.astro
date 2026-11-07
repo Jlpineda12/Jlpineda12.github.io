@@ -1,0 +1,267 @@
+---
+import Puppet from './Puppet.astro';
+import { getData, t, type Lang } from '../i18n';
+import LangSwitch from './LangSwitch.astro';
+import SocialLinks from './SocialLinks.astro';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { site } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const year = new Date().getFullYear();
+---
+<footer class="footer on-dark wrap">
+  <!-- The arcade ending: a countdown while José waits for an answer. -->
+  <div class="continue">
+    <div class="cont-art">
+      <div class="cont-ring">
+        <Puppet pose="happy" class="cont-pp" />
+      </div>
+    </div>
+    <div class="cont-text">
+      <p class="cont-kicker">{ui.gameOver}</p>
+      <p class="cont-title display">{ui.continue} <span class="count" aria-hidden="true">9</span></p>
+      <div class="cont-actions">
+        <a class="btn cont-yes" href="#contacto">{ui.yes}</a>
+        <a class="btn cont-again" href="#inicio">{ui.again}</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-name display" data-fit aria-hidden="true"><span>{site.name.first} {site.name.last}</span></p>
+
+  <div class="footer-row">
+    <div class="find">
+      <h2 class="find-head">{ui.findMe}</h2>
+      <SocialLinks lang={lang} big dark />
+    </div>
+    <nav class="footer-nav" aria-label={ui.footerNav}>
+      <ul>
+        <li><a href="#quien-soy">{ui.navAbout}</a></li>
+        <li><a href="#mundos">{ui.navWorlds}</a></li>
+        <li><a href="#como-trabajo">{ui.navProcess}</a></li>
+      </ul>
+      <ul>
+        <li><a href="#inventario">{ui.navInventory}</a></li>
+        <li><a href="#contacto">{ui.navContact}</a></li>
+        <li><a href={`mailto:${site.email}`}>{site.email.split('@')[0]}@<wbr />{site.email.split('@')[1]}</a></li>
+      </ul>
+      <ul>
+        <li><LangSwitch lang={lang} dark /></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="legal small">
+    <p>© {year} {site.name.first} {site.name.last}</p>
+    <a class="link" href="#inicio">{ui.backTop} ↑</a>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--ink);
+    color: var(--on-dark);
+    padding-top: clamp(48px, 6vw, 96px);
+    padding-bottom: 96px;
+  }
+
+  .continue {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: clamp(24px, 4vw, 64px);
+    align-items: center;
+    padding-bottom: clamp(48px, 6vw, 96px);
+  }
+
+  .cont-ring {
+    position: relative;
+    width: clamp(140px, 16vw, 230px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--red);
+    border: 6px solid var(--paper);
+    transition: background-color 0.5s;
+  }
+
+  .footer.is-over .cont-ring {
+    background: var(--deep);
+  }
+
+  .cont-ring :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -22%;
+    width: 118%;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 420 / 520;
+    translate: -50% 0;
+  }
+
+
+  .cont-kicker {
+    font-weight: 800;
+    color: #f2c14e;
+    font-size: var(--step-lead);
+  }
+
+  .cont-title {
+    font-size: clamp(30px, 5.4vw, 96px);
+    margin: 6px 0 24px;
+  }
+
+  .count {
+    display: inline-block;
+    min-width: 0.8em;
+    color: #f2c14e;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .count.tick {
+    animation: tick 0.5s var(--ease-spring);
+  }
+
+  @keyframes tick {
+    from { transform: scale(1.35); }
+    to { transform: none; }
+  }
+
+  .cont-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cont-again {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .cont-again:hover {
+    background: #f2c14e;
+  }
+
+  .footer-name {
+    font-size: clamp(40px, 9.6vw, 200px);
+    white-space: nowrap;
+    color: var(--red);
+    padding: 0;
+  }
+
+  .footer-row {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    row-gap: 40px;
+    margin-top: 72px;
+  }
+
+  .find {
+    grid-column: 1 / span 6;
+  }
+
+  .find-head {
+    font-size: var(--step-small);
+    font-weight: 700;
+    color: #f2c14e;
+    margin-bottom: 12px;
+  }
+
+  .footer-nav {
+    grid-column: 7 / span 6;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap);
+    font-size: 15px;
+  }
+
+  .footer-nav ul {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .footer-nav a:not([data-lang-switch]) {
+    text-decoration: none;
+    transition: color 0.2s;
+    overflow-wrap: break-word;
+  }
+
+  .footer-nav a:not([data-lang-switch]):hover {
+    color: #f2c14e;
+  }
+
+  .legal {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 80px;
+  }
+
+  @media (max-width: 760px) {
+    .continue {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+
+    .cont-title {
+      font-size: 8.4vw;
+    }
+
+    .find,
+    .footer-nav {
+      grid-column: 1 / -1;
+    }
+
+    .footer-nav {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .legal {
+      flex-direction: column;
+      margin-top: 48px;
+    }
+  }
+</style>
+
+<script>
+  import { mountPuppet } from '../scripts/puppet';
+
+  // The countdown runs while the footer is on screen; at zero José falls asleep.
+  const footer = document.querySelector<HTMLElement>('.footer');
+  const canvas = footer?.querySelector<SVGSVGElement>('.cont-ring svg.pp');
+  const count = footer?.querySelector<HTMLElement>('.count');
+  const yes = footer?.querySelector<HTMLElement>('.cont-yes');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (footer && canvas && count && yes) {
+    const p = mountPuppet(canvas, 'happy');
+    let n = 9;
+    let timer = 0;
+    const step = () => {
+      n -= 1;
+      count.textContent = String(Math.max(n, 0));
+      count.classList.remove('tick');
+      void count.offsetWidth;
+      count.classList.add('tick');
+      if (n <= 0) {
+        clearInterval(timer);
+        footer.classList.add('is-over');
+        p.play('sleep');
+      }
+    };
+    const start = () => {
+      if (reduced || timer) return;
+      n = 9;
+      count.textContent = '9';
+      footer.classList.remove('is-over');
+      p.play('happy');
+      timer = window.setInterval(step, 1000);
+    };
+    const stop = () => { clearInterval(timer); timer = 0; };
+    new IntersectionObserver((e) => (e[0].isIntersecting ? start() : stop()), { threshold: 0.35 }).observe(footer.querySelector('.continue')!);
+    yes.addEventListener('mouseenter', () => { stop(); footer.classList.remove('is-over'); p.play('celebrate'); });
+    yes.addEventListener('focus', () => { stop(); footer.classList.remove('is-over'); p.play('celebrate'); });
+  }
+</script>

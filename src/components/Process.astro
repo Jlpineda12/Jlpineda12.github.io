@@ -1,0 +1,403 @@
+---
+import Puppet from './Puppet.astro';
+import { getData, t, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { process } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const alts: Record<string, string> = ui.alts;
+const doing: Record<string, string> = ui.doing;
+---
+<section class="process" id="como-trabajo" aria-labelledby="process-title">
+  <div class="pin">
+    <div class="track">
+      <svg class="route" aria-hidden="true"><path class="route-bg" /><path class="route-fg" /></svg>
+      <div class="intro">
+        <h2 class="section-head" id="process-title">{ui.processTitle}</h2>
+        <p class="lead">{ui.processLead}</p>
+        <p class="hint small" aria-hidden="true">{ui.processHint}</p>
+      </div>
+      {process.map((s, i) => (
+        <article class:list={['stop', { low: i % 2 === 0 }]} data-pose={s.pose} data-doing={doing[s.pose]}>
+          <div class="stop-art" style={`--delay:${-i * 1.3}s`}>
+            <img class="stop-island" src={`${base}world/${s.island}.webp`} width="900" height="960" loading="lazy" alt={alts[s.island]} />
+            <span class="badge" aria-hidden="true"><Puppet pose={s.pose} live={false} /></span>
+          </div>
+          <div class="stop-text">
+            <h3 class="stop-name">{s.name}</h3>
+            <p class="stop-title">{s.title}</p>
+            <p>{s.text}</p>
+          </div>
+        </article>
+      ))}
+      <div class="outro">
+        <img class="outro-island" src={`${base}world/lanzamiento.webp`} width="900" height="960" loading="lazy"
+          alt={ui.alts.lanzamiento} />
+        <p class="outro-text">{ui.outro}</p>
+        <a class="btn" href="#contacto">{ui.outroBtn} <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <div class="walker" aria-hidden="true" data-go={ui.go} data-launch={ui.launch}>
+      <p class="walker-say"><span>{ui.go}</span></p>
+      <Puppet pose="calm" />
+    </div>
+    <img class="p-cloud" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:58%;top:8%;width:12vw" />
+    <img class="p-cloud" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:8%;top:14%;width:8vw;animation-delay:-10s" />
+  </div>
+</section>
+
+<style>
+  .process {
+    position: relative;
+    background: var(--sky-light);
+    color: var(--ink);
+  }
+
+  .pin {
+    position: relative;
+    height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5vw;
+    height: 100%;
+    width: max-content;
+    padding: 0 var(--margin);
+    will-change: transform;
+  }
+
+  .route {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .route path {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+  }
+
+  .route-bg {
+    stroke: color-mix(in oklab, var(--paper) 40%, var(--sky-light));
+    stroke-dasharray: 0.1 20;
+  }
+
+  .route-fg {
+    stroke: var(--paper);
+  }
+
+  .intro {
+    width: min(32vw, 500px);
+    display: grid;
+    gap: 24px;
+    padding-left: var(--margin);
+  }
+
+  .hint {
+    font-weight: 700;
+  }
+
+  .stop {
+    width: 28vw;
+    min-width: 330px;
+    display: grid;
+    gap: 10px;
+    align-self: flex-start;
+    margin-top: 7vh;
+  }
+
+  .stop.low {
+    align-self: flex-end;
+    margin-bottom: 9vh;
+    margin-top: 0;
+  }
+
+  .stop-art {
+    position: relative;
+    width: 68%;
+    animation: float 6s ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  .stop-island {
+    width: 100%;
+    height: auto;
+  }
+
+  /* The phase pose in a round badge, so the bust never floats with a cut edge. Shown on phones. */
+  .badge {
+    display: none;
+    position: absolute;
+    left: -6%;
+    top: 4%;
+    width: 38%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--paper);
+    border: 4px solid var(--ink);
+  }
+
+  .badge :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -18%;
+    width: 112%;
+    height: auto;
+    translate: -50% 0;
+  }
+
+  .stop-name {
+    color: var(--deep);
+    font-weight: 800;
+    font-stretch: 150%;
+    text-transform: uppercase;
+    font-size: clamp(32px, 2.9vw, 48px);
+    line-height: 1;
+  }
+
+  .stop-title {
+    font-size: clamp(20px, 1.6vw, 26px);
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .stop p:last-child {
+    max-width: 36ch;
+  }
+
+  .outro {
+    width: min(30vw, 460px);
+    display: grid;
+    gap: 20px;
+    justify-items: start;
+    padding-right: 12vw;
+  }
+
+  .outro-island {
+    width: 70%;
+    height: auto;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .outro-text {
+    font-size: clamp(24px, 2.2vw, 32px);
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .walker {
+    position: absolute;
+    left: 5vw;
+    bottom: 0;
+    width: clamp(130px, 11vw, 190px);
+    aspect-ratio: 420 / 520;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .walker :global(.pp) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .walker-say {
+    position: absolute;
+    left: 70%;
+    top: 4%;
+    padding: 10px 16px;
+    border-radius: 20px 20px 20px 4px;
+    background: var(--paper);
+    font-weight: 800;
+    font-size: 16px;
+    white-space: nowrap;
+    transform-origin: 0 100%;
+    transition: transform 0.35s var(--ease-spring);
+  }
+
+  .walker-say.pop {
+    transform: scale(1.12);
+  }
+
+  .p-cloud {
+    position: absolute;
+    z-index: -2;
+    height: auto;
+    pointer-events: none;
+    animation: drift 30s ease-in-out infinite;
+  }
+
+  @media (max-width: 900px) {
+    .pin {
+      height: auto;
+      overflow: visible;
+      padding-block: 24px 56px;
+    }
+
+    .track {
+      flex-direction: column;
+      align-items: stretch;
+      width: auto;
+      gap: 64px;
+      padding: 0 var(--margin);
+    }
+
+    .route,
+    .walker,
+    .hint,
+    .p-cloud {
+      display: none;
+    }
+
+    .intro,
+    .stop,
+    .outro {
+      width: auto;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      align-self: stretch;
+    }
+
+    .stop.low {
+      margin: 0;
+    }
+
+    .stop-art {
+      width: min(72%, 320px);
+    }
+
+    .stop:not(.low) .stop-art {
+      margin-left: auto;
+    }
+
+    .badge {
+      display: block;
+      left: 0;
+    }
+
+    .stop-name {
+      font-size: 30px;
+    }
+
+    .outro-island {
+      width: min(60%, 260px);
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { mountPuppet, type Anim } from '../scripts/puppet';
+
+  gsap.registerPlugin(ScrollTrigger);
+  const section = document.querySelector<HTMLElement>('.process');
+  const track = section?.querySelector<HTMLElement>('.track');
+  const svg = section?.querySelector<SVGSVGElement>('.route');
+  const bg = section?.querySelector<SVGPathElement>('.route-bg');
+  const fg = section?.querySelector<SVGPathElement>('.route-fg');
+  const canvas = section?.querySelector<SVGSVGElement>('.walker svg.pp');
+  const say = section?.querySelector<HTMLElement>('.walker-say');
+  const stops = [...(section?.querySelectorAll<HTMLElement>('.stop') ?? [])];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (section && track && svg && bg && fg && canvas && say) {
+    const mm = gsap.matchMedia();
+    mm.add('(min-width: 901px)', () => {
+      const puppet = mountPuppet(canvas, 'idle');
+      let len = 0;
+      let current: HTMLElement | null = null;
+
+      // The route runs through every island, in the track's own coordinates.
+      const build = () => {
+        const t = track.getBoundingClientRect();
+        const pts = [...track.querySelectorAll<HTMLElement>('.stop-island, .outro-island')].map((img) => {
+          const r = img.getBoundingClientRect();
+          return { x: r.left - t.left + r.width / 2, y: r.top - t.top + r.height * 0.74 };
+        });
+        const all = [{ x: 0, y: t.height * 0.88 }, ...pts];
+        let d = `M${all[0].x},${all[0].y}`;
+        for (let i = 1; i < all.length; i++) {
+          const a = all[i - 1], b = all[i];
+          const mx = (a.x + b.x) / 2;
+          d += ` C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`;
+        }
+        svg.setAttribute('viewBox', `0 0 ${t.width} ${t.height}`);
+        bg.setAttribute('d', d);
+        fg.setAttribute('d', d);
+        len = fg.getTotalLength();
+        fg.style.strokeDasharray = `${len}`;
+        fg.style.strokeDashoffset = `${len}`;
+      };
+      build();
+
+      // Which phase is passing the walker right now.
+      const nearest = () => {
+        const x = window.innerWidth * 0.32;
+        let best: HTMLElement | null = null;
+        let dist = Infinity;
+        for (const s of stops) {
+          const r = s.getBoundingClientRect();
+          const d = Math.abs(r.left + r.width / 2 - x);
+          if (d < dist) { dist = d; best = s; }
+        }
+        return dist < window.innerWidth * 0.2 ? best : null;
+      };
+
+      const setSay = (text: string) => {
+        const span = say.firstElementChild as HTMLElement;
+        if (span.textContent === text) return;
+        span.textContent = text;
+        say.classList.add('pop');
+        setTimeout(() => say.classList.remove('pop'), 200);
+      };
+
+      let rest = 0;
+      const settle = (progress: number) => {
+        current = nearest();
+        if (current) {
+          puppet.play(current.dataset.pose as Anim);
+          setSay(current.dataset.doing || '');
+        } else {
+          puppet.play(progress > 0.95 ? 'celebrate' : 'idle');
+          const w = say.parentElement as HTMLElement;
+          setSay(progress > 0.95 ? w.dataset.launch || '' : w.dataset.go || '');
+        }
+      };
+
+      const tween = gsap.to(track, {
+        x: () => -(track.scrollWidth - window.innerWidth),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          pin: true,
+          scrub: reduced ? true : 0.8,
+          start: 'top top',
+          end: () => `+=${track.scrollWidth - window.innerWidth}`,
+          invalidateOnRefresh: true,
+          onRefresh: build,
+          onUpdate: (self) => {
+            fg.style.strokeDashoffset = `${len * (1 - self.progress)}`;
+            // José walks while the page moves, and acts out each phase when it stops.
+            if (Math.abs(self.getVelocity()) > 40) puppet.play('travel');
+            clearTimeout(rest);
+            rest = window.setTimeout(() => settle(self.progress), 180);
+          },
+        },
+      });
+      return () => tween.scrollTrigger?.kill();
+    });
+  }
+</script>

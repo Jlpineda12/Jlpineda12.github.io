@@ -1,0 +1,52 @@
+---
+import '../styles/global.css';
+import { getData, homeUrl, t, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { site } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const canonical = new URL(homeUrl(lang), Astro.site).href;
+const alt = (l: Lang) => new URL(homeUrl(l), Astro.site).href;
+const og = new URL(`${base}og.jpg`, Astro.site).href;
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{site.title}</title>
+    <meta name="description" content={site.description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="es" href={alt('es')} />
+    <link rel="alternate" hreflang="en" href={alt('en')} />
+    <link rel="alternate" hreflang="x-default" href={alt('es')} />
+    <link rel="icon" type="image/png" href={`${base}favicon.png`} />
+    <meta name="theme-color" content="#7c90da" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content={lang === 'es' ? 'es_CO' : 'en_US'} />
+    <meta property="og:title" content={site.title} />
+    <meta property="og:description" content={site.description} />
+    <meta property="og:image" content={og} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:wdth,wght@75..150,300..900&display=swap" rel="stylesheet" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: `${site.name.first} ${site.name.last}`,
+      jobTitle: site.role,
+      url: canonical,
+      alumniOf: 'Universidad Militar Nueva Granada',
+      address: { '@type': 'PostalAddress', addressLocality: 'Bogotá', addressCountry: 'CO' },
+      sameAs: site.socials.map((s) => s.url),
+    })} />
+  </head>
+  <body data-travelling={ui.travelling}>
+    <a class="skip" href="#contenido">{ui.skip}</a>
+    <slot />
+  </body>
+</html>

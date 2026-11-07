@@ -1,0 +1,168 @@
+---
+// The journey map: a small route fixed at the bottom of the screen. José's head travels
+// to the chapter you are in; each stop is a link that flies you there.
+import { t, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const stops = [
+  { id: 'inicio', label: ui.home },
+  { id: 'quien-soy', label: ui.navAbout },
+  { id: 'mundos', label: ui.navWorlds },
+  { id: 'como-trabajo', label: ui.navProcess },
+  { id: 'inventario', label: ui.navInventory },
+  { id: 'contacto', label: ui.navContact },
+];
+---
+<nav class="journey" aria-label={ui.hud}>
+  <ol>
+    {stops.map((s) => (
+      <li><a href={`#${s.id}`} data-stop={s.id}><span class="j-label">{s.label}</span></a></li>
+    ))}
+  </ol>
+  <img class="j-head" src={`${base}favicon.png`} width="180" height="180" alt="" aria-hidden="true" />
+</nav>
+
+<style>
+  .journey {
+    position: fixed;
+    z-index: 50;
+    left: 50%;
+    bottom: 18px;
+    translate: -50% 0;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: var(--on-dark);
+    display: none;
+  }
+
+  .journey.is-on {
+    display: block;
+    animation: hud-in 0.5s var(--ease-spring);
+  }
+
+  @keyframes hud-in {
+    from { transform: translateY(calc(100% + 40px)); }
+    to { transform: none; }
+  }
+
+  ol {
+    position: relative;
+    display: flex;
+    gap: clamp(18px, 3vw, 40px);
+    align-items: center;
+  }
+
+  ol::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 50%;
+    height: 0;
+    translate: 0 -50%;
+    border-top: 4px dotted #ffffff70;
+  }
+
+  a {
+    position: relative;
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+  }
+
+  a::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: var(--paper);
+    transition: transform 0.3s var(--ease-spring), background-color 0.2s;
+  }
+
+  a:hover::before,
+  a.is-here::before {
+    transform: scale(1.35);
+    background: #f2c14e;
+  }
+
+  .j-label {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 16px);
+    translate: -50% 0;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    background: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  a:hover .j-label,
+  a:focus-visible .j-label {
+    visibility: visible;
+  }
+
+  .j-head {
+    position: absolute;
+    left: 0;
+    top: -26px;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+    transition: transform 0.6s var(--ease-spring);
+    filter: drop-shadow(0 3px 0 var(--ink));
+  }
+
+  @media (max-width: 760px) {
+    .journey {
+      bottom: 12px;
+      padding: 8px 14px;
+    }
+
+    .j-head {
+      width: 34px;
+      height: 34px;
+      top: -22px;
+    }
+  }
+</style>
+
+<script>
+  const nav = document.querySelector<HTMLElement>('.journey');
+  const links = [...(nav?.querySelectorAll<HTMLAnchorElement>('a[data-stop]') ?? [])];
+  const head = nav?.querySelector<HTMLElement>('.j-head');
+  if (nav && head && links.length) {
+    const sections = links.map((l) => document.getElementById(l.dataset.stop!)).filter(Boolean) as HTMLElement[];
+    const moveTo = (i: number) => {
+      links.forEach((l, k) => l.classList.toggle('is-here', k === i));
+      const a = links[i];
+      const ol = a.closest('ol') as HTMLElement;
+      const x = ol.offsetLeft + a.offsetLeft + a.offsetWidth / 2 - head.offsetWidth / 2;
+      head.style.transform = `translateX(${x}px)`;
+    };
+    let on = false;
+    const update = () => {
+      const mid = window.innerHeight * 0.45;
+      let idx = 0;
+      sections.forEach((s, i) => { if (s.getBoundingClientRect().top <= mid) idx = i; });
+      // Hidden on the hero and again at the arcade ending, which has its own buttons.
+      const end = document.querySelector('.footer')?.getBoundingClientRect().top ?? Infinity;
+      const show = window.scrollY > window.innerHeight * 0.6 && end > window.innerHeight;
+      if (show !== on) {
+        on = show;
+        nav.classList.toggle('is-on', on);
+      }
+      if (on) moveTo(idx);
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  }
+</script>

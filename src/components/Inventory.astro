@@ -1,0 +1,303 @@
+---
+import Puppet from './Puppet.astro';
+import { getData, t, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { experience, tools, languages } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+// Triadic accents for the slots (colour theory: three hues spaced evenly on the wheel).
+const triad = ['#b02e2e', '#3d6fd1', '#c98a1c'];
+// What José does when a tool from each group is equipped.
+const moves = ['happy', 'build', 'idea', 'think', 'build', 'think'];
+const cefr = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const level = (v: string) => (v === 'Nativo' ? 6 : cefr.indexOf(v) + 1);
+const edu = experience[0].rows[0];
+---
+<section class="inv wrap" id="inventario" aria-labelledby="inv-title">
+  <div class="grid inv-head">
+    <h2 class="section-head reveal" id="inv-title">{ui.invTitle}</h2>
+    <p class="lead reveal" style="--d:80ms">{ui.invLead}</p>
+  </div>
+
+  <div class="grid inv-body">
+    <div class="bag" role="group" aria-label={ui.pickTool}>
+      {tools.map((g, i) => (
+        <div class="slot-row reveal" style={`--d:${i * 60}ms;--c:${triad[i % 3]}`}>
+          <h3>{g.group}</h3>
+          <ul>
+            {g.items.split(', ').map((it) => (
+              <li><button type="button" class="slot" data-move={moves[i]} data-color={triad[i % 3]} aria-pressed="false">{it}</button></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <aside class="side">
+      <div class="equip reveal">
+        <div class="ring">
+          <Puppet pose="calm" />
+        </div>
+        <p class="equip-say" aria-live="polite"><span class="eq-label">{ui.equipped}</span> <strong class="eq-item">—</strong></p>
+      </div>
+      <div class="edu reveal">
+        <h3 class="edu-title">{edu[0]}</h3>
+        <p>{ui.degree} {edu[2]}, {edu[3]}.</p>
+      </div>
+      <div class="langs reveal" style="--d:100ms">
+        <h3>{ui.langsTitle}</h3>
+        {languages.map((l) => (
+          <div class="lang">
+            <p><strong>{l.group}</strong><span>{l.items === 'Nativo' ? ui.native : l.items}</span></p>
+            <ol class="meter" aria-label={`${l.group}: ${l.items === 'Nativo' ? ui.native : l.items} ${ui.cefr}`}>
+              {cefr.map((c, k) => <li class:list={{ on: k < level(l.items) }}><span>{c}</span></li>)}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </aside>
+  </div>
+</section>
+
+<style>
+  .inv {
+    background: var(--paper);
+    padding-top: clamp(32px, 4vw, 64px);
+    padding-bottom: var(--section);
+  }
+
+  .inv-head {
+    align-items: end;
+    row-gap: 16px;
+  }
+
+  .inv-head h2 {
+    grid-column: 1 / span 6;
+  }
+
+  .inv-head p {
+    grid-column: 8 / span 5;
+    max-width: 38ch;
+  }
+
+  .inv-body {
+    margin-top: clamp(40px, 5vw, 72px);
+    row-gap: 40px;
+    align-items: start;
+  }
+
+  .bag {
+    grid-column: 1 / span 8;
+    display: grid;
+    gap: 26px;
+    padding: clamp(18px, 2vw, 28px);
+    border-radius: 32px;
+    background: var(--ground);
+  }
+
+  .slot-row h3,
+  .side h3 {
+    font-size: var(--step-small);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .slot-row ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 8px;
+  }
+
+  /* Inventory slots: square-ish tiles that lift and take their group's colour when equipped. */
+  .slot {
+    width: 100%;
+    min-height: 64px;
+    padding: 10px 12px;
+    border: 3px solid transparent;
+    border-radius: 16px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: clamp(15px, 1.15vw, 18px);
+    font-weight: 800;
+    line-height: 1.15;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.3s var(--ease-spring), background-color 0.2s, color 0.2s, border-color 0.2s;
+  }
+
+  .slot:hover,
+  .slot:focus-visible {
+    transform: translateY(-4px) rotate(-1deg);
+    border-color: var(--c);
+  }
+
+  .slot[aria-pressed='true'] {
+    background: var(--c);
+    color: var(--paper);
+    transform: translateY(-4px) scale(1.03);
+  }
+
+  .side {
+    grid-column: 9 / span 4;
+    display: grid;
+    gap: 18px;
+    position: sticky;
+    top: 24px;
+  }
+
+  .equip {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+  }
+
+  .ring {
+    position: relative;
+    width: min(100%, 260px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--eq, var(--peach));
+    border: 6px solid var(--ink);
+    transition: background-color 0.4s;
+  }
+
+  .ring :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -22%;
+    width: 118%;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 420 / 520;
+    translate: -50% 0;
+  }
+
+
+  .equip-say {
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: var(--on-dark);
+    font-weight: 700;
+    transition: transform 0.3s var(--ease-spring);
+  }
+
+  .equip-say.pop {
+    transform: scale(1.08);
+  }
+
+  .eq-item {
+    color: #f2c14e;
+  }
+
+  .edu,
+  .langs {
+    padding: 24px;
+    border-radius: 28px;
+    background: var(--ground);
+  }
+
+  .edu {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .side .edu-title {
+    font-size: clamp(22px, 1.8vw, 28px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .lang + .lang {
+    margin-top: 18px;
+  }
+
+  .lang p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .meter {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+
+  .meter li {
+    position: relative;
+    height: 14px;
+    border-radius: 7px;
+    background: var(--paper);
+  }
+
+  .meter li.on {
+    background: var(--red);
+  }
+
+  .meter span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  @media (max-width: 900px) {
+    .inv-head h2,
+    .inv-head p,
+    .bag,
+    .side {
+      grid-column: 1 / -1;
+    }
+
+    .side {
+      position: static;
+      grid-row: 1;
+    }
+
+    .ring {
+      width: min(60%, 220px);
+    }
+
+    .slot-row ul {
+      grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    }
+  }
+</style>
+
+<script>
+  import { mountPuppet, type Anim } from '../scripts/puppet';
+
+  // Equipping a tool: José reacts, the frame takes the slot's colour and the bubble names the tool.
+  const section = document.querySelector<HTMLElement>('.inv');
+  const canvas = section?.querySelector<SVGSVGElement>('.ring svg.pp');
+  const ring = section?.querySelector<HTMLElement>('.ring');
+  const say = section?.querySelector<HTMLElement>('.equip-say');
+  const item = section?.querySelector<HTMLElement>('.eq-item');
+  const slots = [...(section?.querySelectorAll<HTMLButtonElement>('.slot') ?? [])];
+  if (section && canvas && ring && say && item && slots.length) {
+    const p = mountPuppet(canvas, 'idle');
+    let back = 0;
+    const equip = (s: HTMLButtonElement, sticky = false) => {
+      slots.forEach((o) => o.setAttribute('aria-pressed', String(o === s)));
+      item.textContent = s.textContent;
+      ring.style.setProperty('--eq', s.dataset.color || '');
+      say.classList.add('pop');
+      setTimeout(() => say.classList.remove('pop'), 200);
+      p.play(s.dataset.move as Anim);
+      clearTimeout(back);
+      if (!sticky) back = window.setTimeout(() => p.play('idle'), 4000);
+    };
+    slots.forEach((s) => {
+      s.addEventListener('mouseenter', () => equip(s));
+      s.addEventListener('focus', () => equip(s));
+      s.addEventListener('click', () => equip(s, true));
+    });
+    // Start with something equipped, so the panel never looks empty.
+    item.textContent = slots[0].textContent;
+  }
+</script>

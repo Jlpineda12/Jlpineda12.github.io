@@ -1,0 +1,305 @@
+/* Colours come from the character: sky (headphone stripe), peach (skin), red (shirt), ink (hair). */
+:root {
+  --sky: #7c90da;
+  --sky-light: #8c9ee0;
+  --peach: #f6c7b8;
+  --ground: #e9e7e4;
+  --paper: #ffffff;
+  --ink: #2a2a2e;
+  --muted: #55555c;
+  --red: #b02e2e;
+  --deep: #3d4a7a;
+  --on-dark: #ffffff;
+
+  --font: 'TikTok Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+
+  --margin: clamp(16px, 2.4vw, 36px);
+  --gap: clamp(16px, 2vw, 28px);
+  --section: clamp(96px, 12vw, 200px);
+  --radius: 999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--step-body);
+  line-height: 1.5;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+img,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Organic section edges must always reach both sides of the screen. */
+.divider svg,
+svg.edge {
+  max-width: none;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--red);
+  color: var(--on-dark);
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.on-dark :focus-visible {
+  outline-color: var(--on-dark);
+}
+
+.skip {
+  position: absolute;
+  left: var(--margin);
+  top: -100px;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--on-dark);
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.skip:focus {
+  top: 12px;
+}
+
+.wrap {
+  padding-inline: var(--margin);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+}
+
+/* The wide display voice: the name, project names, the email. */
+.display {
+  font-weight: 800;
+  font-stretch: 150%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  font-kerning: normal;
+}
+
+.section-head {
+  font-size: var(--step-head);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.lead {
+  font-size: var(--step-lead);
+  line-height: 1.35;
+}
+
+.small {
+  font-size: var(--step-small);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  min-height: 52px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--red);
+  color: var(--on-dark);
+  font-weight: 700;
+  font-size: var(--step-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-spring), background-color 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  background: #c23838;
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn .arrow {
+  transition: transform 0.25s var(--ease-spring);
+}
+
+.btn:hover .arrow {
+  transform: translateY(3px);
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  transition: color 0.2s, text-underline-offset 0.2s;
+}
+
+.link:hover {
+  text-underline-offset: 0.32em;
+}
+
+/* Entrances: only hidden once the script has marked the page as ready to animate. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s var(--ease-out), transform 0.8s var(--ease-out);
+  transition-delay: var(--d, 0ms);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(var(--drift, 40px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The cloud curtain used when travelling between chapters. */
+.cloud-wipe {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cw-band {
+  position: absolute;
+  inset: 0 -10vw;
+  background: var(--paper);
+}
+
+.cw-edge {
+  position: absolute;
+  top: 50%;
+  width: 60vh;
+  height: auto;
+  translate: 0 -50%;
+}
+
+.cw-l {
+  left: 0;
+  translate: -78% -50%;
+  rotate: 90deg;
+}
+
+.cw-r {
+  right: 0;
+  translate: 78% -50%;
+  rotate: -90deg;
+}
+
+.cw-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(22px, 2.6vw, 40px);
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.cw-label img {
+  width: 1.8em;
+  height: 1.8em;
+  animation: float 1s ease-in-out infinite;
+}
+
+.cw-label strong {
+  color: var(--red);
+  font-stretch: 125%;
+  text-transform: uppercase;
+}
