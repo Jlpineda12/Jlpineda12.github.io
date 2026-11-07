@@ -479,7 +479,7 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
 
 <script>
   import { gsap } from 'gsap';
-  import { mountPuppet } from '../scripts/puppet';
+  import { mountPuppet, type Anim } from '../scripts/puppet';
 
   const section = document.querySelector<HTMLElement>('.worlds');
   const map = section?.querySelector<HTMLElement>('.map');
@@ -494,6 +494,15 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
   if (section && map && traveler && canvas && tabs.length) {
     const puppet = mountPuppet(canvas, 'idle');
     let active = 0;
+
+    // Each world gets its own reaction when José lands on it.
+    const REACT: Record<string, Anim> = { juegos: 'play', vr: 'vr', '3d': 'build', software: 'code' };
+    let calm = 0;
+    const react = (i: number, ms = 2600) => {
+      puppet.play(REACT[tabs[i].dataset.world || ''] || 'happy');
+      clearTimeout(calm);
+      calm = window.setTimeout(() => puppet.play('idle'), ms);
+    };
 
     // Without the script every panel shows; with it, only the active world.
     panels.forEach((p, i) => (p.hidden = i !== 0));
@@ -558,7 +567,7 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
         gsap.from(panels[i].children, { y: 28, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' });
         const dist = Math.hypot(to.x - from.x, to.y - from.y);
         puppet.play('travel');
-        gsap.timeline({ onComplete: () => { puppet.play('happy'); setTimeout(() => puppet.play('idle'), 1600); } })
+        gsap.timeline({ onComplete: () => react(i) })
           .to(traveler, { x: to.x, duration: 0.5 + dist / 900, ease: 'power1.inOut' }, 0)
           .to(traveler, { keyframes: [
             { y: Math.min(from.y, to.y) - map.clientHeight * 0.18, duration: (0.5 + dist / 900) / 2, ease: 'power2.out' },
@@ -583,7 +592,7 @@ const pos: Record<string, { d: [number, number]; m: [number, number] }> = {
     new IntersectionObserver((entries) => {
       const on = entries[0].isIntersecting;
       panels[active].querySelectorAll('video').forEach((v) => (on && !reduced ? v.play().catch(() => {}) : v.pause()));
-      if (on && puppet.current() === 'idle' && !reduced) { puppet.play('happy'); setTimeout(() => puppet.play('idle'), 1800); }
+      if (on && puppet.current() === 'idle' && !reduced) react(active);
     }, { threshold: 0.25 }).observe(section);
 
     const ready = () => requestAnimationFrame(place);

@@ -5,46 +5,27 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const { site, softSkills } = getData(lang);
 const ui = t(lang);
-const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
+const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
 ---
 <section class="about wrap" id="quien-soy" aria-labelledby="about-title">
+  <!-- Who: the story on the left, the player card on the right. -->
   <div class="grid about-top">
     <div class="about-intro">
       <h2 class="section-head reveal" id="about-title">{ui.aboutTitle}</h2>
       <p class="statement reveal" style="--d:80ms"><strong>{ui.aboutLead}</strong> {ui.aboutRest}</p>
-
-      <div class="trophies">
-        <h3 class="mini-head reveal">{ui.achievements}</h3>
-        <ul>
-          {achievements[lang].map((a, i) => (
-            <li class="trophy reveal" style={`--d:${120 + i * 90}ms`}>
-              <span class="cup" aria-hidden="true"><span class="star"></span></span>
-              <span class="trophy-text">
-                <strong>{a.title}</strong>
-                <span>{a.text}</span>
-              </span>
-              <span class="unlock" aria-hidden="true">{ui.unlocked}</span>
-            </li>
-          ))}
-        </ul>
+      <div class="about-copy reveal" style="--d:160ms">
+        <p class="about-lead">{ui.moreLead}</p>
+        <p>{ui.moreText}</p>
+      </div>
+      <div class="perks reveal" style="--d:220ms">
+        <h3 class="mini-head">{ui.perks}</h3>
+        <ul>{softSkills.map((s) => <li>{s}</li>)}</ul>
       </div>
     </div>
 
     <article class="card reveal" style="--d:120ms" aria-label={ui.card}>
       <div class="card-art">
         <Puppet pose="calm" class="card-puppet" label={ui.cardCanvas} />
-      </div>
-      <div class="emotes" role="group" aria-label={ui.emotes}>
-        <p class="emotes-head">{ui.emotes}</p>
-        <div class="emote-row">
-          {emotes.map((e) => (
-            <button type="button" class="emote" data-emote={e} aria-pressed="false">
-              <span class="emote-face"><Puppet pose={e} live={false} /></span>
-              <span>{ui.emote[e]}</span>
-            </button>
-          ))}
-        </div>
       </div>
       <dl class="card-plate">
         <div class="plate-name"><dt class="sr">{ui.player}</dt><dd>{site.name.first} {site.name.last}</dd></div>
@@ -54,28 +35,50 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
     </article>
   </div>
 
-  <div class="grid about-bottom">
-    <div class="drives">
-      <h3 class="mini-head reveal">{ui.drivesTitle}</h3>
-      <ul>
-        {ui.drives.map((d, i) => (
-          <li class="drive reveal" style={`--d:${i * 90}ms`} data-anim={d.anim} tabindex="0">
-            <span class="drive-face"><Puppet pose={d.anim === 'happy' ? 'happy' : d.anim === 'idea' ? 'idea' : 'think'} /></span>
-            <span class="drive-text"><strong>{d.title}</strong><span>{d.text}</span></span>
-          </li>
-        ))}
-      </ul>
-    </div>
+  <!-- Why: three drives, each in its own colour. -->
+  <div class="drives">
+    <h3 class="sub-head reveal">{ui.drivesTitle}</h3>
+    <ul>
+      {ui.drives.map((d, i) => (
+        <li class={`drive drive-${d.anim} reveal`} style={`--d:${i * 90}ms; --c:${driveColor[i]}`} data-anim={d.anim} tabindex="0">
+          <span class="drive-art">
+            <span class="drive-face">
+              <Puppet pose={d.anim} />
+              {d.anim === 'learn' && (
+                <svg class="book" viewBox="0 0 120 60" aria-hidden="true">
+                  <path d="M6 14 Q33 4 60 14 Q87 4 114 14 V56 Q87 46 60 56 Q33 46 6 56 Z" fill="#b02e2e" />
+                  <path d="M10 12 Q34 2 58 12 V50 Q34 40 10 50 Z M62 12 Q86 2 110 12 V50 Q86 40 62 50 Z" fill="#fff" />
+                  <path d="M18 18 Q34 12 50 18 M18 26 Q34 20 50 26 M18 34 Q34 28 46 33 M70 18 Q86 12 102 18 M70 26 Q86 20 102 26 M70 34 Q86 28 98 33" stroke="#363636" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".55" />
+                </svg>
+              )}
+            </span>
+            {d.prop && <span class="drive-prop" aria-hidden="true">{d.prop}</span>}
+          </span>
+          <strong>{d.title}</strong>
+          <span class="drive-text">{d.text}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
 
-    <div class="about-more reveal" style="--d:120ms">
-      <p class="lead">{ui.moreLead}</p>
-      <p>{ui.moreText}</p>
-      <div class="perks">
-        <h3 class="mini-head">{ui.perks}</h3>
-        <ul>{softSkills.map((s) => <li>{s}</li>)}</ul>
-      </div>
-      <a class="btn" href="#mundos">{ui.visitWorlds} <span class="arrow" aria-hidden="true">↓</span></a>
+  <!-- Proof: real milestones that unlock as they scroll in. -->
+  <div class="trophies">
+    <div class="trophies-head">
+      <h3 class="sub-head reveal">{ui.achievements}</h3>
+      <a class="btn reveal" href="#mundos">{ui.visitWorlds} <span class="arrow" aria-hidden="true">↓</span></a>
     </div>
+    <ul>
+      {achievements[lang].map((a, i) => (
+        <li class="trophy reveal" style={`--d:${80 + i * 70}ms`}>
+          <span class="cup" aria-hidden="true"><span class="star"></span></span>
+          <span class="trophy-text">
+            <strong>{a.title}</strong>
+            <span>{a.text}</span>
+          </span>
+          <span class="unlock" aria-hidden="true">{ui.unlocked}</span>
+        </li>
+      ))}
+    </ul>
   </div>
 </section>
 
@@ -96,26 +99,41 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
     white-space: nowrap;
   }
 
+  /* ---------- Who ---------- */
+
   .about-top {
-    align-items: start;
+    align-items: center;
     row-gap: 48px;
   }
 
   .about-intro {
     grid-column: 1 / span 7;
     display: grid;
-    gap: 36px;
+    gap: 28px;
   }
 
   .statement {
-    font-size: clamp(22px, 2.3vw, 34px);
-    line-height: 1.2;
+    font-size: clamp(24px, 2.4vw, 36px);
+    line-height: 1.18;
     letter-spacing: -0.01em;
-    max-width: 40ch;
+    max-width: 30ch;
   }
 
   .statement strong {
     font-weight: 800;
+  }
+
+  .about-copy {
+    display: grid;
+    gap: 14px;
+    max-width: 56ch;
+    font-size: 17px;
+  }
+
+  .about-lead {
+    font-size: clamp(19px, 1.5vw, 22px);
+    font-weight: 600;
+    line-height: 1.35;
   }
 
   .mini-head {
@@ -124,11 +142,265 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
     margin-bottom: 12px;
   }
 
-  /* Achievements: real milestones, each a trophy that unlocks as it scrolls into view. */
+  .perks ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .perks li {
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    background: var(--paper);
+    font-weight: 600;
+    font-size: 15px;
+    transition: transform 0.3s var(--ease-spring), background-color 0.2s, color 0.2s;
+  }
+
+  .perks li:hover {
+    transform: translateY(-3px) rotate(-2deg);
+    background: var(--red);
+    color: var(--on-dark);
+  }
+
+  /* The player card: José on sky blue, the complement of the peach ground. He watches the cursor. */
+  .card {
+    grid-column: 9 / span 4;
+    background: var(--paper);
+    border-radius: 32px;
+    overflow: hidden;
+    transform: rotate(1.5deg);
+    transition: transform 0.5s var(--ease-spring);
+    border: 6px solid var(--paper);
+  }
+
+  .card:hover {
+    transform: rotate(0deg) translateY(-6px);
+  }
+
+  .card-art {
+    position: relative;
+    background: var(--sky);
+    aspect-ratio: 420 / 400;
+    overflow: hidden;
+  }
+
+  /* The camera flash when he poses for the card photo. */
+  .card-art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .card-art.flash::after {
+    animation: flash-photo 0.6s ease-out;
+  }
+
+  @keyframes flash-photo {
+    0% { opacity: 0.85; }
+    100% { opacity: 0; }
+  }
+
+  .card-art :global(.card-puppet) {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    height: 104%;
+    width: auto;
+    max-width: none;
+    aspect-ratio: 420 / 520;
+    translate: -50% 0;
+  }
+
+  .card-plate {
+    margin: 0;
+    padding: 20px 22px 24px;
+    background: var(--paper);
+    display: grid;
+    gap: 9px;
+  }
+
+  .card-plate div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 15px;
+  }
+
+  .card-plate dt {
+    font-weight: 700;
+  }
+
+  .card-plate dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  .plate-name dd {
+    font-size: 22px;
+    font-weight: 900;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--red);
+  }
+
+  /* ---------- Why ---------- */
+
+  .sub-head {
+    font-size: clamp(28px, 2.6vw, 40px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+
+  .drives {
+    margin-top: clamp(64px, 8vw, 128px);
+  }
+
+  .drives ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gap);
+    margin-top: 24px;
+  }
+
+  .drive {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 24px 24px 28px;
+    border-radius: 28px;
+    background: var(--paper);
+    outline: none;
+    transition: transform 0.35s var(--ease-spring), background-color 0.3s, color 0.3s;
+  }
+
+  .drive:hover,
+  .drive:focus-visible,
+  .drive.is-on {
+    transform: translateY(-8px) rotate(-1deg);
+    background: var(--c);
+    color: var(--on-dark);
+  }
+
+  .drive:focus-visible {
+    box-shadow: 0 0 0 3px var(--ink);
+  }
+
+  .drive-art {
+    position: relative;
+    justify-self: start;
+    margin-bottom: 8px;
+  }
+
+  .drive-face {
+    position: relative;
+    display: block;
+    width: clamp(88px, 7.5vw, 112px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--c);
+    box-shadow: 0 0 0 4px var(--paper);
+  }
+
+  /* Props that come with each gesture: a speech bubble for the story, a book and "+1 level" for learning. */
+  .book {
+    position: absolute;
+    left: 50%;
+    bottom: -4%;
+    width: 78%;
+    translate: -50% 110%;
+    transition: translate 0.45s var(--ease-spring);
+  }
+
+  .drive.is-on .book {
+    translate: -50% 0;
+  }
+
+  .drive-prop {
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 2%;
+    padding: 7px 13px;
+    border-radius: 16px 16px 16px 4px;
+    background: var(--ink);
+    color: var(--on-dark);
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+    opacity: 0;
+    transform: scale(0.5) translateY(8px);
+    transform-origin: 0 100%;
+    transition: transform 0.4s var(--ease-spring), opacity 0.2s;
+    pointer-events: none;
+  }
+
+  .drive-story.is-on .drive-prop,
+  .drive-learn.is-aha .drive-prop {
+    opacity: 1;
+    transform: none;
+  }
+
+  .drive-learn .drive-prop {
+    background: #f2c14e;
+    color: var(--ink);
+  }
+
+  .drive.is-on .drive-prop {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .drive-learn.is-on .drive-prop {
+    background: #f2c14e;
+  }
+
+  .drive-face :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -26%;
+    width: 128%;
+    height: auto;
+    translate: -50% 0;
+  }
+
+  .drive strong {
+    font-size: clamp(24px, 2.2vw, 34px);
+    font-weight: 900;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .drive-text {
+    font-size: 17px;
+    max-width: 30ch;
+  }
+
+  /* ---------- Proof ---------- */
+
+  .trophies {
+    margin-top: clamp(56px, 7vw, 112px);
+  }
+
+  .trophies-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px 24px;
+  }
+
   .trophies ul {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 28px;
   }
 
   .trophy {
@@ -137,7 +409,7 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
     grid-template-columns: auto 1fr;
     gap: 14px;
     align-items: center;
-    padding: 14px 16px;
+    padding: 16px 18px;
     border-radius: 20px;
     background: var(--paper);
     transition: transform 0.3s var(--ease-spring);
@@ -151,8 +423,8 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
     position: relative;
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     background: #f2c14e;
     border: 3px solid #e2a53a;
@@ -215,256 +487,71 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
     100% { visibility: hidden; transform: translateY(-6px); }
   }
 
-  /* The player card: José on sky blue, the complement of the peach ground. */
-  .card {
-    grid-column: 9 / span 4;
-    background: var(--sky);
-    border-radius: 32px;
-    overflow: hidden;
-    transform: rotate(1.5deg);
-    transition: transform 0.5s var(--ease-spring);
-  }
-
-  .card:hover {
-    transform: rotate(0deg) translateY(-6px);
-  }
-
-  .card-art {
-    position: relative;
-    aspect-ratio: 420 / 430;
-    overflow: hidden;
-  }
-
-  .card-art :global(.card-puppet) {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    height: 98%;
-    width: auto;
-    max-width: none;
-    aspect-ratio: 420 / 520;
-    translate: -50% 0;
-  }
-
-
-  .emotes {
-    padding: 12px 14px 14px;
-    background: var(--ink);
-    color: var(--on-dark);
-  }
-
-  .emotes-head {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .emote-row {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 6px;
-  }
-
-  .emote {
-    position: relative;
-    display: grid;
-    justify-items: center;
-    gap: 4px;
-    padding: 6px 2px 8px;
-    border: 0;
-    border-radius: 14px;
-    background: #ffffff14;
-    color: inherit;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.1;
-    transition: transform 0.25s var(--ease-spring), background-color 0.2s;
-  }
-
-  .emote-face {
-    position: relative;
-    display: block;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: var(--peach);
-  }
-
-  .emote-face :global(.pp) {
-    position: absolute;
-    left: 50%;
-    bottom: -38%;
-    width: 150%;
-    height: auto;
-    translate: -50% 0;
-  }
-
-  .emote:hover {
-    transform: translateY(-3px);
-    background: #ffffff26;
-  }
-
-  .emote[aria-pressed='true'] {
-    background: var(--red);
-  }
-
-  .card-plate {
-    margin: 0;
-    padding: 18px 20px 22px;
-    background: var(--paper);
-    display: grid;
-    gap: 9px;
-  }
-
-  .card-plate div {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    font-size: 15px;
-  }
-
-  .card-plate dt {
-    font-weight: 700;
-  }
-
-  .card-plate dd {
-    margin: 0;
-    text-align: right;
-  }
-
-  .plate-name dd {
-    font-size: 22px;
-    font-weight: 900;
-    font-stretch: 125%;
-    text-transform: uppercase;
-    text-align: left;
-    color: var(--red);
-  }
-
-  .about-bottom {
-    margin-top: clamp(48px, 6vw, 96px);
-    align-items: center;
-    row-gap: 40px;
-  }
-
-  /* What drives me: three round portraits that come alive on hover or focus. */
-  .drives {
-    grid-column: 1 / span 7;
-  }
-
-  .drives ul {
-    display: grid;
-    gap: 16px;
-  }
-
-  .drive {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 20px;
-    align-items: center;
-    padding: 14px 24px 14px 14px;
-    border-radius: var(--radius);
-    background: var(--paper);
-    outline: none;
-    transition: transform 0.35s var(--ease-spring), background-color 0.3s, color 0.3s;
-  }
-
-  .drive:nth-child(2) {
-    margin-left: clamp(0px, 6vw, 90px);
-  }
-
-  .drive:nth-child(3) {
-    margin-left: clamp(0px, 12vw, 180px);
-  }
-
-  .drive:hover,
-  .drive:focus-visible {
-    transform: translateX(10px) rotate(-0.8deg);
-    background: var(--ink);
-    color: var(--on-dark);
-  }
-
-  .drive-face {
-    position: relative;
-    display: block;
-    width: clamp(84px, 8vw, 118px);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    overflow: hidden;
-  }
-
-  .drive:nth-child(1) .drive-face { background: var(--red); }
-  .drive:nth-child(2) .drive-face { background: var(--sky); }
-  .drive:nth-child(3) .drive-face { background: #2f6e4a; }
-
-  .drive-face :global(.pp) {
-    position: absolute;
-    left: 50%;
-    bottom: -26%;
-    width: 128%;
-    height: auto;
-    translate: -50% 0;
-  }
-
-  .drive-text {
-    display: grid;
-    gap: 4px;
-  }
-
-  .drive-text strong {
-    font-size: clamp(22px, 2vw, 30px);
-    font-weight: 900;
-    font-stretch: 125%;
-    text-transform: uppercase;
-    line-height: 1;
-  }
-
-  .drive-text span {
-    font-size: 17px;
-  }
-
-  .about-more {
-    grid-column: 8 / span 5;
-    display: grid;
-    gap: 20px;
-    justify-items: start;
-    max-width: 44ch;
-  }
-
-  .perks ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .perks li {
-    padding: 8px 14px;
-    border-radius: var(--radius);
-    background: var(--paper);
-    font-weight: 600;
-    font-size: 15px;
-    transition: transform 0.3s var(--ease-spring), background-color 0.2s, color 0.2s;
-  }
-
-  .perks li:hover {
-    transform: translateY(-3px) rotate(-2deg);
-    background: var(--red);
-    color: var(--on-dark);
-  }
+  /* ---------- Smaller screens ---------- */
 
   @media (max-width: 1100px) {
+    .about-intro {
+      grid-column: 1 / span 7;
+    }
+
+    .card {
+      grid-column: 8 / span 5;
+    }
+
     .trophies ul {
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 900px) {
+    .statement {
+      font-size: 24px;
+    }
+
+    .card-plate div {
+      font-size: 14px;
+    }
+
+    .drives ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .drive {
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 18px;
+      align-items: center;
+      padding: 16px 20px 16px 16px;
+    }
+
+    .drive-art {
+      grid-row: span 2;
+      margin: 0;
+    }
+
+    .drive-face {
+      width: 84px;
+    }
+
+    .drive-prop {
+      left: 62px;
+      top: -14px;
+      font-size: 13px;
+    }
+
+    .drive strong {
+      font-size: 24px;
+      align-self: end;
+    }
+
+    .drive-text {
+      align-self: start;
+      font-size: 16px;
+    }
+  }
+
+  @media (max-width: 700px) {
     .about-intro,
-    .card,
-    .drives,
-    .about-more {
+    .card {
       grid-column: 1 / -1;
     }
 
@@ -473,13 +560,11 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
       justify-self: center;
       transform: rotate(1deg);
     }
+  }
 
-    .statement {
-      font-size: 22px;
-    }
-
-    .drive:nth-child(n) {
-      margin-left: 0;
+  @media (max-width: 600px) {
+    .trophies ul {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>
@@ -487,30 +572,42 @@ const emotes = ['happy', 'think', 'idea', 'celebrate', 'sleep'] as const;
 <script>
   import { mountPuppet, type Anim } from '../scripts/puppet';
 
-  // Emote buttons drive the puppet; pressing the active one sends him back to idle.
-  const canvas = document.querySelector<SVGSVGElement>('svg.card-puppet');
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>('.emote')];
-  if (canvas && buttons.length) {
-    const p = mountPuppet(canvas, 'idle');
-    buttons.forEach((b) => b.addEventListener('click', () => {
-      const on = b.getAttribute('aria-pressed') === 'true';
-      buttons.forEach((o) => o.setAttribute('aria-pressed', 'false'));
-      if (on) return p.play('idle');
-      b.setAttribute('aria-pressed', 'true');
-      p.play(b.dataset.emote as Anim);
-    }));
+  // The card portrait watches the cursor and laughs when you come close.
+  const card = document.querySelector<HTMLElement>('.about .card');
+  const canvas = card?.querySelector<SVGSVGElement>('svg.card-puppet');
+  if (card && canvas) {
+    const p = mountPuppet(canvas, 'idle', { follow: true });
+    const art = card.querySelector<HTMLElement>('.card-art')!;
+    canvas.addEventListener('pp-beat', () => {
+      art.classList.remove('flash');
+      void art.offsetWidth;
+      art.classList.add('flash');
+    });
+    card.addEventListener('pointerenter', () => p.play('pose'));
+    card.addEventListener('pointerleave', () => p.play('idle'));
   }
 
-  // Each "what drives me" portrait comes alive while hovered or focused.
+  // Each "what drives me" portrait acts out its drive while hovered or focused
+  // (on touch screens, while the card sits in the middle of the screen).
+  const touch = matchMedia('(pointer: coarse)').matches;
   document.querySelectorAll<HTMLElement>('.drive').forEach((li) => {
     const svg = li.querySelector<SVGSVGElement>('svg.pp');
     if (!svg) return;
     const d = mountPuppet(svg, 'idle');
-    const on = () => d.play(li.dataset.anim as Anim);
-    const off = () => d.play('idle');
+    let aha = 0;
+    const on = () => { li.classList.add('is-on'); d.play(li.dataset.anim as Anim); };
+    const off = () => { li.classList.remove('is-on', 'is-aha'); d.play('idle'); };
+    svg.addEventListener('pp-beat', () => {
+      li.classList.add('is-aha');
+      clearTimeout(aha);
+      aha = window.setTimeout(() => li.classList.remove('is-aha'), 1300);
+    });
     li.addEventListener('mouseenter', on);
     li.addEventListener('focus', on);
     li.addEventListener('mouseleave', off);
     li.addEventListener('blur', off);
+    if (touch) {
+      new IntersectionObserver((e) => (e[0].isIntersecting ? on() : off()), { rootMargin: '-35% 0px -35% 0px' }).observe(li);
+    }
   });
 </script>

@@ -255,7 +255,7 @@ const subject = encodeURIComponent(ui.subject);
     const wake = () => {
       clearTimeout(t);
       section.classList.add('is-awake');
-      p.play('happy');
+      p.play('wake');
       note.textContent = note.dataset.awake || '';
     };
     const sleep = () => {

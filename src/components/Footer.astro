@@ -236,7 +236,7 @@ const year = new Date().getFullYear();
   const yes = footer?.querySelector<HTMLElement>('.cont-yes');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (footer && canvas && count && yes) {
-    const p = mountPuppet(canvas, 'happy');
+    const p = mountPuppet(canvas, 'wait');
     let n = 9;
     let timer = 0;
     const step = () => {
@@ -256,7 +256,7 @@ const year = new Date().getFullYear();
       n = 9;
       count.textContent = '9';
       footer.classList.remove('is-over');
-      p.play('happy');
+      p.play('wait');
       timer = window.setInterval(step, 1000);
     };
     const stop = () => { clearInterval(timer); timer = 0; };

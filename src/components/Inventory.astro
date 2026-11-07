@@ -9,7 +9,8 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 // Triadic accents for the slots (colour theory: three hues spaced evenly on the wheel).
 const triad = ['#b02e2e', '#3d6fd1', '#c98a1c'];
 // What José does when a tool from each group is equipped.
-const moves = ['happy', 'build', 'idea', 'think', 'build', 'think'];
+// games → play, 3D → build, design → idea, programming → code, web → think, AI → learn
+const moves = ['play', 'build', 'idea', 'code', 'think', 'learn'];
 const cefr = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const level = (v: string) => (v === 'Nativo' ? 6 : cefr.indexOf(v) + 1);
 const edu = experience[0].rows[0];
