@@ -1,4 +1,6 @@
 ---
+// Contact: a yellow spiral notebook. "Let's make something" gets circled with a pen as it comes into
+// view, and José naps on top of the page until someone goes for the email.
 import Puppet from './Puppet.astro';
 import SocialLinks from './SocialLinks.astro';
 import { getData, t, type Lang } from '../i18n';
@@ -6,150 +8,223 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const { site } = getData(lang);
 const ui = t(lang);
-const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const [user, domain] = site.email.split('@');
 const subject = encodeURIComponent(ui.subject);
 ---
-<section class="contact on-dark wrap" id="contacto" aria-labelledby="contact-title">
-  <div class="stars" aria-hidden="true">
-    {Array.from({ length: 14 }, (_, i) => (
-      <span style={`left:${(i * 37) % 97}%;top:${(i * 53) % 70 + 4}%;animation-delay:${-(i % 5) * 0.7}s`}></span>
-    ))}
-  </div>
+<section class="contact wrap" id="contacto" aria-labelledby="contact-title">
+  <div class="book">
+    <div class="rings" aria-hidden="true">{Array.from({ length: 9 }, () => <i></i>)}</div>
 
-  <div class="contact-top">
-    <h2 class="contact-title" id="contact-title">{ui.contactTitle}</h2>
-    <div class="scene">
-      <img class="contact-island" src={`${base}world/contacto.webp`} width="787" height="742" loading="lazy"
-        alt={ui.mailAlt} />
-      <div class="sleeper" aria-hidden="true">
-        <div class="moon"><Puppet pose="sleep" /></div>
-        <span class="zzz"><span>z</span><span>z</span><span>Z</span></span>
+    <div class="sleeper" aria-hidden="true">
+      <div class="nap"><Puppet pose="sleep" /></div>
+      <span class="zzz"><span>z</span><span>z</span><span>Z</span></span>
+    </div>
+
+    <div class="page">
+      <h2 class="title" id="contact-title">
+        <span class="title-in">{ui.letsMake}</span>
+        <svg class="circle" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M310 18 C 470 12 590 50 586 104 C 582 160 440 190 290 186 C 130 182 14 156 14 100 C 14 46 140 16 300 22 C 360 24 420 30 470 40" />
+        </svg>
+      </h2>
+      <p class="lead sub">{ui.contactTitle}</p>
+
+      <a class="email" href={`mailto:${site.email}?subject=${subject}`}>
+        <span class="email-in">{user}<span class="at">@</span><wbr />{domain}</span>
+      </a>
+      <p class="wake hand" aria-live="polite" data-asleep={ui.asleep} data-awake={ui.awake}>{ui.asleep}</p>
+
+      <div class="page-foot">
+        <p class="hand reply">{ui.reply}</p>
+        <SocialLinks lang={lang} />
       </div>
     </div>
-  </div>
-  <p class="wake small" aria-live="polite" data-asleep={ui.asleep} data-awake={ui.awake}>{ui.asleep}</p>
-
-  <a class="email display" href={`mailto:${site.email}?subject=${subject}`} data-fit>
-    <span class="email-in">{user}<span class="at">@</span><wbr />{domain}</span>
-  </a>
-
-  <div class="contact-foot">
-    <p class="small">{ui.reply}</p>
-    <SocialLinks lang={lang} />
   </div>
 </section>
 
 <style>
   .contact {
     position: relative;
-    min-height: 100svh;
-    background: var(--deep);
-    color: var(--on-dark);
+    padding-block: var(--section);
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 1fr auto auto;
-    padding-top: clamp(80px, 10vw, 140px);
-    padding-bottom: 32px;
-    overflow: hidden;
-    isolation: isolate;
+    place-items: center;
   }
 
-  .stars span {
-    position: absolute;
-    z-index: -1;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #f2c14e;
-    animation: twinkle 2.4s ease-in-out infinite;
-  }
-
-  @keyframes twinkle {
-    0%, 100% { transform: scale(0.5); opacity: 0.5; }
-    50% { transform: scale(1.2); opacity: 1; }
-  }
-
-  .contact-top {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--gap);
-    align-items: start;
-  }
-
-  .contact-title {
-    grid-column: 1 / span 6;
-    font-size: clamp(24px, 2.4vw, 36px);
-    font-weight: 700;
-    line-height: 1.2;
-    max-width: 22ch;
-  }
-
-  .scene {
-    grid-column: 8 / span 5;
+  .book {
     position: relative;
-    width: 100%;
-    max-width: 480px;
-    justify-self: end;
-    animation: float 6.5s ease-in-out infinite;
+    width: min(100%, 980px);
+    rotate: -1.2deg;
   }
 
-  .contact-island {
-    width: 100%;
-    height: auto;
+  .page {
+    position: relative;
+    padding: clamp(48px, 6vw, 88px) clamp(28px, 5vw, 80px) clamp(32px, 4vw, 56px) clamp(64px, 8vw, 120px);
+    background:
+      radial-gradient(70% 60% at 85% 10%, #ffffff40, #fff0 60%),
+      var(--yellow);
+    border-radius: 4px 14px 14px 4px;
+    box-shadow:
+      0 2px 0 #0000000f,
+      8px 10px 0 -2px #f0cf33,
+      14px 18px 0 -4px #e2bf22,
+      0 40px 60px -30px #2a2a2e80;
+    text-align: center;
   }
 
-  /* José sleeps inside the moon, above the island. */
+  /* The spiral binding down the left side. */
+  .rings {
+    position: absolute;
+    z-index: 2;
+    left: clamp(14px, 2.4vw, 30px);
+    top: 6%;
+    bottom: 6%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .rings i {
+    position: relative;
+    width: clamp(30px, 3.4vw, 44px);
+    height: 12px;
+    border-radius: 99px;
+    border: 3.5px solid #2a2a2e;
+    border-left-color: transparent;
+  }
+
+  .rings i::before {
+    content: '';
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    translate: 0 -50%;
+    border-radius: 50%;
+    background: #c9a91a;
+  }
+
+  .title {
+    position: relative;
+    display: inline-block;
+    padding: 0.18em 0.6em 0.26em;
+    font-family: var(--hand);
+    font-weight: 700;
+    font-size: clamp(54px, 8vw, 128px);
+    line-height: 0.9;
+  }
+
+  .circle {
+    position: absolute;
+    inset: -6% -4%;
+    width: 108%;
+    height: 112%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .circle path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1600;
+    stroke-dashoffset: 0;
+  }
+
+  :global(.js) .circle path { stroke-dashoffset: 1600; }
+  :global(.js) .contact.is-in .circle path { stroke-dashoffset: 0; transition: stroke-dashoffset 1.2s 0.2s var(--ease-out); }
+
+  .sub {
+    max-width: 30ch;
+    margin: 18px auto 0;
+    font-weight: 600;
+  }
+
+  .email {
+    display: inline-block;
+    margin-top: clamp(28px, 4vw, 48px);
+    font-size: clamp(22px, 3.6vw, 52px);
+    font-weight: 900;
+    font-stretch: 125%;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    background: linear-gradient(var(--ink), var(--ink)) 0 100% / 100% 4px no-repeat;
+    padding-bottom: 6px;
+    transition: background-size 0.3s var(--ease-out), color 0.2s;
+  }
+
+  .email:hover {
+    color: var(--red);
+    background-image: linear-gradient(var(--red), var(--red));
+    background-size: 100% 8px;
+  }
+
+  .at { color: var(--red); }
+
+  .wake {
+    margin-top: 12px;
+    font-size: 24px;
+  }
+
+  .page-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: clamp(36px, 5vw, 64px);
+    text-align: left;
+  }
+
+  .reply { font-size: 24px; }
+
+  /* José naps on the top edge of the notebook. */
   .sleeper {
     position: absolute;
-    left: -8%;
-    top: -14%;
-    width: 36%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    overflow: visible;
+    z-index: 3;
+    right: 8%;
+    top: 0;
+    width: clamp(110px, 14vw, 170px);
+    aspect-ratio: 920 / 1140;
+    translate: 0 -62%;
+    rotate: 4deg;
+    cursor: pointer;
   }
 
-  .moon {
+  .nap {
     position: absolute;
     inset: 0;
-    border-radius: 50%;
-    overflow: hidden;
-    background: #f2c14e;
-    transition: background-color 0.5s;
+    clip-path: inset(-40% -40% 34% -40%);
   }
 
-  .contact.is-awake .moon {
-    background: var(--peach);
-  }
-
-  .sleeper :global(.pp) {
-    position: absolute;
-    left: 50%;
-    bottom: -24%;
-    width: 124%;
-    height: auto;
-    aspect-ratio: 420 / 520;
-    translate: -50% 0;
+  .nap :global(.pp) {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
 
   .zzz {
     position: absolute;
-    right: -22%;
-    top: -6%;
-    font-weight: 900;
-    color: #f2c14e;
+    right: -14%;
+    top: 0;
+    font-family: var(--hand);
+    font-weight: 700;
+    color: var(--ink);
     transition: opacity 0.3s;
   }
 
   .zzz span {
     display: inline-block;
-    font-size: 18px;
+    font-size: 24px;
     animation: zzz 2.4s ease-in-out infinite;
   }
 
-  .zzz span:nth-child(2) { font-size: 24px; animation-delay: 0.4s; }
-  .zzz span:nth-child(3) { font-size: 32px; animation-delay: 0.8s; }
+  .zzz span:nth-child(2) { font-size: 30px; animation-delay: 0.4s; }
+  .zzz span:nth-child(3) { font-size: 40px; animation-delay: 0.8s; }
 
   @keyframes zzz {
     0% { transform: translateY(8px); opacity: 0; }
@@ -157,94 +232,24 @@ const subject = encodeURIComponent(ui.subject);
     100% { transform: translateY(-22px); opacity: 0; }
   }
 
-  .contact.is-awake .zzz {
-    opacity: 0;
-  }
+  .contact.is-awake .zzz { opacity: 0; }
 
-  .wake {
-    margin-top: 16px;
-    color: #c9cfee;
-  }
-
-  .email {
-    display: block;
-    margin-top: 32px;
-    font-size: clamp(36px, 7.4vw, 140px);
-    font-stretch: 125%;
-    text-decoration: none;
-    line-height: 1;
-    white-space: nowrap;
-    transition: color 0.25s;
-  }
-
-  .email:hover {
-    color: #f2c14e;
-  }
-
-  .email-in {
-    display: inline-block;
-    transition: transform 0.4s var(--ease-spring);
-  }
-
-  .email:hover .email-in {
-    transform: translateX(10px);
-  }
-
-  .contact-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: 16px;
-    margin-top: 12vh;
-    font-size: 15px;
-  }
-
-  @media (max-width: 900px) {
-    .contact {
-      min-height: 0;
-      grid-template-rows: auto;
-    }
-
-    .contact-foot {
-      margin-top: 64px;
-    }
-  }
-
-  @media (max-width: 760px) {
-    .contact-title {
-      grid-column: 1 / -1;
-      font-size: 22px;
-    }
-
-    .scene {
-      grid-column: 1 / -1;
-      max-width: 320px;
-      margin-top: 72px;
-      justify-self: start;
-    }
-
-    .sleeper {
-      left: 0;
-      top: -20%;
-    }
-
-    .email {
-      white-space: normal;
-      font-size: 6.4vw;
-    }
-
-    .contact-foot {
-      flex-direction: column;
-      align-items: start;
-      margin-top: 48px;
-    }
+  @media (max-width: 700px) {
+    .book { rotate: 0deg; }
+    .page { padding: 64px 20px 32px 58px; }
+    .rings { left: 10px; }
+    .rings i { width: 30px; }
+    .title { font-size: 15vw; }
+    .email { font-size: 6.2vw; }
+    .page-foot { flex-direction: column; align-items: flex-start; }
+    .sleeper { width: 110px; right: 6%; }
   }
 </style>
 
 <script>
   import { mountPuppet } from '../scripts/puppet';
 
-  // José sleeps until someone goes for the email, then wakes up with the controller.
+  // José sleeps until someone goes for the email, then wakes up.
   const section = document.querySelector<HTMLElement>('.contact');
   const canvas = section?.querySelector<SVGSVGElement>('.sleeper svg.pp');
   const email = section?.querySelector<HTMLElement>('.email');
@@ -269,6 +274,16 @@ const subject = encodeURIComponent(ui.subject);
     email.addEventListener('focus', wake);
     email.addEventListener('pointerleave', sleep);
     email.addEventListener('blur', sleep);
-    section.querySelector('.scene')?.addEventListener('click', () => (section.classList.contains('is-awake') ? sleep() : wake()));
+    section.querySelector('.sleeper')?.addEventListener('click', () => (section.classList.contains('is-awake') ? sleep() : wake()));
+    // The pen circles the title when the notebook comes into view.
+    new IntersectionObserver(
+      (e, o) => {
+        if (e[0].isIntersecting) {
+          section.classList.add('is-in');
+          o.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    ).observe(section);
   }
 </script>

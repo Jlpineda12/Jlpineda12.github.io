@@ -65,7 +65,7 @@ const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
   <div class="trophies">
     <div class="trophies-head">
       <h3 class="sub-head reveal">{ui.achievements}</h3>
-      <a class="btn reveal" href="#mundos">{ui.visitWorlds} <span class="arrow" aria-hidden="true">↓</span></a>
+      <a class="btn reveal" href="#proyectos">{ui.visitWorlds} <span class="arrow" aria-hidden="true">↓</span></a>
     </div>
     <ul>
       {achievements[lang].map((a, i) => (
@@ -85,8 +85,7 @@ const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
 <style>
   .about {
     position: relative;
-    background: var(--peach);
-    padding-top: clamp(40px, 5vw, 80px);
+    padding-top: var(--section);
     padding-bottom: var(--section);
   }
 
@@ -149,8 +148,9 @@ const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
   }
 
   .perks li {
-    padding: 8px 14px;
+    padding: 7px 14px;
     border-radius: var(--radius);
+    border: 2px solid var(--ink);
     background: var(--paper);
     font-weight: 600;
     font-size: 15px;
@@ -167,11 +167,12 @@ const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
   .card {
     grid-column: 9 / span 4;
     background: var(--paper);
-    border-radius: 32px;
+    border-radius: 24px;
     overflow: hidden;
     transform: rotate(1.5deg);
     transition: transform 0.5s var(--ease-spring);
-    border: 6px solid var(--paper);
+    border: 3px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
   }
 
   .card:hover {
@@ -273,7 +274,9 @@ const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
     align-content: start;
     gap: 10px;
     padding: 24px 24px 28px;
-    border-radius: 28px;
+    border-radius: 22px;
+    border: 2.5px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
     background: var(--paper);
     outline: none;
     transition: transform 0.35s var(--ease-spring), background-color 0.3s, color 0.3s;
@@ -288,7 +291,7 @@ const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
   }
 
   .drive:focus-visible {
-    box-shadow: 0 0 0 3px var(--ink);
+    box-shadow: 5px 5px 0 var(--ink), 0 0 0 5px var(--yellow);
   }
 
   .drive-art {
@@ -410,7 +413,9 @@ const driveColor = ['var(--red)', 'var(--sky)', '#2f6e4a'];
     gap: 14px;
     align-items: center;
     padding: 16px 18px;
-    border-radius: 20px;
+    border-radius: 16px;
+    border: 2px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
     background: var(--paper);
     transition: transform 0.3s var(--ease-spring);
   }

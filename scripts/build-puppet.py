@@ -17,8 +17,12 @@ num = re.compile(r'-?\d+\.\d+')
 
 
 def compact(d):
-    # One decimal is plenty at this scale and shrinks the paths to about a third.
-    return num.sub(lambda m: f'{float(m.group()):.1f}'.rstrip('0').rstrip('.'), d)
+    # Whole numbers are plenty: the canvas is 1668 units wide and José is never drawn bigger than
+    # about 500px, so rounding moves a point by less than half a pixel and halves the page weight.
+    d = num.sub(lambda m: str(round(float(m.group()))), d)
+    d = re.sub(r'(?<![\d.])-0(?![\d.])', '0', d)
+    # Drop points repeated back to back ("C1 2 1 2 1 2" style no-ops are kept; only spacing is cleaned).
+    return re.sub(r'\s+', ' ', d).strip()
 
 
 def part(file, pid):

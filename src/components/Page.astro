@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Hero from './Hero.astro';
 import Divider from './Divider.astro';
 import About from './About.astro';
-import Worlds from './Worlds.astro';
+import Console from './Console.astro';
 import Process from './Process.astro';
 import Inventory from './Inventory.astro';
 import Contact from './Contact.astro';
@@ -18,15 +18,13 @@ const { lang } = Astro.props;
   <PuppetSprite />
   <Hero lang={lang} />
   <main id="contenido">
-    <Divider shape="clouds" color="var(--peach)" bg="transparent" overlap />
     <About lang={lang} />
-    <Worlds lang={lang} />
+    <Console lang={lang} />
+    <Divider shape="clouds" color="var(--sky-light)" bg="transparent" />
     <Process lang={lang} />
-    <Divider shape="hills" color="var(--paper)" bg="var(--sky-light)" />
+    <Divider shape="hills" color="var(--ground)" bg="var(--sky-light)" />
     <Inventory lang={lang} />
-    <Divider shape="night" color="var(--deep)" bg="var(--paper)" />
     <Contact lang={lang} />
-    <Divider shape="wave" color="var(--ink)" bg="var(--deep)" />
   </main>
   <Footer lang={lang} />
   <Journey lang={lang} />
@@ -34,5 +32,7 @@ const { lang } = Astro.props;
 
 <script>
   import { initMotion } from '../scripts/motion';
+  import { initRewind } from '../scripts/rewind';
   initMotion();
+  initRewind();
 </script>

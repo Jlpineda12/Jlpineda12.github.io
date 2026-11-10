@@ -16,6 +16,13 @@ export const enSite = {
 };
 
 export const enProjects: Record<string, { name?: string; kind: string; summary: string; linkLabel: string; status?: string; stack?: string[] }> = {
+  'digital-human': {
+    kind: 'AI digital human in pixel art',
+    summary:
+      'My digital twin: a chatbot with a face. I modelled it in Blender with code from my own drawing, turned it into pixel art with my Pixel Sprite Forge addon and animate it live with Three.js. It reacts to every question, thinks, hesitates when it doesn’t know and answers about me in an 8-bit voice that moves its mouth syllable by syllable.',
+    stack: ['Three.js', 'Blender', 'AI (Claude)', 'Web Audio', 'Lip-sync'],
+    linkLabel: 'Talk to him',
+  },
   'arcade-station': {
     kind: 'Retro video games',
     summary:

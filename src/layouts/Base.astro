@@ -22,7 +22,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <link rel="alternate" hreflang="en" href={alt('en')} />
     <link rel="alternate" hreflang="x-default" href={alt('es')} />
     <link rel="icon" type="image/png" href={`${base}favicon.png`} />
-    <meta name="theme-color" content="#7c90da" />
+    <meta name="theme-color" content="#f3f2ee" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={lang === 'es' ? 'es_CO' : 'en_US'} />
     <meta property="og:title" content={site.title} />
@@ -32,7 +32,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:wdth,wght@75..150,300..900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600..700&family=TikTok+Sans:wdth,wght@100..150,400..900&display=swap" rel="stylesheet" />
     <script is:inline>document.documentElement.classList.add('js');</script>
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
@@ -45,7 +45,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
       sameAs: site.socials.map((s) => s.url),
     })} />
   </head>
-  <body data-travelling={ui.travelling}>
+  <body data-travelling={ui.travelling} data-rewind-label={ui.rewinding}>
     <a class="skip" href="#contenido">{ui.skip}</a>
     <slot />
   </body>

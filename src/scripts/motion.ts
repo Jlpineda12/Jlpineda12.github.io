@@ -23,15 +23,6 @@ function fitText() {
   });
 }
 
-// Masked headline: each line of the name rises from behind its own baseline.
-function introName() {
-  const lines = document.querySelectorAll<HTMLElement>('.hero-name .line-in');
-  const foot = document.querySelector('.hero-foot');
-  if (reduced) return;
-  gsap.from(lines, { yPercent: 108, duration: 0.9, ease: 'power4.out', stagger: 0.11, delay: 0.1 });
-  if (foot) gsap.from(foot.children, { y: 20, opacity: 0, duration: 0.7, ease: 'power3.out', stagger: 0.08, delay: 0.55 });
-}
-
 // Section entrances: heading, text, picture, staggered by their --d delay.
 function reveals() {
   const items = document.querySelectorAll<HTMLElement>('.reveal');
@@ -127,7 +118,6 @@ export function initMotion() {
     ScrollTrigger.refresh();
   });
   window.addEventListener('resize', fitText);
-  introName();
   reveals();
   parallax();
 }

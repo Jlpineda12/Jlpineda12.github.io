@@ -1,24 +1,31 @@
 ---
+// The first screen: José's Creative ID hangs from a red lanyard (grab it, swing it, let go). Under
+// it, his name and role play as a looping motion graphic made in Blender.
 import Puppet from './Puppet.astro';
-import { getData, homeUrl, t, type Lang } from '../i18n';
+import { getData, t, type Lang } from '../i18n';
 import LangSwitch from './LangSwitch.astro';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const { site } = getData(lang);
 const ui = t(lang);
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const clouds = [
-  { x: '6%', y: '58%', w: 'clamp(140px, 16vw, 260px)', d: '46s', drift: '60px' },
-  { x: '44%', y: '12%', w: 'clamp(110px, 11vw, 190px)', d: '38s', drift: '-50px' },
-  { x: '30%', y: '80%', w: 'clamp(90px, 9vw, 150px)', d: '30s', drift: '40px' },
+// His pastel stars from the old portfolio, big and cropped, drifting behind everything.
+const stars = [
+  { x: -6, y: 10, s: 30, c: '#f4a7b9', r: -14, z: 1.4 },
+  { x: 74, y: -12, s: 24, c: '#4cc3d9', r: 10, z: 0.8 },
+  { x: 80, y: 50, s: 27, c: '#e2b84a', r: -22, z: 1.2 },
+  { x: 4, y: 62, s: 19, c: '#a8d8b9', r: 16, z: 0.6 },
+  { x: 44, y: -16, s: 13, c: '#a8d8b9', r: 32, z: 1 },
 ];
 ---
 <section class="hero" id="inicio" aria-labelledby="hero-title">
-  {clouds.map((c) => (
-    <img class="cloud" src={`${base}world/nube.webp`} alt="" width="390" height="165" aria-hidden="true"
-      style={`left:${c.x};top:${c.y};width:${c.w};animation-duration:${c.d};--drift:${c.drift}`} />
-  ))}
-
+  <div class="stars" aria-hidden="true">
+    {stars.map((st) => (
+      <svg viewBox="0 0 100 100" style={`left:${st.x}%;top:${st.y}%;width:${st.s}vw;--r:${st.r}deg;--z:${st.z}`}>
+        <path d="M50 4 L61.5 37.5 L97 38 L68.5 59.5 L79 94 L50 73.5 L21 94 L31.5 59.5 L3 38 L38.5 37.5 Z" fill={st.c} stroke={st.c} stroke-width="6" stroke-linejoin="round" />
+      </svg>
+    ))}
+  </div>
 
   <header class="nav wrap">
     <a class="id" href="#inicio" aria-label={`José Luis Pineda, ${ui.home}`}>
@@ -33,114 +40,148 @@ const clouds = [
     </a>
     <nav aria-label={ui.chapters}>
       <ul>
-        <li class="hide-sm"><a href="#quien-soy">{ui.navAbout}</a></li>
-        <li class="hide-sm"><a href="#mundos">{ui.navWorlds}</a></li>
-        <li class="hide-sm"><a href="#como-trabajo">{ui.navProcess}</a></li>
+        <li class="hide-sm"><a class="sketch-pill" href="#quien-soy">{ui.navAbout}</a></li>
+        <li class="hide-sm"><a class="sketch-pill" href="#proyectos">{ui.navWorlds}</a></li>
+        <li class="hide-md"><a class="sketch-pill" href="#como-trabajo">{ui.navProcess}</a></li>
         <li class="li-lang"><LangSwitch lang={lang} /></li>
         <li><a class="nav-cta" href="#contacto">{ui.writeMe}</a></li>
       </ul>
     </nav>
   </header>
 
-  <div class="hero-body wrap">
-    <h1 class="hero-name display" id="hero-title">
-      <span class="line"><span class="line-in">{site.name.first}</span></span>
-      <span class="line l2"><span class="line-in">{site.name.last}</span></span>
-    </h1>
-    <div class="hero-foot">
-      <p class="lead hero-tag"><span>{site.tagline}</span></p>
-      <a class="btn" href="#quien-soy">{ui.start} <span class="arrow" aria-hidden="true">↓</span></a>
+  <div class="lanyard" data-lanyard>
+    <div class="swing">
+      <div class="strap" aria-hidden="true"></div>
+      <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
+        <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
+        <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
+        <path d="M22 40 L18 70 Q16 84 30 86 Q44 84 42 70 L38 40" fill="none" stroke="#c9cdd5" stroke-width="7" stroke-linecap="round" />
+        <path d="M30 56 L30 74" stroke="#8b919d" stroke-width="5" stroke-linecap="round" />
+      </svg>
+      <div class="badge">
+        <div class="badge-card cid">
+          <img src={`${base}img/creative-id.webp`} width="889" height="575" fetchpriority="high" alt={ui.cidAlt} draggable="false" />
+          <span class="slot" aria-hidden="true"></span>
+          <p class="bubble tape" data-lines={JSON.stringify(ui.bubbles)} data-loop-line={ui.loopLine}><span>{ui.bubbles[0]}</span></p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="hero-char">
-    <p class="bubble" aria-live="polite" data-lines={JSON.stringify(ui.bubbles)}><span>{ui.bubbles[0]}</span></p>
-    <button class="character" type="button" aria-label={ui.charLabel}>
-      <Puppet pose="happy" label={ui.charAlt} />
-    </button>
+  <div class="hero-body wrap">
+    <h1 class="hero-title" id="hero-title">
+      <span class="sr-only">{site.name.first} {site.name.last}, {site.role}. {ui.heroTag}</span>
+      <video class="title-mg" autoplay muted loop playsinline preload="auto" aria-hidden="true"
+        poster={`${base}video/title-${lang}.jpg`} width="1440" height="720">
+        <source src={`${base}video/title-${lang}.mp4`} type="video/mp4" />
+      </video>
+    </h1>
+  </div>
+
+  <div class="hero-bottom wrap">
+    <a class="hand selected" href="#proyectos">{ui.selected}</a>
+    <p class="note">
+      <svg viewBox="0 0 70 40"><path d="M66 8 C46 6 26 14 10 32 M10 32 L11 18 M10 32 L24 30" /></svg>
+      <span>{ui.selectedNote}</span>
+    </p>
   </div>
 </section>
 
 <style>
   .hero {
+    --strap: clamp(84px, 13svh, 150px);
+    --badge-w: min(34vw, 500px, 54svh);
+    --badge-h: calc(var(--badge-w) / 1.546);
     position: relative;
     min-height: 100svh;
-    background: var(--sky);
     color: var(--ink);
     overflow: hidden;
     isolation: isolate;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
+    /* Its own paper, so the title video can multiply onto it. */
+    background-color: var(--ground);
+    background-image: radial-gradient(circle at 1px 1px, #2a2a2e24 1px, transparent 1.4px);
+    background-size: var(--grid) var(--grid);
+    display: flex;
+    flex-direction: column;
   }
 
-  .cloud {
+  /* Pastel stars (his old portfolio's motif), drifting a little with the pointer. */
+  .stars {
     position: absolute;
     z-index: -1;
-    height: auto;
-    animation: drift 40s ease-in-out infinite;
+    inset: 0;
     pointer-events: none;
   }
 
+  .stars svg {
+    position: absolute;
+    max-width: none;
+    height: auto;
+    rotate: var(--r);
+    translate: calc(var(--px, 0) * var(--z) * 18px) calc(var(--py, 0) * var(--z) * 14px);
+    animation: star-turn 28s ease-in-out infinite alternate;
+    transition: translate 0.6s var(--ease-out);
+  }
+
+  .stars svg:nth-child(2n) { animation-duration: 36s; animation-direction: alternate-reverse; }
+
+  @keyframes star-turn {
+    to { rotate: calc(var(--r) + 14deg); }
+  }
+
+  /* ---------- Navigation ---------- */
   .nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 22px;
-    font-size: 15px;
-    font-weight: 600;
+    gap: 12px;
+    padding-top: 18px;
     position: relative;
     z-index: 3;
   }
 
   .nav ul {
     display: flex;
-    gap: clamp(16px, 2.4vw, 36px);
+    gap: clamp(8px, 1.4vw, 20px);
     align-items: center;
   }
 
-  .nav a {
-    position: relative;
-    display: inline-block;
-    text-decoration: none;
-    padding: 10px 0;
-  }
-
-  .nav ul a::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 6px;
-    height: 2px;
-    background: currentColor;
-    transform: scaleX(0);
-    transform-origin: 0 50%;
-    transition: transform 0.3s var(--ease-out);
-  }
-
-  .nav ul a:hover::after,
-  .nav ul a:focus-visible::after {
-    transform: scaleX(1);
-  }
-
-  /* The header's ID card: José's face, his name and whether he is available. */
+  /* José's tag: his face and name in a box drawn with a pen. */
   .id {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 0;
+    gap: 10px;
+    padding: 6px 14px 6px 6px;
+    text-decoration: none;
+    isolation: isolate;
+  }
+
+  .id::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 10px 14px 9px 12px;
+    box-shadow: 3px 3px 0 var(--ink);
+    rotate: -1.2deg;
+    transition: rotate 0.3s var(--ease-spring);
+  }
+
+  .id:hover::before {
+    rotate: 1deg;
   }
 
   .id-face {
     display: block;
     position: relative;
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     overflow: hidden;
-    background: var(--paper);
-    border: 3px solid var(--ink);
+    background: var(--sky);
     flex: none;
     transition: transform 0.4s var(--ease-spring);
   }
@@ -156,31 +197,20 @@ const clouds = [
     transition: opacity 0.15s;
   }
 
-  .id-face :global(.f-joy) {
-    opacity: 0;
-  }
-
-  .id:hover .id-face {
-    transform: rotate(-8deg) scale(1.08);
-  }
-
-  .id:hover .id-face :global(.f-joy) {
-    opacity: 1;
-  }
-
-  .id:hover .id-face :global(.f-calm) {
-    opacity: 0;
-  }
+  .id-face :global(.f-joy) { opacity: 0; }
+  .id:hover .id-face { transform: rotate(-8deg) scale(1.08); }
+  .id:hover .id-face :global(.f-joy) { opacity: 1; }
+  .id:hover .id-face :global(.f-calm) { opacity: 0; }
 
   .id-text {
     display: grid;
-    line-height: 1.15;
+    line-height: 1.1;
   }
 
   .id-name {
     font-weight: 900;
     font-stretch: 125%;
-    font-size: 18px;
+    font-size: 16px;
     text-transform: uppercase;
   }
 
@@ -188,55 +218,164 @@ const clouds = [
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 14px;
+    font-family: var(--hand);
+    font-size: 18px;
     font-weight: 600;
   }
 
   .dot {
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #3fbf6f;
-    box-shadow: 0 0 0 0 #3fbf6f;
     animation: live 2s ease-out infinite;
   }
 
   @keyframes live {
     0% { box-shadow: 0 0 0 0 #3fbf6faa; }
-    100% { box-shadow: 0 0 0 10px #3fbf6f00; }
+    100% { box-shadow: 0 0 0 9px #3fbf6f00; }
+  }
+
+  .nav :global(.lang-switch) {
+    box-shadow: inset 0 0 0 2px var(--ink);
   }
 
   .nav-cta {
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
     min-height: 44px;
-    padding: 0 18px !important;
+    padding: 0 18px;
     border-radius: var(--radius);
     background: var(--ink);
     color: var(--paper);
     font-weight: 800;
-    transition: transform 0.25s var(--ease-spring), background-color 0.2s !important;
+    font-size: 15px;
+    text-decoration: none;
+    box-shadow: 3px 3px 0 var(--red);
+    transition: transform 0.25s var(--ease-spring), box-shadow 0.25s var(--ease-spring);
   }
 
   .nav-cta:hover {
-    transform: translateY(-2px);
-    background: var(--red);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--red);
   }
 
-  .nav ul li:last-child a::after,
-  .li-lang a::after {
-    display: none;
+  /* ---------- The lanyard and badge ---------- */
+  .lanyard {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    top: 0;
+    width: 0;
+    height: 0;
   }
 
+  .swing {
+    --len: var(--strap);
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  .strap {
+    position: absolute;
+    left: -15px;
+    top: -20px;
+    width: 30px;
+    height: calc(var(--len) + 24px);
+    background:
+      linear-gradient(90deg, #00000026 0 3px, #0000 3px calc(100% - 3px), #00000026 0),
+      repeating-linear-gradient(0deg, #ffffff12 0 2px, #0000 2px 5px),
+      var(--red);
+  }
+
+  .clip {
+    position: absolute;
+    left: -21px;
+    top: calc(var(--len) - 6px);
+    width: 42px;
+    max-width: none;
+    height: auto;
+    overflow: visible;
+    filter: drop-shadow(0 3px 2px #0000002e);
+  }
+
+  .badge {
+    position: absolute;
+    left: calc(var(--badge-w) / -2);
+    top: calc(var(--len) + 50px);
+    width: var(--badge-w);
+    height: var(--badge-h);
+    transform-origin: 50% -30px;
+    perspective: 900px;
+    touch-action: pan-y;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .badge.is-grabbed {
+    cursor: grabbing;
+  }
+
+  /* ---------- The Creative ID: José's own card from his old portfolio ---------- */
+  .cid {
+    position: absolute;
+    inset: 0;
+    container-type: inline-size;
+    border-radius: 5cqw;
+    box-shadow:
+      0 2px 0 #0000000d,
+      0 30px 50px -18px #2a2a2e66,
+      0 70px 90px -40px #2a2a2e40;
+    transform-style: preserve-3d;
+  }
+
+  .cid img {
+    width: 100%;
+    height: 100%;
+    border-radius: 5cqw;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  /* A punched slot for the clip. */
+  .slot {
+    position: absolute;
+    left: 50%;
+    top: 1.6cqw;
+    width: 15cqw;
+    height: 2.4cqw;
+    translate: -50% 0;
+    border-radius: 99px;
+    background: #2a2a2e;
+    box-shadow: 0 1px 0 #fff8, inset 0 2px 3px #000;
+  }
+
+  /* The greeting is written on a piece of yellow tape stuck across the card's corner. */
+  .bubble {
+    position: absolute;
+    z-index: 3;
+    left: -6cqw;
+    top: -4cqw;
+    max-width: 60cqw;
+    rotate: -6deg;
+    font-size: clamp(18px, 4cqw, 26px);
+    transform-origin: 10% 50%;
+    transition: transform 0.4s var(--ease-spring), opacity 0.25s;
+    pointer-events: none;
+  }
+
+  :global(.js) .bubble { opacity: 0; transform: scale(0.5); }
+  :global(.js) .bubble.is-on { opacity: 1; transform: none; }
+
+  /* ---------- Name and tagline ---------- */
   .hero-body {
     position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding-top: 12vh;
-    padding-bottom: 40px;
+    margin-top: calc(var(--strap) + 50px + var(--badge-h) - 72px);
+    text-align: center;
     pointer-events: none;
   }
 
@@ -244,287 +383,138 @@ const clouds = [
     pointer-events: auto;
   }
 
-  .hero-name {
-    font-size: clamp(64px, 9.6vw, 190px);
-    max-width: 66vw;
+  /* The name and role: a motion graphic made in Blender (3D, 2D, stop motion, looping). It is
+     rendered on white and multiplied onto the page, so the white disappears and the shadows stay. */
+  .hero-title {
+    margin: 0;
+    line-height: 0;
   }
 
-  .line {
-    display: block;
-    overflow: hidden;
-    padding: 0.14em 0 0.06em;
-    margin: -0.14em 0 -0.06em;
-    white-space: nowrap;
+  .title-mg {
+    width: auto;
+    height: clamp(170px, 31svh, 330px);
+    max-width: 100%;
+    aspect-ratio: 2 / 1;
+    margin-inline: auto;
+    object-fit: contain;
+    mix-blend-mode: multiply;
   }
 
-  .line-in {
-    display: inline-block;
-  }
 
-  .line:first-child {
-    color: var(--paper);
-  }
 
-  /* ---------- The name's materials (cycled by name-skins.ts) ---------- */
-
-  .line {
+  /* ---------- Bottom row ---------- */
+  .hero-bottom {
     position: relative;
-  }
-
-  /* After the intro the lines stop clipping, so shadows and extrusions can show. */
-  .hero-name.is-ready .line {
-    overflow: visible;
-  }
-
-  .hero-name.swap .line-in,
-  .hero-name.swap :global(.name-px) {
-    animation: skin-swap 0.42s var(--ease-spring);
-  }
-
-  @keyframes skin-swap {
-    0% { scale: 1.06 0.86; }
-    100% { scale: 1 1; }
-  }
-
-  .line-in {
-    transform-origin: 0 80%;
-  }
-
-  :global(.name-px) {
-    position: absolute;
-    left: 0;
-    top: 0;
-    image-rendering: pixelated;
-    pointer-events: none;
-    display: none;
-    transform-origin: 0 80%;
-  }
-
-  .hero-name[data-skin='pixel'] :global(.name-px) {
-    display: block;
-  }
-
-  .hero-name[data-skin='pixel'] .line-in {
-    color: transparent;
-  }
-
-  /* Plasticine: soft clay colours, a fingerprinted surface and a squashy extrusion. */
-  .hero-name[data-skin='clay'] .line-in {
-    color: transparent;
-    background:
-      radial-gradient(120% 70% at 30% 18%, #ffffff7a, #ffffff00 55%),
-      linear-gradient(#ffffff00 55%, #00000030),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
-      var(--clay);
-    -webkit-background-clip: text;
-    background-clip: text;
-    filter:
-      drop-shadow(0 3px 0 var(--clay-dark))
-      drop-shadow(0 3px 0 var(--clay-dark))
-      drop-shadow(0 5px 6px #0000004d);
-    animation: clay-wobble 1.6s ease-in-out infinite;
-  }
-
-  .hero-name[data-skin='clay'] .line:first-child .line-in {
-    --clay: #f08a4b;
-    --clay-dark: #b8562a;
-  }
-
-  .hero-name[data-skin='clay'] .line:nth-child(2) .line-in {
-    --clay: #3fa66b;
-    --clay-dark: #23704a;
-  }
-
-  @keyframes clay-wobble {
-    0%, 100% { scale: 1 1; }
-    50% { scale: 1.012 0.985; }
-  }
-
-  /* Wireframe: outlined letters with a mesh inside and a depth copy behind, like a 3D viewport. */
-  .hero-name[data-skin='wire'] .line-in {
-    color: transparent;
-    -webkit-text-stroke: max(2px, 0.018em) var(--wire);
-    background: repeating-linear-gradient(90deg, var(--wire-mesh) 0 1px, #0000 1px 0.16em),
-      repeating-linear-gradient(0deg, var(--wire-mesh) 0 1px, #0000 1px 0.16em);
-    -webkit-background-clip: text;
-    background-clip: text;
-    filter: drop-shadow(0.05em 0.05em 0 var(--wire-depth));
-  }
-
-  .hero-name[data-skin='wire'] .line:first-child .line-in {
-    --wire: #ffffff;
-    --wire-mesh: #ffffff59;
-    --wire-depth: #2a2a2e66;
-  }
-
-  .hero-name[data-skin='wire'] .line:nth-child(2) .line-in {
-    --wire: #2a2a2e;
-    --wire-mesh: #2a2a2e47;
-    --wire-depth: #ffffff80;
-  }
-
-  /* Glitch: split colour channels that jump for a moment. */
-  .hero-name[data-skin='glitch'] .line-in {
-    text-shadow: -0.04em 0 #ff2d55, 0.04em 0 #22d3ee;
-    animation: glitch 0.9s steps(1) infinite;
-  }
-
-  .hero-name[data-skin='glitch'] .line:nth-child(2) .line-in {
-    animation-delay: -0.3s;
-  }
-
-  @keyframes glitch {
-    0% { translate: 0 0; clip-path: inset(0 0 0 0); }
-    12% { translate: -0.03em 0; clip-path: inset(10% 0 55% 0); }
-    18% { translate: 0.04em 0; clip-path: inset(60% 0 8% 0); }
-    24% { translate: 0 0; clip-path: inset(0 0 0 0); }
-    62% { translate: 0.02em 0; text-shadow: 0.05em 0 #ff2d55, -0.05em 0 #22d3ee; }
-    68% { translate: 0 0; text-shadow: -0.04em 0 #ff2d55, 0.04em 0 #22d3ee; }
-  }
-
-  .hero-foot {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 24px;
-    max-width: 30ch;
-    margin-top: 40px;
-  }
-
-  /* The subtitle sits on white highlighter strips so it never gets lost on the sky. */
-  .hero-tag {
-    font-weight: 700;
-    line-height: 1.55;
-  }
-
-  .hero-tag span {
-    background: var(--paper);
-    color: var(--ink);
-    padding: 0.12em 0.4em;
-    border-radius: 0.3em;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-  }
-
-  .hero-char {
-    position: absolute;
-    z-index: 1;
-    right: clamp(8px, 5vw, 100px);
-    /* The shirt's flat bottom edge sits on the bottom of the hero (under the clouds). */
-    height: 64%;
-    bottom: clamp(24px, 3.4vw, 52px);
-    aspect-ratio: 920 / 1140;
-  }
-
-  .character {
-    position: relative;
-    display: block;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transform-origin: 50% 85%;
-    transition: transform 0.5s var(--ease-spring);
-  }
-
-  .character :global(.pp) {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-
-  .character:focus-visible {
-    outline-offset: -12px;
-    border-radius: 40px;
-  }
-
-  .bubble {
-    position: absolute;
     z-index: 2;
-    left: 4%;
-    top: 40%;
-    translate: -100% 0;
-    background: var(--paper);
-    color: var(--ink);
-    padding: 12px 18px;
-    border-radius: 22px 22px 4px 22px;
-    font-weight: 700;
-    font-size: 16px;
-    white-space: nowrap;
-    transform-origin: 100% 100%;
-    transition: transform 0.4s var(--ease-spring), opacity 0.3s;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: auto;
+    padding-top: 24px;
+    padding-bottom: clamp(18px, 3svh, 32px);
   }
 
-  :global(.js) .bubble {
-    opacity: 0;
-    transform: scale(0.6);
+  .selected {
+    font-size: clamp(20px, 1.7vw, 26px);
+    text-decoration: none;
   }
 
-  :global(.js) .bubble.is-on {
-    opacity: 1;
-    transform: none;
+  .selected:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  .hero-bottom .note svg {
+    width: 56px;
+    order: -1;
+  }
+
+  @media (max-width: 1100px) {
+    .hide-md { display: none; }
+  }
+
+  /* Tablets standing up: more height to fill, so a bigger card and title. */
+  @media (min-width: 761px) and (max-width: 1100px) and (min-aspect-ratio: 1/1.6) and (max-aspect-ratio: 1/1) {
+    .hero {
+      --strap: clamp(90px, 12svh, 160px);
+      --badge-w: min(62vw, 560px, 44svh);
+    }
+
+    .title-mg { height: auto; width: min(92%, 760px); }
   }
 
   @media (max-width: 760px) {
-    .hide-sm {
-      display: none;
+    .hide-sm { display: none; }
+
+    .hero {
+      --strap: clamp(70px, 17svh, 170px);
+      --badge-w: min(92vw, 420px);
     }
 
-    .hero-body {
-      padding-top: 7svh;
-      padding-bottom: 28px;
-    }
 
-    .hero-name {
-      font-size: 11.2vw;
-      max-width: none;
-    }
+    .nav { padding-top: 12px; }
+    .hero-body { margin-top: calc(var(--strap) + 50px + var(--badge-h) - 56px); }
+    .id-status { font-size: 16px; }
+    .nav-cta { padding: 0 14px; font-size: 14px; }
 
-    .hero-foot {
-      max-width: 62%;
-      gap: 18px;
-      margin-top: 28px;
-    }
+    .stars svg { scale: 1.7; }
 
-    .hero-tag {
-      font-size: 18px;
-    }
+    .title-mg { height: auto; width: 100%; }
 
-    .btn {
-      padding: 0 20px;
-    }
 
-    .hero-char {
-      right: -4vw;
-      height: 48%;
-      bottom: 0;
-    }
+    .hero-bottom { align-items: center; }
+    .hero-bottom .note span { max-width: 9ch; }
+    .hero-bottom .note svg { width: 40px; }
+  }
 
-    /* Above his head on the right, so it never covers the face. */
-    .bubble {
-      left: auto;
-      right: 8%;
-      top: 3%;
-      translate: 0 0;
-      font-size: 14px;
-      padding: 10px 14px;
-      border-radius: 22px 22px 22px 4px;
-      transform-origin: 0 100%;
-      white-space: normal;
-      width: max-content;
-      max-width: 42vw;
-    }
+  @media (max-width: 520px) {
+    .id-text { display: none; }
+    .id { padding: 5px; }
   }
 </style>
 
 <script>
-  import { initCharacter } from '../scripts/character';
-  import { initNameSkins } from '../scripts/name-skins';
-  initCharacter();
-  initNameSkins();
+  import { initLanyard } from '../scripts/lanyard';
+  initLanyard();
+  // The stars lean toward the pointer.
+  const hero = document.querySelector<HTMLElement>('.hero');
+  if (hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    window.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      hero.style.setProperty('--px', ((e.clientX / innerWidth) * 2 - 1).toFixed(3));
+      hero.style.setProperty('--py', ((e.clientY / innerHeight) * 2 - 1).toFixed(3));
+    });
+  }
+  // The title loop plays only while it is on screen, and never with reduced motion.
+  const mg = document.querySelector<HTMLVideoElement>('.title-mg');
+  if (mg) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      mg.removeAttribute('autoplay');
+      mg.pause();
+    } else {
+      new IntersectionObserver((e) => (e[0].isIntersecting ? mg.play().catch(() => {}) : mg.pause())).observe(mg);
+    }
+  }
+  // The greeting on the tape; a new lap gets a welcome back.
+  const tape = document.querySelector<HTMLElement>('.badge .bubble');
+  if (tape) {
+    const lines: string[] = JSON.parse(tape.dataset.lines || '[]');
+    const loopLine = tape.dataset.loopLine || '';
+    let i = 0;
+    const say = (t: string) => {
+      tape.classList.remove('is-on');
+      setTimeout(() => {
+        tape.firstElementChild!.textContent = t;
+        tape.classList.add('is-on');
+      }, 160);
+    };
+    const lap = Number(document.querySelector('[data-loop]')?.textContent || 1);
+    setTimeout(() => say(lap > 1 && loopLine ? loopLine.replace('{name}', String(lap)) : lines[0]), 1100);
+    document.querySelector('.badge')?.addEventListener('click', () => {
+      i = (i + 1) % lines.length;
+      say(lines[i]);
+    });
+    window.addEventListener('jlp-loop', (e) => setTimeout(() => say(loopLine.replace('{name}', String((e as CustomEvent<number>).detail))), 900));
+  }
 </script>

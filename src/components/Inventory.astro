@@ -63,7 +63,6 @@ const edu = experience[0].rows[0];
 
 <style>
   .inv {
-    background: var(--paper);
     padding-top: clamp(32px, 4vw, 64px);
     padding-bottom: var(--section);
   }
@@ -93,8 +92,10 @@ const edu = experience[0].rows[0];
     display: grid;
     gap: 26px;
     padding: clamp(18px, 2vw, 28px);
-    border-radius: 32px;
-    background: var(--ground);
+    border-radius: 24px;
+    border: 2.5px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+    background: var(--paper);
   }
 
   .slot-row h3,
@@ -115,9 +116,9 @@ const edu = experience[0].rows[0];
     width: 100%;
     min-height: 64px;
     padding: 10px 12px;
-    border: 3px solid transparent;
-    border-radius: 16px;
-    background: var(--paper);
+    border-radius: 14px;
+    border: 2px solid var(--ink);
+    background: var(--ground);
     color: var(--ink);
     font-size: clamp(15px, 1.15vw, 18px);
     font-weight: 800;
@@ -196,8 +197,10 @@ const edu = experience[0].rows[0];
   .edu,
   .langs {
     padding: 24px;
-    border-radius: 28px;
-    background: var(--ground);
+    border-radius: 22px;
+    border: 2.5px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+    background: var(--paper);
   }
 
   .edu {

@@ -1,0 +1,1069 @@
+---
+// José's projects as cartridges for a handheld console: pick one from the shelf, it flies into the
+// slot, the console boots and the screen plays the project. The page beside it is the game's manual.
+// The newest cartridge, his digital human, can be played right inside the console's screen.
+import Puppet from './Puppet.astro';
+import { getData, t, fill, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { projects, worlds } = getData(lang);
+const ui = t(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const order = ['digital-human', 'arcade-station', 'misterios-trigonometricos', 'ojos-del-planeta', 'lingopulse', 'melodia-ai', 'neurotext', 'personajes-3d', 'threejs-lab', 'gamevault', 'rigging', 'stop-motion'];
+const list = order.map((s) => projects.find((p) => p.slug === s)!).filter(Boolean);
+const world = Object.fromEntries(worlds.map((w) => [w.id, w]));
+const total = list.length;
+const num = (i: number) => String(i + 1).padStart(2, '0');
+---
+<section class="console-sec" id="proyectos" aria-labelledby="console-title">
+  <div class="wrap head">
+    <h2 class="section-head reveal" id="console-title">{ui.consoleTitle}</h2>
+    <p class="lead reveal" style="--d:80ms">{ui.consoleLead}</p>
+    <p class="note head-note reveal" style="--d:160ms" aria-hidden="true">
+      <span>{ui.consoleNote}</span>
+      <svg viewBox="0 0 70 40"><path d="M4 8 C24 6 46 14 60 32 M60 32 L46 30 M60 32 L60 18" /></svg>
+    </p>
+  </div>
+
+  <div class="wrap stage">
+    <div class="rig">
+      <div class="peek" aria-hidden="true"><Puppet pose="calm" props /></div>
+
+      <div class="console" data-console>
+        <div class="slot-cart" aria-hidden="true"><span class="sc-label"></span></div>
+        <div class="bezel">
+          <span class="power"><i></i> POWER</span>
+          <div class="screen" aria-live="polite">
+            <img class="scr-img" alt="" width="1400" height="900" loading="lazy" decoding="async" src={`${base}${list[0].poster}`} />
+            <video class="scr-vid" muted loop playsinline preload="none" hidden></video>
+            <div class="scr-embed"></div>
+            <div class="scr-hud">
+              <span class="scr-title">{list[0].name}</span>
+              <span class="scr-count">{num(0)}/{num(total - 1)}</span>
+            </div>
+            <div class="scr-boot" hidden>
+              <span class="boot-face"><Puppet pose="happy" live={false} /></span>
+              <span class="boot-logo">JLP</span>
+            </div>
+            <div class="scr-noise"></div>
+            <div class="scr-lines"></div>
+          </div>
+          <span class="brand">JLP <b>SYSTEM</b></span>
+        </div>
+
+        <div class="pad">
+          <div class="dpad" role="group" aria-label={ui.pickCart}>
+            <button class="d-left" type="button" data-step="-1" aria-label={ui.prev}></button>
+            <button class="d-right" type="button" data-step="1" aria-label={ui.next}></button>
+            <span class="d-up" aria-hidden="true"></span>
+            <span class="d-down" aria-hidden="true"></span>
+            <span class="d-mid" aria-hidden="true"></span>
+          </div>
+          <div class="ab">
+            <button class="b-btn" type="button" data-b aria-label={ui.btnB}><span>B</span></button>
+            <button class="a-btn" type="button" data-a aria-label={ui.btnA}><span>A</span></button>
+          </div>
+          <div class="ss" aria-hidden="true"><span>SELECT</span><span>START</span></div>
+          <div class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <p class="controls hand">{ui.controlsHint}</p>
+    </div>
+
+    <div class="manuals">
+      {list.map((p, i) => {
+        const w = world[p.world];
+        return (
+          <article class:list={['manual', { 'is-on': i === 0 }]} data-i={i} style={`--c:${w.bg};--c2:${w.accent}`}>
+            <p class="m-top"><span>{ui.manual}</span><span>{num(i)}/{num(total - 1)}</span></p>
+            <p class="m-world" style={`--c:${w.bg}`}>{w.name}</p>
+            <h3 class="m-name">{p.name}</h3>
+            <p class="m-kind">{p.kind}{p.year && ` · ${p.year}`}</p>
+            {p.status && <p class="tape m-status">{p.isNew ? `${ui.newTag} · ${p.status}` : p.status}</p>}
+            {p.embed && <p class="note m-play"><svg viewBox="0 0 70 40"><path d="M64 30 C46 34 26 26 10 10 M10 10 L11 24 M10 10 L24 12" /></svg><span>{ui.playHere}</span></p>}
+            <p class="m-summary">{p.summary}</p>
+            <ul class="m-stack">{p.stack.map((s) => <li>{s}</li>)}</ul>
+            {p.models && (
+              <ul class="m-models" aria-label={ui.pickModel}>
+                {p.models.map((m) => (
+                  <li><button type="button" data-model={m.uid} data-title={m.name} aria-label={fill(ui.see3d, m.name)}>
+                    <img src={`${base}img/sketchfab/${m.uid}.jpg`} width="640" height="360" loading="lazy" alt="" />
+                  </button></li>
+                ))}
+              </ul>
+            )}
+            <a class="btn m-cta" href={p.url} target="_blank" rel="noopener">{p.linkLabel} <span aria-hidden="true">↗</span></a>
+          </article>
+        );
+      })}
+    </div>
+  </div>
+
+  <div class="shelf-wrap">
+    <p class="wrap shelf-note hand" aria-hidden="true">{ui.shelfNote} · {total}</p>
+    <ul class="shelf wrap" aria-label={ui.pickCart}>
+      {list.map((p, i) => {
+        const w = world[p.world];
+        return (
+          <li>
+            <button class:list={['cart', { 'is-in': i === 0 }]} type="button" aria-pressed={i === 0 ? 'true' : 'false'}
+              aria-label={fill(ui.insert, p.name)} data-i={i} data-world={p.world} data-name={p.name}
+              data-poster={`${base}${p.poster}`} data-video={p.video ? `${base}${p.video}` : undefined}
+              data-youtube={p.youtube} data-model={p.models?.[0].uid} data-model-name={p.models?.[0].name}
+              data-url={p.url} data-label={p.linkLabel} data-embed={p.embed} data-react={p.embed ? 'listen' : undefined}
+              style={`--c:${w.bg};--c2:${w.accent}`}>
+              <span class="cart-ridges" aria-hidden="true"></span>
+              {p.isNew && <span class="cart-new" aria-hidden="true">{ui.newTag}</span>}
+              <span class="cart-label">
+                <img src={`${base}${p.poster}`} width="1400" height="900" loading="lazy" alt="" />
+                <span class="cart-name">{p.name}</span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .console-sec {
+    position: relative;
+    padding-block: var(--section) calc(var(--section) * 0.7);
+  }
+
+  /* ---------- Heading ---------- */
+  .head {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    row-gap: 14px;
+    align-items: end;
+    margin-bottom: clamp(36px, 5vw, 72px);
+  }
+
+  .head h2 { grid-column: 1 / span 6; }
+  .head .lead { grid-column: 8 / span 5; max-width: 36ch; }
+
+  .head-note {
+    grid-column: 8 / span 5;
+    justify-self: start;
+    rotate: -2deg;
+  }
+
+  /* ---------- Stage: console + manual ---------- */
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(28px, 4vw, 72px);
+    align-items: start;
+  }
+
+  .rig {
+    position: relative;
+    padding-top: clamp(60px, 7vw, 100px);
+  }
+
+  /* José peeks over the console and does what the cartridge is about. */
+  .peek {
+    position: absolute;
+    z-index: 0;
+    right: 6%;
+    top: clamp(-10px, -1vw, 0px);
+    width: clamp(110px, 14%, 170px);
+    aspect-ratio: 920 / 1140;
+    translate: 0 40%;
+    transition: translate 0.6s var(--ease-spring);
+  }
+
+  .peek.is-up { translate: 0 0; }
+
+  .peek :global(.pp) {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* The console: a warm grey plastic handheld, screen on the left, buttons on the right. */
+  .console {
+    --plastic: #ebe7df;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+    gap: 5%;
+    padding: 5.5% 5% 6%;
+    border-radius: 44px 44px 64px 64px;
+    background:
+      radial-gradient(120% 90% at 30% 0%, #ffffff80, #fff0 60%),
+      linear-gradient(#f2efe8, #dcd7cc);
+    box-shadow:
+      inset 0 3px 0 #ffffffcc,
+      inset 0 -10px 0 #c9c2b4,
+      inset 0 0 0 2px #00000014,
+      0 40px 60px -30px #2a2a2e80,
+      0 14px 24px -14px #2a2a2e59;
+  }
+
+  /* The cartridge that is in the slot sticks out of the top. */
+  .slot-cart {
+    position: absolute;
+    z-index: -1;
+    left: 16%;
+    top: 0;
+    width: 22%;
+    aspect-ratio: 1.05;
+    translate: 0 -46%;
+    border-radius: 10px 10px 0 0;
+    background:
+      repeating-linear-gradient(90deg, #0000 0 7px, #00000022 7px 9px) 0 6px / 100% 22% no-repeat,
+      var(--sc, var(--red));
+    clip-path: polygon(0 0, 86% 0, 100% 12%, 100% 100%, 0 100%);
+    transition: translate 0.35s var(--ease-out);
+  }
+
+  .slot-cart.is-out { translate: 0 -140%; }
+
+  .sc-label {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    top: 34%;
+    bottom: 26%;
+    border-radius: 4px;
+    background: #fff var(--sc-img, none) center / cover;
+  }
+
+  .bezel {
+    position: relative;
+    display: grid;
+    padding: 8% 9% 12%;
+    border-radius: 22px 22px 56px 22px;
+    background: linear-gradient(#3a3b42, #2c2d33);
+    box-shadow: inset 0 2px 0 #ffffff1a, inset 0 -3px 0 #0000004d;
+  }
+
+  .power {
+    position: absolute;
+    left: 3%;
+    top: 46%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #ffffff80;
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+  }
+
+  .power i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff4b4b;
+    box-shadow: 0 0 8px #ff4b4b;
+  }
+
+  .brand {
+    position: absolute;
+    left: 9%;
+    bottom: 3.5%;
+    font-size: clamp(10px, 1vw, 14px);
+    font-weight: 900;
+    font-style: italic;
+    font-stretch: 125%;
+    letter-spacing: 0.06em;
+    color: #ffffffa8;
+  }
+
+  .brand b { color: var(--yellow); }
+
+  .screen {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #11131a;
+    box-shadow: inset 0 0 0 2px #000, 0 0 0 3px #1c1d22;
+    isolation: isolate;
+  }
+
+  .scr-img,
+  .scr-vid,
+  .scr-embed :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 0;
+  }
+
+  .scr-embed:empty { display: none; }
+  .scr-embed { position: absolute; inset: 0; z-index: 2; background: #000; }
+
+  .scr-hud {
+    position: absolute;
+    z-index: 1;
+    inset: auto 0 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 18% 4% 3%;
+    background: linear-gradient(#0000, #000000b3);
+    color: #fff;
+    font-size: clamp(12px, 1.25vw, 18px);
+    font-weight: 900;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-shadow: 2px 2px 0 #000;
+    pointer-events: none;
+  }
+
+  .scr-count { color: var(--yellow); }
+
+  .scr-boot {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 6px;
+    background: #e9e6dc;
+    color: var(--ink);
+  }
+
+  .boot-face {
+    width: 26%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--sky);
+    position: relative;
+  }
+
+  .boot-face :global(.pp) {
+    position: absolute;
+    left: 50%;
+    bottom: -30%;
+    width: 150%;
+    max-width: none;
+    translate: -50% 0;
+  }
+
+  .boot-logo {
+    font-size: clamp(26px, 3.4vw, 48px);
+    font-weight: 900;
+    font-stretch: 150%;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+
+
+
+
+  /* TV static between cartridges, and scanlines on top of everything. */
+  .scr-noise {
+    position: absolute;
+    z-index: 4;
+    inset: -20%;
+    opacity: 0;
+    pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .screen.is-static .scr-noise {
+    opacity: 1;
+    animation: static 0.2s steps(3) infinite;
+  }
+
+  @keyframes static {
+    0% { translate: 0 0; }
+    33% { translate: -8% 5%; }
+    66% { translate: 6% -7%; }
+  }
+
+  .scr-lines {
+    position: absolute;
+    z-index: 5;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(#0000 0 2px, #0000001f 2px 3px);
+    box-shadow: inset 0 0 40px #00000080;
+  }
+
+  /* Buttons */
+  .pad {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto auto;
+    align-items: center;
+    justify-items: center;
+    row-gap: 10%;
+  }
+
+  .dpad {
+    position: relative;
+    width: min(100%, 120px);
+    aspect-ratio: 1;
+  }
+
+  .dpad > * {
+    position: absolute;
+    padding: 0;
+    border: 0;
+    background: #2f3036;
+    box-shadow: inset 0 -4px 0 #18191d, inset 0 2px 0 #ffffff1f;
+  }
+
+  .d-left, .d-right, .d-mid { top: 33.3%; width: 34%; height: 33.4%; }
+  .d-up, .d-down { left: 33.3%; width: 33.4%; height: 34%; }
+  .d-left { left: 0; border-radius: 8px 0 0 8px; cursor: pointer; }
+  .d-right { right: 0; border-radius: 0 8px 8px 0; cursor: pointer; }
+  .d-mid { left: 33%; box-shadow: none; }
+  .d-up { top: 0; border-radius: 8px 8px 0 0; }
+  .d-down { bottom: 0; border-radius: 0 0 8px 8px; }
+
+  .d-left::after, .d-right::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 0;
+    height: 0;
+    translate: 0 -50%;
+    border-block: 6px solid transparent;
+  }
+
+  .d-left::after { left: 30%; border-right: 8px solid #ffffff59; }
+  .d-right::after { right: 30%; border-left: 8px solid #ffffff59; }
+
+  .d-left:active, .d-right:active, .d-left.is-press, .d-right.is-press {
+    box-shadow: inset 0 2px 0 #18191d;
+    translate: 0 2px;
+  }
+
+  .ab {
+    display: flex;
+    gap: 14%;
+    rotate: -24deg;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ab button {
+    width: clamp(40px, 4.4vw, 60px);
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 30%, #d0484d, #a32a30);
+    box-shadow: inset 0 -5px 0 #74191e, 0 3px 0 #00000026;
+    color: #ffffffcc;
+    font-weight: 900;
+    font-size: 15px;
+    cursor: pointer;
+    transition: translate 0.08s, box-shadow 0.08s;
+  }
+
+  .ab button span { display: inline-block; rotate: 24deg; }
+  .ab .b-btn { margin-top: 26%; }
+
+  .ab button:active, .ab button.is-press {
+    translate: 0 3px;
+    box-shadow: inset 0 -2px 0 #74191e;
+  }
+
+  .ss {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 14px;
+  }
+
+  .ss span {
+    display: grid;
+    justify-items: center;
+    gap: 5px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #2a2a2e8c;
+  }
+
+  .ss span::before {
+    content: '';
+    width: 40px;
+    height: 10px;
+    border-radius: 99px;
+    background: #8b8578;
+    box-shadow: inset 0 -2px 0 #00000033;
+    rotate: -24deg;
+  }
+
+  .grille {
+    grid-column: 2;
+    justify-self: end;
+    display: flex;
+    gap: 7px;
+    rotate: -24deg;
+    margin-right: 6%;
+  }
+
+  .grille i {
+    width: 5px;
+    height: 34px;
+    border-radius: 99px;
+    background: #2a2a2e33;
+    box-shadow: inset 0 2px 2px #0000004d;
+  }
+
+  .controls {
+    margin-top: 18px;
+    text-align: center;
+    font-size: clamp(19px, 1.5vw, 22px);
+  }
+
+  /* ---------- The manual page ---------- */
+  .manuals {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: clamp(60px, 7vw, 100px);
+  }
+
+  .manual {
+    grid-area: 1 / 1;
+    padding: clamp(24px, 2.6vw, 40px);
+    border-radius: 6px;
+    background:
+      linear-gradient(90deg, #0000 36px, #b02e2e33 36px 38px, #0000 38px),
+      repeating-linear-gradient(#0000 0 31px, #7c90da2e 31px 32px),
+      var(--paper);
+    background-position: 0 0, 0 18px, 0 0;
+    box-shadow: 0 1px 0 #0000000f, 0 24px 40px -24px #2a2a2e66;
+    rotate: 1deg;
+    padding-left: clamp(52px, 4.6vw, 64px);
+  }
+
+  :global(.js) .manual { display: none; }
+  :global(.js) .manual.is-on { display: block; animation: page-in 0.45s var(--ease-out); }
+
+  @keyframes page-in {
+    from { opacity: 0; translate: 0 14px; rotate: -1deg; }
+  }
+
+  .m-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .m-world {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 4px 12px 5px;
+    border-radius: 99px;
+    background: var(--c);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .m-name {
+    margin-top: 14px;
+    font-size: clamp(26px, 2.7vw, 46px);
+    font-weight: 900;
+    font-stretch: 125%;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    text-transform: uppercase;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .m-kind {
+    margin-top: 10px;
+    font-family: var(--hand);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--c);
+  }
+
+  .m-status {
+    margin-top: 10px;
+    rotate: -3deg;
+    font-size: 20px;
+  }
+
+  .m-summary {
+    margin-top: 16px;
+    max-width: 44ch;
+    line-height: 1.55;
+  }
+
+  .m-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .m-stack li {
+    padding: 3px 12px 5px;
+    border: 2px solid var(--ink);
+    border-radius: 52% 48% 46% 54% / 60% 52% 48% 40%;
+    font-family: var(--hand);
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .m-models {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 18px;
+  }
+
+  .m-models button {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--ground);
+    cursor: pointer;
+    transition: translate 0.25s var(--ease-spring), border-color 0.2s;
+  }
+
+  .m-models button:hover,
+  .m-models button.is-on {
+    translate: 0 -3px;
+    border-color: var(--c);
+  }
+
+  .m-models img { width: 100%; height: 100%; object-fit: cover; }
+
+  .m-cta {
+    margin-top: 24px;
+    background: var(--ink);
+    box-shadow: 4px 4px 0 var(--c);
+  }
+
+  .m-cta:hover { background: var(--c); }
+
+  .m-play { margin-top: 20px; rotate: -2deg; color: var(--c); }
+  .m-play svg { width: 52px; }
+
+  /* A "new" sticker on the newest cartridge. */
+  .cart-new {
+    position: absolute;
+    z-index: 2;
+    right: -2px;
+    top: 14%;
+    padding: 2px 7px 3px;
+    background: var(--yellow);
+    color: var(--ink);
+    font-family: var(--hand);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
+    rotate: 8deg;
+    box-shadow: 0 2px 4px #0003;
+  }
+
+  /* ---------- The shelf of cartridges ---------- */
+  .shelf-wrap {
+    margin-top: clamp(48px, 6vw, 88px);
+  }
+
+  .shelf-note {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+
+  .shelf {
+    display: flex;
+    gap: clamp(10px, 1.2vw, 18px);
+    overflow-x: auto;
+    padding-top: 26px;
+    padding-bottom: 26px;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--margin);
+    scrollbar-width: none;
+    /* the shelf board */
+    background: linear-gradient(#0000 calc(100% - 22px), #c9b79c calc(100% - 22px), #b39d7e calc(100% - 6px), #9a8466 0);
+  }
+
+  .shelf::-webkit-scrollbar { display: none; }
+
+  .shelf li {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  .cart {
+    position: relative;
+    display: block;
+    width: clamp(96px, 8.6vw, 128px);
+    aspect-ratio: 0.86;
+    padding: 0;
+    border: 0;
+    border-radius: 10px 10px 6px 6px;
+    background:
+      linear-gradient(#ffffff26, #0000 30%),
+      var(--c);
+    clip-path: polygon(0 0, 84% 0, 100% 10%, 100% 100%, 0 100%);
+    box-shadow: inset 0 -6px 0 #00000033;
+    cursor: pointer;
+    transition: translate 0.35s var(--ease-spring), opacity 0.3s, filter 0.3s;
+  }
+
+  .cart:hover,
+  .cart:focus-visible {
+    translate: 0 -10px;
+  }
+
+  .cart:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  /* The one in the console leaves an empty spot on the shelf. */
+  .cart.is-in {
+    opacity: 0.22;
+    filter: grayscale(1);
+    translate: 0 -4px;
+  }
+
+  .cart-ridges {
+    position: absolute;
+    left: 10%;
+    right: 18%;
+    top: 6%;
+    height: 12%;
+    background: repeating-linear-gradient(90deg, #0000 0 6px, #00000029 6px 8px);
+  }
+
+  .cart-label {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 24%;
+    bottom: 12%;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--paper);
+    box-shadow: 0 0 0 2px #00000014;
+  }
+
+  .cart-label img {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    object-fit: cover;
+  }
+
+  .cart-name {
+    padding: 4px 5px 5px;
+    font-size: 10px;
+    font-weight: 900;
+    font-stretch: 112%;
+    line-height: 1.05;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--ink);
+    border-top: 3px solid var(--c2);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+
+  /* The flying copy used while a cartridge travels from the shelf to the slot. */
+  :global(.cart-fly) {
+    position: fixed;
+    z-index: 80;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  /* ---------- Tablet ---------- */
+  @media (max-width: 1100px) {
+    .stage { grid-template-columns: minmax(0, 1fr); }
+    .rig { max-width: 760px; width: 100%; margin-inline: auto; }
+    .manuals { margin-top: 12px; max-width: 760px; width: 100%; margin-inline: auto; }
+    .manual { rotate: 0.5deg; }
+  }
+
+  /* ---------- Phone: the console stands up, screen on top and buttons below ---------- */
+  @media (max-width: 700px) {
+    .head h2, .head .lead, .head-note { grid-column: 1 / -1; }
+
+    .rig { max-width: 420px; padding-top: 70px; }
+
+    .console {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+      padding: 7% 7% 9%;
+      border-radius: 30px 30px 70px 30px;
+    }
+
+    .slot-cart { left: 39%; width: 34%; }
+
+    .bezel { padding: 8% 9% 13%; border-radius: 16px 16px 44px 16px; }
+    .power { left: 2.5%; }
+
+    .pad {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      row-gap: 18px;
+      padding-top: 9%;
+    }
+
+    .dpad { width: 112px; }
+    .ab button { width: 54px; }
+    .ss { grid-column: 1 / -1; }
+    .grille { position: absolute; right: 0; bottom: -6%; margin: 0; }
+
+    .peek { width: 30%; right: 2%; }
+
+    .scr-hud { font-size: 14px; }
+
+    .manual { padding: 22px 20px 26px 48px; rotate: 0deg; }
+    .m-models { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { mountPuppet, type Anim } from '../scripts/puppet';
+
+  const sec = document.querySelector<HTMLElement>('.console-sec');
+  const consoleEl = sec?.querySelector<HTMLElement>('[data-console]');
+  const screen = sec?.querySelector<HTMLElement>('.screen');
+  const carts = [...(sec?.querySelectorAll<HTMLButtonElement>('.cart') ?? [])];
+  const manuals = [...(sec?.querySelectorAll<HTMLElement>('.manual') ?? [])];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (sec && consoleEl && screen && carts.length) {
+    const img = screen.querySelector<HTMLImageElement>('.scr-img')!;
+    const vid = screen.querySelector<HTMLVideoElement>('.scr-vid')!;
+    const embed = screen.querySelector<HTMLElement>('.scr-embed')!;
+    const boot = screen.querySelector<HTMLElement>('.scr-boot')!;
+    const title = screen.querySelector<HTMLElement>('.scr-title')!;
+    const count = screen.querySelector<HTMLElement>('.scr-count')!;
+    const slotCart = consoleEl.querySelector<HTMLElement>('.slot-cart')!;
+    const aBtn = consoleEl.querySelector<HTMLButtonElement>('[data-a]')!;
+    const bBtn = consoleEl.querySelector<HTMLButtonElement>('[data-b]')!;
+    const peekSvg = sec.querySelector<SVGSVGElement>('.peek svg.pp')!;
+    const peek = sec.querySelector<HTMLElement>('.peek')!;
+    const puppet = mountPuppet(peekSvg, 'idle');
+    const REACT: Record<string, Anim> = { juegos: 'play', vr: 'vr', '3d': 'sculpt', software: 'code' };
+    const n = carts.length;
+    let active = 0;
+    let busy = false;
+    let seen = false;
+
+    const pad = (i: number) => String(i + 1).padStart(2, '0');
+
+    const setSlot = (c: HTMLButtonElement) => {
+      slotCart.style.setProperty('--sc', c.style.getPropertyValue('--c'));
+      slotCart.style.setProperty('--sc-img', c.dataset.poster ? `url("${c.dataset.poster}")` : 'none');
+    };
+
+    const stopMedia = () => {
+      vid.pause();
+      embed.innerHTML = '';
+    };
+
+    // Put cartridge i's content on the screen.
+    const paint = (i: number) => {
+      const c = carts[i];
+      stopMedia();
+      if (c.dataset.poster) img.src = c.dataset.poster;
+      if (c.dataset.video && !reduced) {
+        vid.hidden = false;
+        if (vid.dataset.src !== c.dataset.video) {
+          vid.dataset.src = c.dataset.video;
+          vid.poster = c.dataset.poster || '';
+          vid.src = c.dataset.video;
+        }
+        vid.play().catch(() => {});
+      } else {
+        vid.hidden = true;
+      }
+      title.textContent = c.dataset.name || '';
+      count.textContent = `${pad(i)}/${pad(n - 1)}`;
+      aBtn.setAttribute('aria-label', c.dataset.label || aBtn.getAttribute('aria-label') || 'A');
+      manuals.forEach((m, k) => m.classList.toggle('is-on', k === i));
+      carts.forEach((b, k) => {
+        b.classList.toggle('is-in', k === i);
+        b.setAttribute('aria-pressed', String(k === i));
+      });
+      setSlot(c);
+      peek.classList.add('is-up');
+      puppet.play((c.dataset.react as Anim) || REACT[c.dataset.world || ''] || 'happy');
+    };
+
+    // Static, the console's boot screen, then the game.
+    const bootUp = (i: number, quick = false) =>
+      new Promise<void>((done) => {
+        if (reduced) {
+          paint(i);
+          return done();
+        }
+        screen.classList.add('is-static');
+        setTimeout(() => {
+          screen.classList.remove('is-static');
+          paint(i);
+          boot.hidden = false;
+          gsap.fromTo(boot.children, { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, stagger: 0.08, ease: 'back.out(2)' });
+          setTimeout(() => {
+            gsap.to(boot, {
+              opacity: 0,
+              duration: 0.25,
+              onComplete: () => {
+                boot.hidden = true;
+                boot.style.opacity = '';
+                done();
+              },
+            });
+          }, quick ? 380 : 750);
+        }, 220);
+      });
+
+    const insert = async (i: number) => {
+      i = ((i % n) + n) % n;
+      if (busy || i === active) return;
+      busy = true;
+      const from = carts[i];
+      // The old cartridge pops out of the slot, the new one flies in from the shelf.
+      slotCart.classList.add('is-out');
+      if (!reduced) {
+        const r = from.getBoundingClientRect();
+        const s = slotCart.getBoundingClientRect();
+        const fly = from.cloneNode(true) as HTMLElement;
+        fly.classList.add('cart-fly');
+        fly.classList.remove('is-in');
+        fly.removeAttribute('id');
+        fly.setAttribute('aria-hidden', 'true');
+        fly.tabIndex = -1;
+        Object.assign(fly.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+        document.body.appendChild(fly);
+        from.classList.add('is-in');
+        const onScreen = r.bottom > 0 && r.top < innerHeight;
+        await gsap
+          .timeline()
+          .fromTo(fly, { opacity: onScreen ? 1 : 0 }, { opacity: 1, duration: 0.1 })
+          .to(fly, {
+            left: s.left,
+            top: s.top - s.height * 0.75,
+            width: s.width,
+            height: s.width / 0.86,
+            rotate: -8,
+            duration: 0.5,
+            ease: 'power3.inOut',
+          })
+          .to(fly, { top: s.top + s.height * 0.1, rotate: 0, duration: 0.18, ease: 'power2.in' })
+          .then();
+        fly.remove();
+      }
+      slotCart.classList.remove('is-out');
+      gsap.fromTo(consoleEl, { y: 0 }, { y: 5, duration: 0.08, yoyo: true, repeat: 1 });
+      active = i;
+      await bootUp(i, true);
+      busy = false;
+    };
+
+    carts.forEach((c, i) => c.addEventListener('click', () => insert(i)));
+
+    const press = (el: HTMLElement) => {
+      el.classList.add('is-press');
+      setTimeout(() => el.classList.remove('is-press'), 140);
+    };
+
+    sec.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+      b.addEventListener('click', () => insert(active + Number(b.dataset.step))),
+    );
+
+    // A: play it. 3D models and reels open right on the screen; everything else opens its link.
+    const loadModel = (uid: string, name: string) => {
+      stopMedia();
+      embed.innerHTML = `<iframe title="${name} 3D" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen
+        src="https://sketchfab.com/models/${uid}/embed?autostart=1&ui_theme=dark&ui_hint=2&dnt=1"></iframe>`;
+    };
+    aBtn.addEventListener('click', () => {
+      const c = carts[active];
+      if (c.dataset.embed) {
+        stopMedia();
+        embed.innerHTML = `<iframe title="${c.dataset.name}" allow="autoplay; fullscreen" src="${c.dataset.embed}"></iframe>`;
+      } else if (c.dataset.model) loadModel(c.dataset.model, c.dataset.modelName || '');
+      else if (c.dataset.youtube) {
+        stopMedia();
+        embed.innerHTML = `<iframe title="${c.dataset.name}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen
+          src="https://www.youtube-nocookie.com/embed/${c.dataset.youtube}?autoplay=1&rel=0&modestbranding=1&playsinline=1"></iframe>`;
+      } else if (c.dataset.url) window.open(c.dataset.url, '_blank', 'noopener');
+    });
+    // B: back to the cover.
+    bBtn.addEventListener('click', () => paint(active));
+
+    sec.querySelectorAll<HTMLButtonElement>('[data-model]').forEach((m) =>
+      m.addEventListener('click', () => {
+        loadModel(m.dataset.model!, m.dataset.title || '');
+        m.closest('.m-models')?.querySelectorAll('button').forEach((x) => x.classList.toggle('is-on', x === m));
+        screen.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      }),
+    );
+
+    // Arrow keys and A/B on the keyboard while the console is on screen.
+    let inView = false;
+    new IntersectionObserver(
+      (e) => {
+        inView = e[0].isIntersecting;
+        if (inView && !seen) {
+          seen = true;
+          bootUp(active);
+        }
+        if (!inView) vid.pause();
+        else if (!vid.hidden && !reduced) vid.play().catch(() => {});
+      },
+      { threshold: 0.45 },
+    ).observe(consoleEl);
+
+    window.addEventListener('keydown', (e) => {
+      const t = e.target as HTMLElement;
+      if (!inView || e.metaKey || e.ctrlKey || e.altKey || t.closest('input, textarea, select, [contenteditable]')) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); press(sec.querySelector('.d-right')!); insert(active + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); press(sec.querySelector('.d-left')!); insert(active - 1); }
+    });
+
+    // Swipe the screen sideways on a phone.
+    let sx = 0, sy = 0;
+    screen.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    screen.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4 && !embed.innerHTML) insert(active + (dx < 0 ? 1 : -1));
+    });
+
+    paint(0);
+    peek.classList.remove('is-up');
+  }
+</script>

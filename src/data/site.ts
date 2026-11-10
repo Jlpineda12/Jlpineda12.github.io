@@ -36,10 +36,29 @@ export type Project = {
   youtube?: string; // id de un video de YouTube
   models?: { uid: string; name: string }[]; // modelos de Sketchfab para el visor 3D
   status?: string;
+  embed?: string; // página que puede jugarse dentro de la pantalla de la consola
+  isNew?: boolean;
 };
 
 // Proyectos reales (GitHub, Behance, Sketchfab y YouTube de José).
 export const projects: Project[] = [
+  {
+    slug: 'digital-human',
+    name: 'Jose.exe',
+    kind: 'Humano digital con IA en pixel art',
+    year: '2026',
+    summary:
+      'Mi gemelo digital: un chatbot con cara. Lo modelé por código en Blender a partir de mi dibujo, lo convertí a pixel art con mi addon Pixel Sprite Forge y lo animé en tiempo real con Three.js. Reacciona a cada pregunta, piensa, duda cuando no sabe y responde sobre mí con una voz de 8 bits que mueve la boca sílaba por sílaba.',
+    stack: ['Three.js', 'Blender', 'IA (Claude)', 'Web Audio', 'Lip-sync'],
+    url: 'https://jlpineda12.github.io/digital-human/',
+    linkLabel: 'Hablar con él',
+    world: 'software',
+    poster: 'img/digital-human.webp',
+    video: 'video/digital-human.mp4',
+    status: 'Beta',
+    embed: 'https://jlpineda12.github.io/digital-human/',
+    isNew: true,
+  },
   {
     slug: 'arcade-station',
     name: 'Arcade Station',

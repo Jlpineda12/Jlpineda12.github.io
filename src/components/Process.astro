@@ -41,15 +41,21 @@ const doing: Record<string, string> = ui.doing;
       <p class="walker-say"><span>{ui.go}</span></p>
       <Puppet pose="calm" props />
     </div>
-    <img class="p-cloud" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:58%;top:8%;width:12vw" />
-    <img class="p-cloud" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:8%;top:14%;width:8vw;animation-delay:-10s" />
+    <img class="p-cloud" loading="lazy" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:58%;top:8%;width:12vw" />
+    <img class="p-cloud" loading="lazy" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:8%;top:14%;width:8vw;animation-delay:-10s" />
   </div>
 </section>
 
 <style>
+  /* Blueprint paper: the headphone blue with a white engineering grid. */
   .process {
     position: relative;
-    background: var(--sky-light);
+    background:
+      linear-gradient(#ffffff2e 1px, transparent 1px) 0 0 / 112px 112px,
+      linear-gradient(90deg, #ffffff2e 1px, transparent 1px) 0 0 / 112px 112px,
+      linear-gradient(#ffffff17 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(90deg, #ffffff17 1px, transparent 1px) 0 0 / 28px 28px,
+      var(--sky-light);
     color: var(--ink);
   }
 
