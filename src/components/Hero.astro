@@ -1,12 +1,11 @@
 ---
-// The first screen. An intro in the spirit of a title card: on cream, José's little mark wobbles
-// while the world loads; then a cobalt liquid rises with a wavy edge and his name lands letter by
-// letter, as puffy 3D letters made in Blender (blender/hero3d.py), with his own face as the "O".
-// Glossy stickers for his worlds float around it; drag them, throw them, or tap one to open those
-// projects. A glass lens follows the mouse over the name and bursts when clicked.
-// The way in is one more sticker: his Creative ID. Carry it to the glass reader (or tap it): the
-// laser reads it, the letters wobble like jelly as the access wave reaches them, and the page
-// glides straight on to the next chapter.
+// The first screen. An intro in the spirit of a title card: on cream, José's little mark wobbles at
+// the bottom; his letters fly out of it along arcs and set into his name, inked black; then a cut
+// to colour: puffy 3D letters made in Blender (blender/hero3d.py), his own face as the "O", over a
+// surface of moving liquid glass (scripts/liquidbg.ts). A glass lens magnifies the name.
+// Under it, the way in: his Creative ID. Pull it down onto the glass reader (or tap it): the laser
+// reads it, the letters wobble like jelly as the access wave reaches them, the card flies off and
+// the page glides on to "About me", where the card is found hanging from its lanyard.
 // "Enter without scanning" opens it too, and nothing is gated without JS.
 import Puppet from './Puppet.astro';
 import { getData, t, type Lang } from '../i18n';
@@ -14,26 +13,16 @@ import LangSwitch from './LangSwitch.astro';
 import h3d from '../data/hero3d.json';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const { site, worlds } = getData(lang);
+const { site } = getData(lang);
 const ui = t(lang);
 const h = ui.hero3d;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const L = h3d.letters as Record<string, { w: number; h: number; x0: number; y0: number }>;
 const lines = [['J', 'O', 'S', 'E-acute', ' ', 'L', 'U', 'I', 'S'], ['P', 'I', 'N', 'E', 'D', 'A']];
 const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
-const wname = Object.fromEntries(worlds.map((w) => [w.id, w.name]));
-const wcol = Object.fromEntries(worlds.map((w) => [w.id, w.bg]));
-// Where each sticker rests, in % of the stage, its turn and its width (vw on wide screens).
-const stickers = [
-  { id: 'mando', group: 'juegos', label: wname.juegos, x: 12, y: 14, r: -14, s: 12, d: 0, mx: 4, my: 2, ms: 22 },
-  { id: 'visor', group: 'vr', label: wname.vr, x: 64, y: 10, r: 10, s: 11, d: 1.4, mx: 68, my: 1, ms: 22 },
-  { id: 'gema', group: '3d', label: wname['3d'], x: 5, y: 50, r: 8, s: 9, d: 0.7, mx: 2, my: 34, ms: 16 },
-  { id: 'chip', group: 'software', label: wname.software, x: 82, y: 58, r: -9, s: 9.5, d: 2.1, mx: 78, my: 35, ms: 17 },
-  { id: 'claqueta', group: '3d', label: h.claqueta, x: 72, y: 76, r: 12, s: 9.5, d: 1, mx: 79, my: 60, ms: 17 },
-];
-const S = h3d.stickers as Record<string, { w: number; h: number }>;
 ---
 <section class="hero" id="inicio" aria-labelledby="hero-title" data-scene="hero">
+  <canvas class="liquid-bg" aria-hidden="true"></canvas>
   <header class="nav wrap">
     <nav aria-label={ui.chapters}>
       <ul class="glass" data-liquid='{"bezel":16,"scale":30}'>
@@ -61,17 +50,6 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
         ))}
       </h1>
     </div>
-
-    <ul class="stickers" aria-label={ui.navWorlds}>
-      {stickers.map((s) => (
-        <li class="sticker-li" style={`--x:${s.x};--y:${s.y};--mx:${s.mx};--my:${s.my};--ms:${s.ms};--r:${s.r}deg;--s:${s.s};--ar:${S[s.id].w / S[s.id].h};--d:${s.d}s;--c:${wcol[s.group]}`}>
-          <button class="sticker" type="button" data-group={s.group} aria-label={`${h.open} ${s.label}`}>
-            <img src={`${base}hero/s-${s.id}.webp`} alt="" draggable="false" loading="eager" />
-            <span class="sticker-tip glass" aria-hidden="true">{s.label}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
 
     <div class="lens" aria-hidden="true"><div class="lens-in"></div><span class="lens-shine"></span></div>
     <div class="ghost" aria-hidden="true">
@@ -589,7 +567,7 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(24px, 4svh, 48px) var(--margin) clamp(40px, 9svh, 110px);
+    padding: clamp(24px, 4svh, 48px) var(--margin) clamp(220px, 40svh, 420px);
     transition: opacity 0.3s;
   }
 
@@ -659,8 +637,7 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
   .sp { flex: none; width: calc(var(--u) * 0.3); }
 
   /* A letter you touch wobbles like jelly. */
-  .ch.is-wobble,
-  .sticker img.is-wobble { animation: jelly 0.7s cubic-bezier(0.3, 0.7, 0.4, 1); }
+  .ch.is-wobble { animation: jelly 0.7s cubic-bezier(0.3, 0.7, 0.4, 1); }
 
   @keyframes jelly {
     0% { transform: none; }
@@ -709,101 +686,16 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
   .btn-glass:hover { transform: translateY(-3px); }
   .hero .btn-glass.glass { background: linear-gradient(160deg, #ffffff40 0%, #ffffff12 50%, #ffffff26 100%); }
 
-  /* ---------- Stickers ---------- */
-  .stickers {
+
+  /* ---------- The liquid glass behind the name (scripts/liquidbg.ts) ---------- */
+  .liquid-bg {
     position: absolute;
+    z-index: 0;
     inset: 0;
-    z-index: 3;
-    pointer-events: none;
-  }
-
-  .sticker-li {
-    position: absolute;
-    left: calc(var(--x) * 1%);
-    top: calc(var(--y) * 1%);
-    width: min(calc(var(--s) * 1vw), calc(var(--s) * 1.75svh));
-  }
-
-  .sticker {
-    position: relative;
-    display: block;
     width: 100%;
-    padding: 0;
-    border: 0;
-    background: none;
-    pointer-events: auto;
-    cursor: grab;
-    touch-action: none;
-    transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(calc(var(--r) + var(--dr, 0deg)));
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .sticker img {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: var(--ar);
+    height: 100%;
+    max-width: none;
     pointer-events: none;
-    user-select: none;
-    filter: drop-shadow(0 16px 14px #0b114059);
-    animation: bob 5.5s ease-in-out infinite;
-    animation-delay: calc(var(--d) * -1);
-    transition: scale 0.45s cubic-bezier(0.34, 1.8, 0.5, 1), filter 0.3s;
-  }
-
-  @keyframes bob {
-    50% { translate: 0 -7%; rotate: 4deg; }
-  }
-
-  .sticker:hover img,
-  .sticker:focus-visible img { scale: 1.08; }
-
-  .sticker.is-held { cursor: grabbing; z-index: 2; }
-
-  .sticker.is-held img {
-    scale: 1.14;
-    animation-play-state: paused;
-    filter: drop-shadow(0 34px 22px #0b114066);
-  }
-
-  .sticker:focus-visible { outline: 3px solid var(--accent); outline-offset: 6px; border-radius: 24px; }
-
-  .sticker-tip {
-    position: absolute;
-    left: 50%;
-    top: 96%;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 6px 12px 6px 9px;
-    border-radius: 999px;
-    color: var(--ink);
-    font-size: 13px;
-    font-weight: 800;
-    white-space: nowrap;
-    translate: -50% 0;
-    rotate: calc(var(--r) * -1 - var(--dr, 0deg));
-    opacity: 0;
-    scale: 0.7;
-    transition: opacity 0.2s, scale 0.35s var(--ease-spring);
-    pointer-events: none;
-  }
-
-  .sticker-tip::before {
-    content: '';
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--c);
-  }
-
-  .hero .sticker-tip.glass { background: linear-gradient(160deg, #ffffffd9, #ffffffa6); }
-
-  .sticker:hover .sticker-tip,
-  .sticker:focus-visible .sticker-tip,
-  .sticker.is-held .sticker-tip {
-    opacity: 1;
-    scale: 1;
   }
 
   /* ---------- The glass lens over the name ---------- */
@@ -1044,7 +936,7 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
     background-size: var(--grid) var(--grid);
   }
 
-  .hero.is-paper .stickers,
+  .hero.is-paper .liquid-bg,
   .hero.is-paper .ghost,
   .hero.is-paper .nav { visibility: hidden; }
 
@@ -1072,17 +964,17 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
 
 
 
-  /* ---------- The Creative ID, as a sticker you carry to the reader ---------- */
+  /* ---------- The Creative ID, under the name: pull it down to the reader ---------- */
   .hero { --anchor: 50%; }
 
   .pass {
     position: absolute;
     z-index: 4;
-    left: 20%;
-    top: 76%;
-    width: min(16vw, 250px, 28svh);
+    left: 50%;
+    top: 61%;
+    width: min(18vw, 270px, 24svh);
     translate: -50% -50%;
-    transform: translate(var(--px, 0px), var(--py, 0px)) rotate(calc(-9deg + var(--pr, 0deg))) scale(var(--ps, 1));
+    transform: translate(var(--px, 0px), var(--py, 0px)) rotate(calc(-4deg + var(--pr, 0deg))) scale(var(--ps, 1));
     cursor: grab;
     touch-action: none;
     user-select: none;
@@ -1192,9 +1084,9 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
 
   @media (max-width: 900px), (max-aspect-ratio: 1/1) {
     .pass {
-      left: 48%;
+      left: 50%;
       top: 59%;
-      width: min(56vw, 300px, 26svh);
+      width: min(62vw, 320px, 27svh);
     }
   }
 
@@ -1280,12 +1172,6 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
       padding-top: 15svh;
     }
 
-    .sticker-li {
-      left: calc(var(--mx) * 1%);
-      top: calc(var(--my) * 1%);
-      width: calc(var(--ms) * 1vw);
-    }
-
     .lens { display: none; }
   }
 
@@ -1303,7 +1189,6 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .sticker img,
     .intro-word span { animation: none; }
   }
 
@@ -1314,6 +1199,8 @@ const S = h3d.stickers as Record<string, { w: number; h: number }>;
   import { initScanner } from '../scripts/scanner';
   import { initLiquid } from '../scripts/liquid';
   import { initHero3d } from '../scripts/hero3d';
+  import { initLiquidBg } from '../scripts/liquidbg';
+  initLiquidBg(document.querySelector<HTMLCanvasElement>('.hero .liquid-bg'));
   initScanner(initPass());
   initLiquid();
   initHero3d();

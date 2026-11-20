@@ -1,8 +1,9 @@
 ---
-// Who José is, in the quiet column (after Candid's "Studio"): a small heading with his flag, the
-// story, his email in a pill and two square tiles — his Creative ID hanging from its lanyard (grab
-// it, swing it, throw it) and a controller he modelled in Blender that turns under the pointer. Then what he has
-// achieved, two by two, and his skills.
+// Who José is. Right after the way in, his Creative ID is found hanging from its lanyard at the top
+// of the chapter (grab it, swing it, pull the cord, throw it); under it, his name and his story in
+// the quiet column (after Candid's "Studio"), his email in a pill, a card with the facts and a
+// controller he modelled in Blender that turns under the pointer. Then his achievements, two by
+// two, and his skills.
 import { getData, t, achievements, type Lang } from '../i18n';
 import h3d from '../data/hero3d.json';
 interface Props { lang: Lang }
@@ -15,14 +16,39 @@ const spin = (h3d as { spin?: { frames: number; w: number; h: number } }).spin ?
 const gh = site.socials.find((s) => s.icon === 'github');
 const li = site.socials.find((s) => s.icon === 'linkedin');
 ---
-<section data-scene="about" class="c-sec studio" id="quien-soy" aria-labelledby="about-title">
+<section data-scene="about" class="studio" id="quien-soy" aria-labelledby="about-title">
+  <div class="hang" data-lanyard-scope>
+    <div class="lanyard" data-lanyard>
+      <div class="strap" aria-hidden="true"><span class="reel"></span></div>
+      <span class="cord" aria-hidden="true"></span>
+      <div class="swing">
+        <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
+          <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
+          <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
+          <path d="M22 40 L18 70 Q16 84 30 86 Q44 84 42 70 L38 40" fill="none" stroke="#c9cdd5" stroke-width="7" stroke-linecap="round" />
+          <path d="M30 56 L30 74" stroke="#8b919d" stroke-width="5" stroke-linecap="round" />
+        </svg>
+        <div class="badge">
+          <div class="badge-card id-card">
+            <img src={`${base}img/creative-id.webp`} width="889" height="575" loading="lazy" alt={ui.cidAlt} draggable="false" />
+            <span class="slot" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="col">
-    <h2 class="c-head reveal" id="about-title">
-      {ui.aboutTitle}
-      <svg class="flag" viewBox="0 0 30 20" aria-label="Colombia" role="img">
-        <rect width="30" height="10" fill="#fcd116" /><rect y="10" width="30" height="5" fill="#003893" /><rect y="15" width="30" height="5" fill="#ce1126" />
-      </svg>
-    </h2>
+    <header class="me reveal">
+      <p class="me-kicker">
+        {ui.aboutTitle}
+        <svg class="flag" viewBox="0 0 30 20" aria-label="Colombia" role="img">
+          <rect width="30" height="10" fill="#fcd116" /><rect y="10" width="30" height="5" fill="#003893" /><rect y="15" width="30" height="5" fill="#ce1126" />
+        </svg>
+      </p>
+      <h2 class="me-name" id="about-title">{site.name.first} {site.name.last}</h2>
+      <p class="me-role">{site.role}</p>
+    </header>
 
     <div class="c-text reveal" style="--d:60ms">
       <p><strong>{ui.aboutLead}</strong> {ui.aboutRest}</p>
@@ -35,29 +61,12 @@ const li = site.socials.find((s) => s.icon === 'linkedin');
     </div>
 
     <div class="tiles reveal" style="--d:120ms">
-      <div class="tile c-card tile-lanyard" data-lanyard-scope>
-        <div class="lanyard" data-lanyard>
-          <div class="strap" aria-hidden="true"><span class="reel"></span></div>
-          <span class="cord" aria-hidden="true"></span>
-          <div class="swing">
-            <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
-              <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
-              <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
-              <path d="M22 40 L18 70 Q16 84 30 86 Q44 84 42 70 L38 40" fill="none" stroke="#c9cdd5" stroke-width="7" stroke-linecap="round" />
-              <path d="M30 56 L30 74" stroke="#8b919d" stroke-width="5" stroke-linecap="round" />
-            </svg>
-            <div class="badge">
-              <div class="badge-card id-card">
-                <img src={`${base}img/creative-id.webp`} width="889" height="575" loading="lazy" alt={ui.cidAlt} draggable="false" />
-                <span class="slot" aria-hidden="true"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <span class="tile-tag" aria-hidden="true">{c.idCard}</span>
-      </div>
-      <div class="tile c-card tile-spin" data-lens={c.spin} role="img" aria-label={lang === 'es' ? 'Control de videojuego en 3D, modelado en Blender, que gira con el puntero' : 'A 3D game controller, modelled in Blender, that turns with the pointer'}>
+      <dl class="tile c-card facts">
+        {site.facts.map((f) => <div><dt>{f.label}</dt><dd>{f.value}</dd></div>)}
+      </dl>
+      <div class="tile c-card tile-spin" role="img" aria-label={lang === 'es' ? 'Control de videojuego en 3D, modelado en Blender, que gira con el puntero' : 'A 3D game controller, modelled in Blender, that turns with the pointer'}>
         <span class="spin" style={`--n:${spin.frames};--ar:${spin.w / spin.h};background-image:url(${base}hero/spin.webp)`}></span>
+        <span class="tile-tag" aria-hidden="true">Blender</span>
       </div>
     </div>
 
@@ -108,15 +117,79 @@ const li = site.socials.find((s) => s.icon === 'linkedin');
     perspective: 700px;
   }
 
-  /* The ID hangs from its lanyard inside the tile and can swing out over its edges. */
-  .tile-lanyard {
-    container-type: inline-size;
-    overflow: visible;
-    z-index: 2;
-    --strap: 14cqw;
-    --badge-w: 70cqw;
-    --badge-h: calc(var(--badge-w) / 1.546);
+  .studio {
+    position: relative;
+    padding-bottom: clamp(72px, 9vw, 128px);
   }
+
+  /* The ID hangs from the top edge of the chapter, centred, and can swing out over everything. */
+  .hang {
+    --strap: clamp(64px, 9svh, 110px);
+    --badge-w: min(360px, 76vw);
+    --badge-h: calc(var(--badge-w) / 1.546);
+    position: relative;
+    z-index: 3;
+    height: calc(var(--strap) + 50px + var(--badge-h) + 56px);
+    /* The strap starts at the chapter's top edge: nothing of it shows above. */
+    clip-path: inset(0 -100vw -100vh -100vw);
+  }
+
+  .badge { container-type: inline-size; }
+
+  /* His name, under the card. */
+  .me {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  .me-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--fg) 65%, transparent);
+  }
+
+  .me-kicker .flag { width: 22px; }
+
+  .me-name {
+    font-size: clamp(2.6rem, 1.6rem + 4vw, 4.8rem);
+    font-weight: 900;
+    font-stretch: 125%;
+    letter-spacing: -0.03em;
+    line-height: 0.92;
+    text-wrap: balance;
+  }
+
+  .me-role {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* The facts, like the back of a player card. */
+  .facts {
+    display: grid;
+    align-content: center;
+    gap: 14px;
+    padding: 24px;
+    place-items: stretch;
+  }
+
+  .facts div { display: grid; gap: 2px; }
+  .facts dt { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #2a2a2e8c; }
+  .facts dd { margin: 0; font-weight: 700; line-height: 1.3; }
 
   /* ---------- The lanyard (scripts/lanyard.ts) ---------- */
   .lanyard {
@@ -241,7 +314,7 @@ const li = site.socials.find((s) => s.icon === 'linkedin');
 
   .tile-tag {
     position: absolute;
-    left: 14px;
+    left: 18px;
     bottom: 12px;
     font-size: 12px;
     font-weight: 800;
