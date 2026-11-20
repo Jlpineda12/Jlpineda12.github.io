@@ -20,10 +20,10 @@ const steps = [
 const colors = ['#7c90da', '#6b4fd8', '#f2b630', '#e5483b', '#2fae7a', '#ff6b4a'];
 ---
 <section class="process" id="como-trabajo" data-scene="process" aria-labelledby="process-title">
-  <div class="wrap">
+  <div class="col-wide">
     <header class="p-head">
-      <h2 class="section-head reveal" id="process-title">{ui.processTitle}</h2>
-      <p class="lead reveal" style="--d:80ms">{ui.processLead} <span class="lead-more">{lab.lead}</span></p>
+      <h2 class="c-head reveal" id="process-title">{ui.processTitle}</h2>
+      <p class="c-text reveal" style="--d:80ms">{ui.processLead} <span class="lead-more">{lab.lead}</span></p>
     </header>
 
     <div class="lab" data-lab data-hints={JSON.stringify(lab.hints)} data-done={JSON.stringify(lab.done)} data-colors={JSON.stringify(colors)}>

@@ -28,8 +28,8 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.world === g)]));
 ---
 <section data-scene="projects" class="console-sec" id="consola" aria-labelledby="console-title">
-  <div class="wrap head">
-    <h2 class="section-head reveal" id="console-title">{ui.consoleTitle}</h2>
+  <div class="col-wide head">
+    <h2 class="c-head reveal" id="console-title">{ui.consoleTitle}</h2>
     <div class="chips reveal" style="--d:80ms" role="group" aria-label={ui.worldsTabs}>
       {groups.map((g) => (
         <button class="chip glass" data-liquid='{"bezel":12,"scale":22}' type="button" data-group={g} data-first={first[g]} style={`--cc:${CART[g].c}`}>
@@ -39,7 +39,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     </div>
   </div>
 
-  <div class="wrap stage">
+  <div class="col-wide stage">
     <div class="carousel" data-carousel>
       <ul class="turntable" aria-label={ui.pickCart}>
         {list.map((p, i) => {
@@ -132,7 +132,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     </span>
   </div>
 
-  <div class="wrap manuals-wrap">
+  <div class="col-wide manuals-wrap">
     <div class="manuals">
       {list.map((p, i) => {
         const w = world[p.world];
