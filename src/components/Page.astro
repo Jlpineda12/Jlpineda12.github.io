@@ -1,10 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from './Hero.astro';
-import About from './About.astro';
+import Studio from './Studio.astro';
+import Works from './Works.astro';
 import Console from './Console.astro';
 import Process from './Process.astro';
-import Inventory from './Inventory.astro';
+import Playground from './Playground.astro';
 import Contact from './Contact.astro';
 import Footer from './Footer.astro';
 import Journey from './Journey.astro';
@@ -17,10 +18,11 @@ const { lang } = Astro.props;
   <PuppetSprite />
   <Hero lang={lang} />
   <main id="contenido">
-    <About lang={lang} />
+    <Studio lang={lang} />
+    <Works lang={lang} />
     <Console lang={lang} />
     <Process lang={lang} />
-    <Inventory lang={lang} />
+    <Playground lang={lang} />
     <Contact lang={lang} />
   </main>
   <Footer lang={lang} />

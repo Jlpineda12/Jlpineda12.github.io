@@ -40,7 +40,7 @@ const stops = [
   .journey.is-on {
     display: block;
     position: fixed;
-    animation: hud-in 0.5s var(--ease-spring);
+    animation: hud-in 0.45s var(--ease-spring);
   }
 
   @keyframes hud-in {
@@ -154,14 +154,25 @@ const stops = [
       sections.forEach((s, i) => { if (s.getBoundingClientRect().top <= mid) idx = i; });
       // Hidden on the hero and again at the arcade ending, which has its own buttons.
       const end = document.querySelector('.footer')?.getBoundingClientRect().top ?? Infinity;
-      const show = window.scrollY > window.innerHeight * 0.6 && end > window.innerHeight;
+      const show = window.scrollY > window.innerHeight * 0.6 && end > window.innerHeight && (moving || hover);
       if (show !== on) {
         on = show;
         nav.classList.toggle('is-on', on);
       }
       if (on) moveTo(idx);
     };
-    window.addEventListener('scroll', update, { passive: true });
+    // It only shows while you travel (scrolling) or reach for it, then gets out of the way.
+    let moving = false, hover = false, idle = 0;
+    nav.addEventListener('pointerenter', () => { hover = true; update(); });
+    nav.addEventListener('pointerleave', () => { hover = false; update(); });
+    nav.addEventListener('focusin', () => { hover = true; update(); });
+    nav.addEventListener('focusout', () => { hover = false; update(); });
+    window.addEventListener('scroll', () => {
+      moving = true;
+      clearTimeout(idle);
+      idle = window.setTimeout(() => { moving = false; update(); }, 1600);
+      update();
+    }, { passive: true });
     window.addEventListener('resize', update);
     update();
   }

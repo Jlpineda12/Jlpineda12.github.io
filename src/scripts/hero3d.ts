@@ -299,8 +299,8 @@ function initStickers(hero: HTMLElement, items: HTMLElement[], onGrab: () => voi
         puppet?.play('think');
         return;
       }
-      travelTo('#proyectos');
-      setTimeout(() => document.querySelector<HTMLButtonElement>(`#proyectos .chip[data-group="${group}"]`)?.click(), 1300);
+      travelTo('#consola');
+      setTimeout(() => document.querySelector<HTMLButtonElement>(`#consola .chip[data-group="${group}"]`)?.click(), 1300);
     };
 
     btn.addEventListener('pointerdown', (e) => {

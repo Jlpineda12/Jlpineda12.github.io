@@ -1,0 +1,177 @@
+---
+// Who José is, in the quiet column (after Candid's "Studio"): a small heading with his flag, the
+// story, his email in a pill and two square tiles — his Creative ID, which tilts towards the
+// pointer, and a controller he modelled in Blender that turns under it. Then what he has
+// achieved, two by two, and his skills.
+import { getData, t, achievements, type Lang } from '../i18n';
+import h3d from '../data/hero3d.json';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { site, softSkills } = getData(lang);
+const ui = t(lang);
+const c = ui.candid;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const spin = (h3d as { spin?: { frames: number; w: number; h: number } }).spin ?? { frames: 24, w: 552, h: 347 };
+const gh = site.socials.find((s) => s.icon === 'github');
+const li = site.socials.find((s) => s.icon === 'linkedin');
+---
+<section data-scene="about" class="c-sec studio" id="quien-soy" aria-labelledby="about-title">
+  <div class="col">
+    <h2 class="c-head reveal" id="about-title">
+      {ui.aboutTitle}
+      <svg class="flag" viewBox="0 0 30 20" aria-label="Colombia" role="img">
+        <rect width="30" height="10" fill="#fcd116" /><rect y="10" width="30" height="5" fill="#003893" /><rect y="15" width="30" height="5" fill="#ce1126" />
+      </svg>
+    </h2>
+
+    <div class="c-text reveal" style="--d:60ms">
+      <p><strong>{ui.aboutLead}</strong> {ui.aboutRest}</p>
+      <p>{ui.moreLead}</p>
+      <p>{ui.moreText}</p>
+      <p>
+        {c.reach.split('GitHub')[0]}<a href={gh?.url} target="_blank" rel="noopener">GitHub</a>{c.reach.split('GitHub')[1].split('LinkedIn')[0]}<a href={li?.url} target="_blank" rel="noopener">LinkedIn</a>{c.reach.split('LinkedIn')[1]}
+      </p>
+      <p><a class="c-pill" href={`mailto:${site.email}?subject=${encodeURIComponent(ui.subject)}`}>{site.email}</a></p>
+    </div>
+
+    <div class="tiles reveal" style="--d:120ms">
+      <a class="tile c-card tile-id" href="#inicio" data-lens={c.idCard}>
+        <span class="id-tilt"><img src={`${base}img/creative-id.webp`} width="889" height="575" loading="lazy" alt={ui.cidAlt} /></span>
+      </a>
+      <div class="tile c-card tile-spin" data-lens={c.spin} role="img" aria-label={lang === 'es' ? 'Control de videojuego en 3D, modelado en Blender, que gira con el puntero' : 'A 3D game controller, modelled in Blender, that turns with the pointer'}>
+        <span class="spin" style={`--n:${spin.frames};--ar:${spin.w / spin.h};background-image:url(${base}hero/spin.webp)`}></span>
+      </div>
+    </div>
+
+    <hr class="c-rule" />
+
+    <h3 class="c-head reveal">{ui.achievements}</h3>
+    <ul class="c-grid2 reveal" style="--d:60ms">
+      {achievements[lang].map((a) => (
+        <li><strong>{a.title}</strong><span>{a.text}</span></li>
+      ))}
+    </ul>
+
+    <h3 class="c-head skills-head reveal">{c.skills}</h3>
+    <ul class="skills reveal" style="--d:60ms">
+      {softSkills.map((s) => <li class="c-pill">{s}</li>)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .flag {
+    width: 26px;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px #0000001a;
+  }
+
+  .c-text a:not(.c-pill) {
+    color: var(--fg);
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .tile {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    overflow: hidden;
+    perspective: 700px;
+  }
+
+  /* The ID card leans towards the pointer, like a card picked up off a table. */
+  .id-tilt {
+    display: block;
+    width: 84%;
+    transform: rotateX(var(--ty, 0deg)) rotateY(var(--tx, 0deg)) rotate(-6deg);
+    transition: transform 0.5s var(--ease-out);
+    filter: drop-shadow(0 18px 18px #0000002e);
+  }
+
+  .tile-id:hover .id-tilt { transition-duration: 0.12s; }
+
+  .id-tilt img {
+    width: 100%;
+    height: auto;
+    border-radius: 4.5% / 7%;
+  }
+
+  /* The controller, one frame per angle, side by side in one image. */
+  .spin {
+    display: block;
+    width: 92%;
+    aspect-ratio: var(--ar);
+    background-size: calc(var(--n) * 100%) 100%;
+    background-position: calc(var(--f, 0) / (var(--n) - 1) * 100%) 0;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 16px 14px #0000002e);
+  }
+
+  .skills-head { margin-top: 44px; }
+
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .skills .c-pill { font-size: 14px; }
+
+  @media (max-width: 520px) {
+    .tiles { gap: 8px; }
+  }
+</style>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The ID tilts towards the pointer.
+  const id = document.querySelector<HTMLElement>('.studio .tile-id');
+  const tilt = id?.querySelector<HTMLElement>('.id-tilt');
+  if (id && tilt && !reduced) {
+    id.addEventListener('pointermove', (e) => {
+      const r = id.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      tilt.style.setProperty('--tx', `${(x * 26).toFixed(1)}deg`);
+      tilt.style.setProperty('--ty', `${(-y * 22).toFixed(1)}deg`);
+    });
+    id.addEventListener('pointerleave', () => {
+      tilt.style.setProperty('--tx', '0deg');
+      tilt.style.setProperty('--ty', '0deg');
+    });
+  }
+
+  // The controller turns slowly on its own, and follows the pointer across the tile (or a finger).
+  const tile = document.querySelector<HTMLElement>('.studio .tile-spin');
+  const spin = tile?.querySelector<HTMLElement>('.spin');
+  if (tile && spin) {
+    const n = Number(getComputedStyle(spin).getPropertyValue('--n')) || 24;
+    let f = 0, held = false, timer = 0;
+    const show = (k: number) => {
+      f = ((Math.round(k) % n) + n) % n;
+      spin.style.setProperty('--f', String(f));
+    };
+    const idle = () => {
+      if (reduced || timer) return;
+      timer = window.setInterval(() => { if (!held) show(f + 1); }, 110);
+    };
+    const rest = () => { clearInterval(timer); timer = 0; };
+    tile.addEventListener('pointermove', (e) => {
+      const r = tile.getBoundingClientRect();
+      held = true;
+      show(((e.clientX - r.left) / r.width) * n * 1.5);
+    });
+    tile.addEventListener('pointerleave', () => { held = false; });
+    new IntersectionObserver((e) => (e[0].isIntersecting ? idle() : rest())).observe(tile);
+  }
+</script>

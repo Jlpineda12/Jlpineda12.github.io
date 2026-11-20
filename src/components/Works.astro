@@ -1,0 +1,162 @@
+---
+// A short list of José's projects in the quiet column (after Candid's "Works"): one card each,
+// picture, name, what it is and a line about it; the corner arrow opens it. Below, the way to the
+// console, where every project can be played.
+import { getData, t, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { projects, worlds } = getData(lang);
+const ui = t(lang);
+const c = ui.candid;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+// One or two per world, the strongest first.
+const FEATURED = ['kart-wars', 'arcade-station', 'digital-human', 'ojos-del-planeta', 'personajes-3d', 'lingopulse'];
+const list = FEATURED.map((s) => projects.find((p) => p.slug === s)).filter((p) => !!p);
+const wcolor = Object.fromEntries(worlds.map((w) => [w.id, w.bg]));
+const wname = Object.fromEntries(worlds.map((w) => [w.id, w.name]));
+// The first sentence is enough for a card.
+const short = (s: string) => (s.match(/^.*?[.!?](\s|$)/)?.[0] ?? s).trim();
+---
+<section data-scene="projects" class="c-sec works" id="proyectos" aria-labelledby="works-title">
+  <div class="col">
+    <h2 class="c-head reveal" id="works-title">{c.works}</h2>
+    <ul class="list">
+      {list.map((p, i) => (
+        <li class="reveal" style={`--d:${i * 60}ms`}>
+          <a class="work c-card" href={p!.url} target="_blank" rel="noopener" data-lens={c.open} style={`--wc:${wcolor[p!.world]}`}>
+            <span class="thumb"><img src={`${base}${p!.poster}`} width="1400" height="900" loading="lazy" alt="" /></span>
+            <span class="txt">
+              <strong>{p!.name}{p!.isNew && <em class="new">{ui.newTag}</em>}</strong>
+              <span class="kind"><i aria-hidden="true"></i>{wname[p!.world]} · {p!.kind}{p!.year && ` · ${p!.year}`}</span>
+              <span class="sum">{short(p!.summary)}</span>
+            </span>
+            <span class="corner" aria-hidden="true"></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="more reveal"><a class="c-pill" href="#consola">{c.more} <span aria-hidden="true">↓</span></a></p>
+  </div>
+</section>
+
+<style>
+  .list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .work {
+    position: relative;
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding: 12px 44px 12px 12px;
+    border-radius: 28px;
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 0.35s var(--ease-spring), box-shadow 0.3s;
+  }
+
+  .work:hover { transform: translateY(-3px) scale(1.01); }
+
+  .thumb {
+    display: block;
+    width: 84px;
+    aspect-ratio: 1;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--wc);
+    box-shadow: inset 0 0 0 1px #0000000f;
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s var(--ease-out);
+  }
+
+  .work:hover .thumb img { transform: scale(1.08); }
+
+  .txt {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .txt strong {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .new {
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .kind {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #2a2a2ea6;
+  }
+
+  .kind i {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--wc);
+  }
+
+  .sum {
+    font-size: 14.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #2a2a2ebf;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Candid's little corner mark: it turns into an arrow on hover. */
+  .corner {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    width: 12px;
+    height: 12px;
+    border-right: 2.5px solid #2a2a2e59;
+    border-bottom: 2.5px solid #2a2a2e59;
+    border-bottom-right-radius: 4px;
+    transition: transform 0.35s var(--ease-spring), border-color 0.2s;
+  }
+
+  .work:hover .corner {
+    border-color: var(--ink);
+    transform: translate(2px, -8px) rotate(-90deg);
+  }
+
+  .more { margin-top: 22px; }
+
+  @media (max-width: 520px) {
+    .work { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding-right: 36px; }
+    .thumb { width: 64px; border-radius: 16px; }
+    .txt strong { font-size: 15.5px; }
+  }
+</style>
