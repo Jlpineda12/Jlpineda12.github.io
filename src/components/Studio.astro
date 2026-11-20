@@ -1,229 +1,191 @@
 ---
-// Who José is. Right after the way in, his Creative ID is found hanging from its lanyard at the top
-// of the chapter (grab it, swing it, pull the cord, throw it); under it, his name and his story in
-// the quiet column (after Candid's "Studio"), his email in a pill, a card with the facts and a
-// controller he modelled in Blender that turns under the pointer. Then his achievements, two by
-// two, and his skills.
-import Edge from './Edge.astro';
-import Puppet from './Puppet.astro';
+// Who José is, at a glance. His Creative ID hangs from its lanyard on the left (grab it, swing it,
+// pull the cord, throw it) and stays in view while the cards on the right are read: his name and
+// story, whether he is free and the time in Bogotá, studies, languages, what he makes (his four
+// worlds), a controller he modelled in Blender, what drives him, what he has achieved, his skills
+// and how to reach him. Everything fits in about one screen.
+import SocialLinks from './SocialLinks.astro';
 import { getData, t, achievements, type Lang } from '../i18n';
 import h3d from '../data/hero3d.json';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const { site, softSkills } = getData(lang);
+const { site, softSkills, worlds, languages } = getData(lang);
 const ui = t(lang);
-const c = ui.candid;
+const b = ui.bento;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const spin = (h3d as { spin?: { frames: number; w: number; h: number } }).spin ?? { frames: 24, w: 552, h: 347 };
-const gh = site.socials.find((s) => s.icon === 'github');
-const li = site.socials.find((s) => s.icon === 'linkedin');
-const talk = ui.talk;
-const withEmail = (line: string) => line.replace('{email}', site.email);
+const study = site.facts.find((f) => /Estudios|Studies/.test(f.label))?.value ?? '';
+// Simple line icons, drawn on a 24px grid.
+const ICON: Record<string, string> = {
+  pin: 'M12 21s-6-5.4-6-10.2a6 6 0 1 1 12 0C18 15.6 12 21 12 21z M12 13a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4z',
+  cap: 'M2 9.5 12 4.5l10 5-10 5z M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5 M22 9.5v5',
+  chat: 'M4 5h16v11H10l-5 4v-4H4z M8 10h8 M8 13h5',
+  juegos: 'M7 8h10a4.5 4.5 0 0 1 4.4 5.5l-.7 3a2.4 2.4 0 0 1-4.2 1L15 16H9l-1.5 1.5a2.4 2.4 0 0 1-4.2-1l-.7-3A4.5 4.5 0 0 1 7 8z M8 11v3 M6.5 12.5h3 M15.5 11.5h.01 M17.5 13.5h.01',
+  vr: 'M3 9.5A2.5 2.5 0 0 1 5.5 7h13A2.5 2.5 0 0 1 21 9.5v5a2.5 2.5 0 0 1-2.5 2.5H15l-2-2.5h-2L9 17H5.5A2.5 2.5 0 0 1 3 14.5z',
+  '3d': 'M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5 M12 12v9 M12 12 4 7.5',
+  software: 'M8 7 3 12l5 5 M16 7l5 5-5 5 M14 4l-4 16',
+  play: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M10 8.5v7l6-3.5z',
+  story: 'M4 5.5C6 4.5 9 4.5 12 6c3-1.5 6-1.5 8-.5V19c-2-1-5-1-8 .5-3-1.5-6-1.5-8-.5z M12 6v13.5',
+  learn: 'M12 3l2.3 5.6 6 .5-4.6 3.9 1.4 5.9L12 15.8 6.9 18.9l1.4-5.9L3.7 9.1l6-.5z',
+  trophy: 'M8 4h8v5a4 4 0 0 1-8 0z M8 6H5a3 3 0 0 0 3 4 M16 6h3a3 3 0 0 1-3 4 M12 13v4 M9 20h6 M10 17h4',
+  mail: 'M3 6h18v12H3z M3 7l9 6 9-6',
+};
+const icon = (k: string) => ICON[k] ?? ICON.learn;
+const driveIcon = ['play', 'story', 'learn'];
 ---
 <section data-scene="about" class="studio" id="quien-soy" aria-labelledby="about-title">
-  <Edge kind="melt" color="#181f78" />
-  <div class="hang" data-lanyard-scope>
-    <div class="lanyard" data-lanyard>
-      <div class="strap" aria-hidden="true"><span class="reel"></span></div>
-      <span class="cord" aria-hidden="true"></span>
-      <div class="swing">
-        <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
-          <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
-          <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
-          <path d="M22 40 L18 70 Q16 84 30 86 Q44 84 42 70 L38 40" fill="none" stroke="#c9cdd5" stroke-width="7" stroke-linecap="round" />
-          <path d="M30 56 L30 74" stroke="#8b919d" stroke-width="5" stroke-linecap="round" />
-        </svg>
-        <div class="badge">
-          <div class="badge-card id-card">
-            <img src={`${base}img/creative-id.webp`} width="889" height="575" loading="lazy" alt={ui.cidAlt} draggable="false" />
-            <span class="slot" aria-hidden="true"></span>
+  <div class="col-wide about-grid">
+    <!-- His ID, hanging on the left. -->
+    <aside class="id-col">
+      <div class="hang" data-lanyard-scope>
+        <div class="lanyard" data-lanyard>
+          <div class="strap" aria-hidden="true"><span class="reel"></span></div>
+          <span class="cord" aria-hidden="true"></span>
+          <div class="swing">
+            <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
+              <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
+              <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
+              <path d="M22 40 L18 70 Q16 84 30 86 Q44 84 42 70 L38 40" fill="none" stroke="#c9cdd5" stroke-width="7" stroke-linecap="round" />
+              <path d="M30 56 L30 74" stroke="#8b919d" stroke-width="5" stroke-linecap="round" />
+            </svg>
+            <div class="badge">
+              <div class="badge-card id-card">
+                <img src={`${base}img/creative-id.webp`} width="889" height="575" loading="lazy" alt={ui.cidAlt} draggable="false" />
+                <span class="slot" aria-hidden="true"></span>
+              </div>
+            </div>
           </div>
         </div>
+        <p class="hang-hint hand" aria-hidden="true">{b.pull} ↓</p>
       </div>
-    </div>
-  </div>
+    </aside>
 
-  <div class="col">
-    <header class="me reveal">
-      <p class="me-kicker">
-        {ui.aboutTitle}
-        <svg class="flag" viewBox="0 0 30 20" aria-label="Colombia" role="img">
-          <rect width="30" height="10" fill="#fcd116" /><rect y="10" width="30" height="5" fill="#003893" /><rect y="15" width="30" height="5" fill="#ce1126" />
-        </svg>
-      </p>
-      <h2 class="me-name" id="about-title">{site.name.first} {site.name.last}</h2>
-      <p class="me-role">{site.role}</p>
-    </header>
+    <!-- Everything else, in cards. -->
+    <div class="bento">
+      <article class="card c-card b-intro reveal">
+        <p class="kicker">
+          {b.kicker}
+          <svg class="flag" viewBox="0 0 30 20" aria-label="Colombia" role="img">
+            <rect width="30" height="10" fill="#fcd116" /><rect y="10" width="30" height="5" fill="#003893" /><rect y="15" width="30" height="5" fill="#ce1126" />
+          </svg>
+        </p>
+        <h2 class="me-name" id="about-title">{site.name.first} {site.name.last}</h2>
+        <p class="me-role">{site.role}</p>
+        <p class="me-bio"><strong>{ui.aboutLead}</strong> {ui.aboutRest}</p>
+      </article>
 
-    <!-- His story as a game dialogue: he talks, you pick the questions. -->
-    <div class="talk reveal" style="--d:60ms" data-talk data-email={site.email}
-      data-hello={talk.hello} data-topics={JSON.stringify(talk.topics)}>
-      <div class="talk-box c-card" role="group" aria-label={talk.speaker}>
-        <div class="talk-face" aria-hidden="true"><Puppet pose="happy" view="430 640 820 900" /></div>
-        <div class="talk-body">
-          <p class="talk-name">{talk.speaker}</p>
-          <p class="talk-text" aria-live="polite">{talk.hello}</p>
-          <button class="talk-next" type="button" aria-label={talk.next} hidden>▾</button>
-        </div>
-      </div>
-      <ul class="talk-qs" aria-label={talk.speaker}>
-        {talk.topics.map((tp, i) => (
-          <li><button class="talk-q" type="button" data-q={i}><span aria-hidden="true">▸</span> {tp.q}</button></li>
-        ))}
-      </ul>
-      <details class="talk-all">
-        <summary>{talk.all}</summary>
-        <dl>
-          {talk.topics.map((tp) => (
-            <div><dt>{tp.q}</dt><dd>{tp.a.map(withEmail).join(' ')}</dd></div>
+      <article class="card c-card b-status reveal" style="--d:60ms">
+        <p class="open"><span class="dot" aria-hidden="true"></span>{b.open}</p>
+        <p class="where">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('pin')} /></svg>
+          Bogotá, Colombia
+        </p>
+        <p class="clock"><time data-bogota>--:--</time> <span>{b.time}</span></p>
+      </article>
+
+      <article class="card c-card b-study reveal" style="--d:90ms">
+        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('cap')} /></svg>{b.study}</p>
+        <p class="big">{study.split(',')[0]}</p>
+        <p class="small">Universidad Militar Nueva Granada · Bogotá</p>
+      </article>
+
+      <article class="card c-card b-langs reveal" style="--d:120ms">
+        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('chat')} /></svg>{b.langs}</p>
+        <ul class="langs">
+          {languages.map((l, i) => (
+            <li><span>{l.group}</span><em>{l.items}</em><i style={`--lv:${i === 0 ? 1 : 0.7}`}></i></li>
           ))}
-        </dl>
-      </details>
-      <p class="talk-links">
-        <a class="c-pill" href={`mailto:${site.email}?subject=${encodeURIComponent(ui.subject)}`}>{site.email}</a>
-        <a class="c-pill" href={gh?.url} target="_blank" rel="noopener">GitHub ↗</a>
-        <a class="c-pill" href={li?.url} target="_blank" rel="noopener">LinkedIn ↗</a>
-      </p>
-    </div>
+        </ul>
+      </article>
 
-    <div class="tiles reveal" style="--d:120ms">
-      <dl class="tile c-card facts">
-        {site.facts.map((f) => <div><dt>{f.label}</dt><dd>{f.value}</dd></div>)}
-      </dl>
-      <div class="tile c-card tile-spin" role="img" aria-label={lang === 'es' ? 'Control de videojuego en 3D, modelado en Blender, que gira con el puntero' : 'A 3D game controller, modelled in Blender, that turns with the pointer'}>
+      <article class="card c-card b-does reveal" style="--d:150ms">
+        <p class="label">{b.does}</p>
+        <ul class="worlds">
+          {worlds.map((w) => (
+            <li style={`--wc:${w.bg}`}>
+              <span class="w-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon(w.id)} /></svg></span>
+              <span class="w-txt"><strong>{w.name}</strong><span>{w.blurb}</span></span>
+            </li>
+          ))}
+        </ul>
+      </article>
+
+      <div class="card c-card b-spin tile-spin reveal" style="--d:180ms" role="img" aria-label={lang === 'es' ? 'Control de videojuego en 3D, modelado en Blender, que gira con el puntero' : 'A 3D game controller, modelled in Blender, that turns with the pointer'}>
         <span class="spin" style={`--n:${spin.frames};--ar:${spin.w / spin.h};background-image:url(${base}hero/spin.webp)`}></span>
-        <span class="tile-tag" aria-hidden="true">Blender</span>
+        <span class="tag">{b.blender}</span>
       </div>
+
+      <article class="card c-card b-drives reveal" style="--d:210ms">
+        <p class="label">{b.drives}</p>
+        <ul class="rows">
+          {ui.drives.map((d, i) => (
+            <li>
+              <span class="r-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon(driveIcon[i])} /></svg></span>
+              <span><strong>{d.title}</strong><span>{d.text}</span></span>
+            </li>
+          ))}
+        </ul>
+      </article>
+
+      <article class="card c-card b-wins reveal" style="--d:240ms">
+        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('trophy')} /></svg>{b.wins}</p>
+        <ul class="wins">
+          {achievements[lang].map((a) => <li><strong>{a.title}</strong><span>{a.text}</span></li>)}
+        </ul>
+      </article>
+
+      <article class="card c-card b-skills reveal" style="--d:270ms">
+        <p class="label">{b.skills}</p>
+        <ul class="chips">{softSkills.map((s) => <li>{s}</li>)}</ul>
+      </article>
+
+      <article class="card c-card b-talk reveal" style="--d:300ms">
+        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('mail')} /></svg>{b.talk}</p>
+        <a class="mail" href={`mailto:${site.email}?subject=${encodeURIComponent(ui.subject)}`}>{site.email}</a>
+        <SocialLinks lang={lang} />
+      </article>
     </div>
-
-    <hr class="c-rule" />
-
-    <h3 class="c-head reveal">{ui.achievements}</h3>
-    <ul class="c-grid2 reveal" style="--d:60ms">
-      {achievements[lang].map((a) => (
-        <li><strong>{a.title}</strong><span>{a.text}</span></li>
-      ))}
-    </ul>
-
-    <h3 class="c-head skills-head reveal">{c.skills}</h3>
-    <ul class="skills reveal" style="--d:60ms">
-      {softSkills.map((s) => <li class="c-pill">{s}</li>)}
-    </ul>
   </div>
 </section>
 
 <style>
-  .flag {
-    width: 26px;
-    height: auto;
-    border-radius: 4px;
-    box-shadow: 0 0 0 1px #0000001a;
-  }
-
-  .c-text a:not(.c-pill) {
-    color: var(--fg);
-    text-decoration: underline;
-    text-decoration-thickness: 1.5px;
-    text-underline-offset: 3px;
-  }
-
-  .tiles {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 28px;
-  }
-
-  .tile {
-    position: relative;
-    display: grid;
-    place-items: center;
-    aspect-ratio: 1;
-    overflow: hidden;
-    perspective: 700px;
-  }
-
   .studio {
     position: relative;
-    padding-bottom: clamp(72px, 9vw, 128px);
+    padding-block: clamp(40px, 6vw, 80px) clamp(72px, 9vw, 120px);
   }
 
-  /* The ID hangs from the top edge of the chapter, centred, and can swing out over everything. */
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, 0.36fr) minmax(0, 1fr);
+    gap: clamp(20px, 3vw, 44px);
+    align-items: start;
+  }
+
+  /* ---------- The ID, hanging on the left and staying in view ---------- */
+  .id-col {
+    position: sticky;
+    top: 0;
+  }
+
   .hang {
-    --strap: clamp(64px, 9svh, 110px);
-    --badge-w: min(360px, 76vw);
+    --strap: clamp(70px, 12svh, 140px);
+    --badge-w: min(24vw, 300px);
     --badge-h: calc(var(--badge-w) / 1.546);
     position: relative;
     z-index: 3;
-    height: calc(var(--strap) + 50px + var(--badge-h) + 56px);
-    /* The strap starts at the chapter's top edge: nothing of it shows above. */
+    height: calc(var(--strap) + 50px + var(--badge-h) + 70px);
+    margin-top: calc(clamp(40px, 6vw, 80px) * -1);
+    /* The strap starts at the top edge: nothing of it shows above. */
     clip-path: inset(0 -100vw -100vh -100vw);
   }
 
   .badge { container-type: inline-size; }
-
-  /* His name, under the card. */
-  .me {
-    display: grid;
-    justify-items: center;
-    gap: 8px;
-    margin-bottom: 30px;
-    text-align: center;
-  }
-
-  .me-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: color-mix(in oklab, var(--fg) 65%, transparent);
-  }
-
-  .me-kicker .flag { width: 22px; }
-
-  .me-name {
-    font-size: clamp(2.6rem, 1.6rem + 4vw, 4.8rem);
-    font-weight: 900;
-    font-stretch: 125%;
-    letter-spacing: -0.03em;
-    line-height: 0.92;
-    text-wrap: balance;
-  }
-
-  .me-role {
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  /* The facts, like the back of a player card. */
-  .facts {
-    display: grid;
-    align-content: center;
-    gap: 14px;
-    padding: 24px;
-    place-items: stretch;
-  }
-
-  .facts div { display: grid; gap: 2px; }
-  .facts dt { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #2a2a2e8c; }
-  .facts dd { margin: 0; font-weight: 700; line-height: 1.3; }
-
 
   .id-card {
     position: absolute;
     inset: 0;
     border-radius: 5cqw;
     box-shadow: 0 2px 0 #0000000d, 0 24px 34px -18px #2a2a2e80;
-    transform-style: preserve-3d;
   }
 
   .id-card img {
@@ -234,7 +196,6 @@ const withEmail = (line: string) => line.replace('{email}', site.email);
     -webkit-user-drag: none;
   }
 
-  /* A punched slot for the clip. */
   .slot {
     position: absolute;
     left: 50%;
@@ -247,264 +208,301 @@ const withEmail = (line: string) => line.replace('{email}', site.email);
     box-shadow: 0 1px 0 #fff8, inset 0 2px 3px #000;
   }
 
-  .tile-tag {
+  .hang-hint {
     position: absolute;
-    left: 18px;
-    bottom: 12px;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #2a2a2e80;
+    left: 50%;
+    bottom: 10px;
+    translate: -50% 0;
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+    color: color-mix(in oklab, var(--fg) 55%, transparent);
+    rotate: -3deg;
   }
 
-  /* The controller, one frame per angle, side by side in one image. */
+  /* ---------- The cards ---------- */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    position: relative;
+    padding: clamp(16px, 1.6vw, 22px);
+    border-radius: 26px;
+    color: var(--ink);
+    transition: transform 0.35s var(--ease-spring);
+  }
+
+  .card:hover { transform: translateY(-3px); }
+
+  .label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2a2a2e99;
+  }
+
+  .label svg,
+  .where svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Name and story */
+  .b-intro { grid-column: span 4; display: grid; gap: 8px; align-content: center; }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2a2a2e99;
+  }
+
+  .flag { width: 22px; height: auto; border-radius: 3px; box-shadow: 0 0 0 1px #0000001a; }
+
+  .me-name {
+    font-size: clamp(2rem, 1.3rem + 2.6vw, 3.4rem);
+    font-weight: 900;
+    font-stretch: 125%;
+    letter-spacing: -0.03em;
+    line-height: 0.92;
+  }
+
+  .me-role {
+    justify-self: start;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .me-bio { color: #2a2a2ec4; line-height: 1.5; }
+  .me-bio strong { color: var(--ink); }
+
+  /* Free to work, where, and what time it is there */
+  .b-status {
+    grid-column: span 2;
+    display: grid;
+    align-content: space-between;
+    gap: 10px;
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .open { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #3fbf6f;
+    animation: live 2s ease-out infinite;
+  }
+
+  @keyframes live {
+    0% { box-shadow: 0 0 0 0 #3fbf6faa; }
+    100% { box-shadow: 0 0 0 10px #3fbf6f00; }
+  }
+
+  .where { display: flex; align-items: center; gap: 6px; font-weight: 700; opacity: 0.9; }
+  .where svg { stroke: #ffd23f; }
+
+  .clock time {
+    display: block;
+    font-size: clamp(1.5rem, 1rem + 1.3vw, 2.2rem);
+    font-weight: 900;
+    font-stretch: 105%;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .clock span { font-size: 13px; opacity: 0.7; }
+
+  /* Studies and languages */
+  .b-study { grid-column: span 3; }
+  .b-langs { grid-column: span 3; }
+
+  .big { font-size: 1.15rem; font-weight: 800; line-height: 1.25; }
+  .small { margin-top: 4px; font-size: 14px; color: #2a2a2ea6; }
+
+  .langs { display: grid; gap: 10px; }
+
+  .langs li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 2px 8px;
+  }
+
+  .langs span { font-weight: 800; }
+  .langs em { justify-self: end; font-style: normal; font-size: 13px; font-weight: 700; color: #2a2a2ea6; }
+
+  .langs i {
+    grid-column: 1 / -1;
+    height: 6px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--accent) calc(var(--lv) * 100%), #2a2a2e1a 0);
+  }
+
+  /* His four worlds */
+  .b-does { grid-column: span 4; }
+
+  .worlds {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .worlds li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: start; }
+
+  .w-ico {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+    background: var(--wc);
+    box-shadow: inset 0 2px 0 #ffffff40, inset 0 -2px 0 #0000002e;
+  }
+
+  .w-ico svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+  .w-txt { display: grid; gap: 2px; font-size: 13.5px; line-height: 1.35; color: #2a2a2eb3; }
+  .w-txt strong { font-size: 15px; color: var(--ink); }
+
+  /* The controller */
+  .b-spin {
+    grid-column: span 2;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    min-height: 180px;
+  }
+
   .spin {
     display: block;
-    width: 92%;
+    width: 100%;
     aspect-ratio: var(--ar);
     background-size: calc(var(--n) * 100%) 100%;
     background-position: calc(var(--f, 0) / (var(--n) - 1) * 100%) 0;
     background-repeat: no-repeat;
-    filter: drop-shadow(0 16px 14px #0000002e);
+    filter: drop-shadow(0 14px 12px #0000002e);
   }
 
-
-  /* ---------- The dialogue ---------- */
-  .talk { display: grid; gap: 14px; }
-
-  .talk-box {
-    position: relative;
-    display: grid;
-    grid-template-columns: 96px minmax(0, 1fr);
-    gap: 18px;
-    align-items: start;
-    min-height: 168px;
-    padding: 20px 22px 22px;
-    border-radius: 28px;
-    cursor: pointer;
-  }
-
-  .talk-face {
-    width: 96px;
-    aspect-ratio: 1;
-    border-radius: 24px;
-    background: radial-gradient(circle at 50% 35%, #ffffffcc, #fff0 70%), var(--accent);
-    box-shadow: inset 0 2px 0 #ffffff80, inset 0 -3px 0 #0000001f;
-    overflow: hidden;
-    display: grid;
-    place-items: end center;
-  }
-
-  .talk-face :global(.pp) { width: 112%; height: auto; max-width: none; overflow: visible; margin-bottom: -6%; }
-
-  .talk-body { display: grid; gap: 6px; min-width: 0; }
-
-  .talk-name {
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  .talk-text {
-    font-size: clamp(1.05rem, 0.98rem + 0.35vw, 1.25rem);
-    font-weight: 600;
-    line-height: 1.45;
-    min-height: 3em;
-  }
-
-  .talk-text :global(a) { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-
-  /* The blinking caret while he types, and the little "next" arrow when he is done. */
-  .talk-text.is-typing::after {
-    content: '';
-    display: inline-block;
-    width: 0.5em;
-    height: 1.05em;
-    margin-left: 2px;
-    vertical-align: -0.15em;
-    background: currentColor;
-    animation: caret 0.8s steps(2) infinite;
-  }
-
-  @keyframes caret { 50% { opacity: 0; } }
-
-  .talk-next {
+  .tag {
     position: absolute;
-    right: 18px;
+    left: 16px;
     bottom: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #2a2a2e80;
+  }
+
+  /* What drives him, and what he has done */
+  .b-drives { grid-column: span 3; }
+  .b-wins { grid-column: span 3; }
+
+  .rows { display: grid; gap: 12px; }
+  .rows li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
+
+  .r-ico {
+    display: grid;
+    place-items: center;
     width: 34px;
     height: 34px;
-    border: 0;
-    border-radius: 50%;
-    background: var(--ink);
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-    animation: next-bob 1s ease-in-out infinite;
+    border-radius: 11px;
+    background: color-mix(in oklab, var(--accent) 14%, #fff);
   }
 
-  @keyframes next-bob { 50% { translate: 0 3px; } }
+  .r-ico svg { width: 19px; height: 19px; fill: none; stroke: var(--accent); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .rows li > span:last-child { display: grid; gap: 1px; font-size: 13.5px; line-height: 1.35; color: #2a2a2eb3; }
+  .rows strong { font-size: 15px; color: var(--ink); }
 
-  .talk-qs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  .wins { display: grid; gap: 9px; }
+  .wins li { display: grid; gap: 1px; padding-left: 14px; border-left: 3px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+  .wins strong { font-size: 14px; }
+  .wins span { font-size: 13px; color: #2a2a2ea6; line-height: 1.35; }
 
-  .talk-q {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 42px;
-    padding: 0 16px;
-    border: 0;
+  /* Skills and how to reach him */
+  .b-skills { grid-column: span 4; }
+  .b-talk { grid-column: span 2; display: grid; align-content: start; gap: 10px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .chips li {
+    padding: 7px 12px;
     border-radius: 999px;
-    background: #ffffffb3;
-    color: var(--ink);
+    background: #2a2a2e0f;
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+
+  .mail {
     font-weight: 800;
     font-size: 14.5px;
-    cursor: pointer;
-    box-shadow: inset 0 1px 0 #fff, 0 0 0 1px #2a2a2e14, 0 8px 16px -12px #2a2a2e80;
-    transition: transform 0.3s var(--ease-spring), background-color 0.2s;
+    color: var(--accent);
+    word-break: break-all;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
-  .talk-q:hover { transform: translateY(-2px); background: #fff; }
-  .talk-q span { color: var(--accent); }
-  .talk-q.is-on { background: var(--ink); color: #fff; }
-  .talk-q.is-on span { color: #fff; }
-  .talk-q.is-done { opacity: 0.6; }
-  .talk-q.is-done span::before { content: '✓ '; }
-
-  .talk-all summary {
-    width: max-content;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    color: color-mix(in oklab, var(--fg) 65%, transparent);
+  @media (max-width: 1100px) {
+    .about-grid { grid-template-columns: minmax(0, 1fr); }
+    .id-col { position: relative; }
+    .hang { --badge-w: min(70vw, 320px); }
   }
 
-  .talk-all dl { display: grid; gap: 12px; margin-top: 12px; }
-  .talk-all dt { font-weight: 800; }
-  .talk-all dd { margin: 2px 0 0; color: color-mix(in oklab, var(--fg) 75%, transparent); line-height: 1.5; }
-
-  .talk-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-
-  @media (max-width: 520px) {
-    .talk-box { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 16px; }
-    .talk-face { width: 64px; border-radius: 18px; }
-  }
-
-  .skills-head { margin-top: 44px; }
-
-  .skills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .skills .c-pill { font-size: 14px; }
-
-  @media (max-width: 520px) {
-    .tiles { gap: 8px; }
+  @media (max-width: 700px) {
+    .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .b-intro, .b-does, .b-drives, .b-wins, .b-skills, .b-talk { grid-column: 1 / -1; }
+    .b-status, .b-spin { grid-column: span 1; }
+    .b-study, .b-langs { grid-column: 1 / -1; }
+    .worlds { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
 
 <script>
   import { initLanyard } from '../scripts/lanyard';
-  import { mountPuppet, type Anim } from '../scripts/puppet';
-
-  // ---------- The dialogue ----------
-  // He greets you when the chapter comes into view; each question plays its answer line by line,
-  // typed out, with his gestures. A tap on the box finishes the line, then moves to the next.
-  const talk = document.querySelector<HTMLElement>('[data-talk]');
-  const box = talk?.querySelector<HTMLElement>('.talk-box');
-  const text = talk?.querySelector<HTMLElement>('.talk-text');
-  const next = talk?.querySelector<HTMLButtonElement>('.talk-next');
-  const face = talk?.querySelector<SVGSVGElement>('.talk-face svg.pp');
-  if (talk && box && text && next) {
-    const reducedTalk = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const email = talk.dataset.email || '';
-    const hello = talk.dataset.hello || '';
-    const topics: { q: string; a: string[]; anims: Anim[] }[] = JSON.parse(talk.dataset.topics || '[]');
-    const qs = [...talk.querySelectorAll<HTMLButtonElement>('.talk-q')];
-    const puppet = face ? mountPuppet(face, 'happy') : null;
-    let lines: string[] = [];
-    let anims: Anim[] = [];
-    let at = 0;
-    let typing = 0;
-    let full = '';
-
-    const html = (t: string) =>
-      t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)
-        .replace(email, `<a href="mailto:${email}">${email}</a>`);
-    const finish = () => {
-      clearInterval(typing);
-      typing = 0;
-      text.classList.remove('is-typing');
-      text.innerHTML = html(full);
-      next.hidden = at >= lines.length - 1;
-    };
-    const say = (t: string, anim: Anim) => {
-      full = t.replace('{email}', email);
-      puppet?.play(anim);
-      next.hidden = true;
-      if (reducedTalk) return finish();
-      let i = 0;
-      text.textContent = '';
-      text.classList.add('is-typing');
-      clearInterval(typing);
-      typing = window.setInterval(() => {
-        i += full[i] === ' ' ? 2 : 1;
-        text.textContent = full.slice(0, i);
-        if (i >= full.length) finish();
-      }, 24);
-    };
-    const play = (k: number) => {
-      lines = topics[k].a;
-      anims = topics[k].anims;
-      at = 0;
-      qs.forEach((b, j) => {
-        b.classList.toggle('is-on', j === k);
-        if (j === k) b.classList.add('is-done');
-      });
-      say(lines[0], anims[0] || 'happy');
-    };
-    const advance = () => {
-      if (typing) return finish();
-      if (at < lines.length - 1) {
-        at++;
-        say(lines[at], anims[at] || anims[0] || 'happy');
-      }
-    };
-    qs.forEach((b) => b.addEventListener('click', () => play(Number(b.dataset.q))));
-    box.addEventListener('click', (e) => {
-      if ((e.target as Element).closest('a')) return;
-      advance();
-    });
-    next.addEventListener('click', (e) => {
-      e.stopPropagation();
-      advance();
-    });
-    // The greeting, typed, the first time the box is seen.
-    let greeted = false;
-    new IntersectionObserver((e) => {
-      if (greeted || !e[0].isIntersecting) return;
-      greeted = true;
-      lines = [hello];
-      anims = ['happy'];
-      at = 0;
-      say(hello, 'happy');
-    }, { threshold: 0.6 }).observe(box);
-  }
-
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // The ID swings on its lanyard.
   initLanyard(document.querySelector<HTMLElement>('.studio [data-lanyard]'));
 
-  // The controller turns slowly on its own, and follows the pointer across the tile (or a finger).
+  // The time in Bogotá, kept up to date.
+  const clock = document.querySelector<HTMLElement>('[data-bogota]');
+  if (clock) {
+    const fmt = new Intl.DateTimeFormat(document.documentElement.lang === 'en' ? 'en-US' : 'es-CO', {
+      timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit',
+    });
+    const tick = () => { clock.textContent = fmt.format(new Date()); };
+    tick();
+    setInterval(tick, 30000);
+  }
+
+  // The controller turns slowly on its own, and follows the pointer across the card (or a finger).
   const tile = document.querySelector<HTMLElement>('.studio .tile-spin');
   const spin = tile?.querySelector<HTMLElement>('.spin');
   if (tile && spin) {

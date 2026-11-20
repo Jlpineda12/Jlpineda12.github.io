@@ -5,7 +5,6 @@
 // and let go to launch it. The drops are SVG circles under a "goo" filter that melts them together
 // and lights them like glossy jelly (scripts/droplab.ts). José follows along beside the text.
 // Without scripts, every phase is simply listed.
-import Edge from './Edge.astro';
 import Puppet from './Puppet.astro';
 import { getData, t, type Lang } from '../i18n';
 interface Props { lang: Lang }
@@ -21,7 +20,6 @@ const steps = [
 const colors = ['#7c90da', '#6b4fd8', '#f2b630', '#e5483b', '#2fae7a', '#ff6b4a'];
 ---
 <section class="process" id="como-trabajo" data-scene="process" aria-labelledby="process-title">
-  <Edge kind="blobs" />
   <div class="col-wide">
     <header class="p-head">
       <h2 class="c-head reveal" id="process-title">{ui.processTitle}</h2>

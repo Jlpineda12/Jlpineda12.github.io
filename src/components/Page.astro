@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from './Hero.astro';
+import Portal from './Portal.astro';
 import Studio from './Studio.astro';
 import Works from './Works.astro';
 import Console from './Console.astro';
@@ -10,20 +11,27 @@ import Contact from './Contact.astro';
 import Footer from './Footer.astro';
 import Journey from './Journey.astro';
 import PuppetSprite from './PuppetSprite.astro';
-import type { Lang } from '../i18n';
+import { t, type Lang } from '../i18n';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
+const ui = t(lang);
 ---
 <Base lang={lang}>
   <PuppetSprite />
   <Hero lang={lang} />
   <main id="contenido">
+    <Portal shape="circle" n={1} from="#181f78" to="#fde3d2" ink="#fbf0e0" title={ui.navAbout} />
     <Studio lang={lang} />
+    <Portal shape="cartridge" n={2} from="#fde3d2" to="#cfeedd" title={ui.navWorlds} />
     <Works lang={lang} />
     <Console lang={lang} />
+    <Portal shape="drop" n={3} from="#cfeedd" to="#ddd5fb" title={ui.navProcess} />
     <Process lang={lang} />
+    <Portal shape="spark" n={4} from="#ddd5fb" to="#fff1b3" title={ui.candid.tools} />
     <Playground lang={lang} />
+    <Portal shape="bubble" n={5} from="#fff1b3" to="#b4c6ff" title={ui.navContact} />
     <Contact lang={lang} />
+    <Portal shape="pixel" n={6} from="#b4c6ff" to="#2a2a2e" title={ui.gameOver} />
   </main>
   <Footer lang={lang} />
   <Journey lang={lang} />
@@ -34,10 +42,10 @@ const { lang } = Astro.props;
   import { initRewind } from '../scripts/rewind';
   import { initDroplet } from '../scripts/droplet';
   import { initScenes } from '../scripts/scenes';
-  import { initEdges } from '../scripts/edges';
+  import { initPortals } from '../scripts/portals';
   initMotion();
   initRewind();
   initDroplet();
   initScenes();
-  initEdges();
+  initPortals();
 </script>

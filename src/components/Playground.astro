@@ -2,7 +2,6 @@
 // What José carries and what he has made, in the quiet column: his tools two by two with his
 // languages, then a playground of pictures (after Candid's) — his projects and his 3D models, in a
 // loose mosaic, each naming itself on a small glass pill when you point at it.
-import Edge from './Edge.astro';
 import { getData, t, type Lang } from '../i18n';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -23,7 +22,6 @@ for (let i = 0; i < Math.max(posters.length, models.length); i++) {
 }
 ---
 <section data-scene="inventory" class="c-sec play" id="inventario" aria-labelledby="tools-title">
-  <Edge kind="dome" />
   <div class="col">
     <h2 class="c-head reveal" id="tools-title">{c.tools}</h2>
     <ul class="c-grid2 reveal" style="--d:60ms">
