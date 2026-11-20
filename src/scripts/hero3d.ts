@@ -3,7 +3,6 @@
 import { gsap } from 'gsap';
 import { mountPuppet } from './puppet';
 import { travelTo } from './motion';
-import { initWater } from './water';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -75,7 +74,6 @@ export function initHero3d() {
     return tl;
   };
 
-  const water = initWater(hero);
   const pass = hero.querySelector<HTMLElement>('[data-pass]');
   const reader = hero.querySelector<HTMLElement>('[data-reader]');
   const readerBody = reader?.querySelector<HTMLElement>('.reader-body');
@@ -97,41 +95,36 @@ export function initHero3d() {
     ghost.stop();
   });
 
-  // Reading the card: the hero turns to water and a ring of light runs out from the reader; when
-  // access is granted the letters wobble as the wave reaches them, one by one.
-  if (reader && readerBody && water) {
+  // Reading the card: José thinks while the laser passes; on access the letters and stickers wobble
+  // like jelly as the wave from the reader reaches them, one by one.
+  if (reader && readerBody) {
     new MutationObserver(() => {
       const st = reader.dataset.state;
+      if (st === 'scan') puppet?.play('think');
+      if (st !== 'ok') return;
       const r = readerBody.getBoundingClientRect();
       const cx = r.left + r.width / 2, cy = r.top;
-      if (st === 'scan') {
-        water.rise();
-        setTimeout(() => water.ripple(cx, cy), 250);
-        puppet?.play('think');
-      }
-      if (st === 'ok') {
-        water.ripple(cx, cy);
-        water.glow();
-        puppet?.play('celebrate');
-        letters.forEach((l) => {
-          const b = l.getBoundingClientRect();
-          const d = Math.hypot(b.left + b.width / 2 - cx, b.top + b.height / 2 - cy);
-          setTimeout(() => wobble(l), d * 0.9);
-        });
-        items.forEach((li) => {
-          const b = li.getBoundingClientRect();
-          const d = Math.hypot(b.left + b.width / 2 - cx, b.top + b.height / 2 - cy);
-          setTimeout(() => wobble(li.querySelector('img')!), d * 0.9);
-        });
-      }
+      puppet?.play('celebrate');
+      const wave = (el: Element | null, box: Element) => {
+        if (!el) return;
+        const b = box.getBoundingClientRect();
+        setTimeout(() => wobble(el), Math.hypot(b.left + b.width / 2 - cx, b.top + b.height / 2 - cy) * 0.8);
+      };
+      letters.forEach((l) => wave(l, l));
+      items.forEach((li) => wave(li.querySelector('img'), li));
     }).observe(reader, { attributes: true, attributeFilter: ['data-state'] });
   }
 
-  // Access granted: the water drains away, the card is collected, and José's cursor goes back to
-  // showing off the stickers.
+  // Access granted: the card is collected and the page glides straight on to the next chapter.
   addEventListener('jlp-enter', () => {
-    water?.drain();
     ghost.stop();
+    const next = document.getElementById('quien-soy');
+    if (next && scrollY < innerHeight * 0.5) {
+      setTimeout(() => {
+        next.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+        history.replaceState(null, '', '#quien-soy');
+      }, reduced ? 0 : 650);
+    }
     setTimeout(() => {
       puppet?.play('idle');
       ghost.start();
@@ -140,7 +133,6 @@ export function initHero3d() {
 
   // Another lap (from the end of the page): a fresh card waits on the hero again.
   addEventListener('jlp-loop', () => {
-    water?.fill();
     ghost.stop();
     touched = false;
     setTimeout(showWay, 1500);
@@ -167,7 +159,7 @@ export function initHero3d() {
 // ---------- Intro (after Candid's title card) ----------
 // 1. Paper, and a tiny wobbling mark at the bottom.
 // 2. The letters fly out of the mark along arcs, growing, and set into the big name, inked black.
-// 3. The cut: a flash, the paper turns to cobalt water, the letters to cream, the stickers pop in.
+// 3. The cut: a flash, the paper turns to cobalt, the letters to cream, the stickers pop in.
 // 4. The hero, as it stays: and the way in pops on (the card and the reader).
 function playIntro(o: {
   hero: HTMLElement;

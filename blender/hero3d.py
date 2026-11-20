@@ -2,7 +2,7 @@
 # Every letter and every sticker is rendered on its own (transparent background), so the page can
 # lay the name out, put José's face in the "O" and let each piece bounce, wobble and be dragged.
 #
-#   /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/hero3d.py -- "$PWD" [letters|stickers|all] [samples]
+#   /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/hero3d.py -- "$PWD" [letters|stickers|spin|all] [samples]
 #
 # Writes public/hero/l-<key>.webp, public/hero/s-<name>.webp and src/data/hero3d.json (sizes and
 # baselines, in letter units: 1 = the font size).
@@ -470,11 +470,49 @@ def stickers(manifest):
     manifest['stickers'] = out
 
 
+def spin(manifest, frames=24):
+    """The controller on a turntable: the same camera, one frame per angle, so the page can spin
+    it under the pointer (public/hero/spin-NN.webp)."""
+    clear()
+    parts = controller()
+    bpy.context.view_layer.update()
+    root = parts[0].parent
+    turn = link(bpy.data.objects.new('turn', None))
+    root.parent = turn
+    meshes = [p for p in parts if p.type == 'MESH']
+    # Frame every angle with one camera: the bounds over the whole turn.
+    lo, hi = Vector((1e9,) * 3), Vector((-1e9,) * 3)
+    for i in range(frames):
+        turn.rotation_euler = (0, math.radians(i * 360 / frames), 0)
+        bpy.context.view_layer.update()
+        a, b = bounds(meshes)
+        lo = Vector(map(min, lo, a))
+        hi = Vector(map(max, hi, b))
+    pad = 0.15
+    x0, x1, y0, y1 = lo.x - pad, hi.x + pad, lo.y - pad, hi.y + pad
+    w, h = x1 - x0, y1 - y0
+    cam.location = ((x0 + x1) / 2, (y0 + y1) / 2, 20)
+    cam.data.ortho_scale = max(w, h)
+    cam.data.sensor_fit = 'HORIZONTAL' if w >= h else 'VERTICAL'
+    sc.render.resolution_x = round(w * 170)
+    sc.render.resolution_y = round(h * 170)
+    for ob in sc.objects:
+        if ob.type == 'MESH':
+            ob.hide_render = ob not in meshes
+    for i in range(frames):
+        turn.rotation_euler = (0, math.radians(i * 360 / frames), 0)
+        sc.render.filepath = os.path.join(OUT, f'spin-{i:02d}')
+        bpy.ops.render.render(write_still=True)
+    manifest['spin'] = {'frames': frames, 'w': sc.render.resolution_x, 'h': sc.render.resolution_y}
+
+
 path = os.path.join(ROOT, 'src', 'data', 'hero3d.json')
 manifest = json.load(open(path)) if os.path.exists(path) else {}
 if WHAT in ('letters', 'all'):
     letters(manifest)
 if WHAT in ('stickers', 'all'):
     stickers(manifest)
+if WHAT in ('spin', 'all'):
+    spin(manifest)
 json.dump(manifest, open(path, 'w'), indent=2)
 print('done', list(manifest.get('letters', {})), list(manifest.get('stickers', {})))

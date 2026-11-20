@@ -4,9 +4,9 @@
 // letter, as puffy 3D letters made in Blender (blender/hero3d.py), with his own face as the "O".
 // Glossy stickers for his worlds float around it; drag them, throw them, or tap one to open those
 // projects. A glass lens follows the mouse over the name and bursts when clicked.
-// The way in is one more sticker: his Creative ID. Carry it to the glass reader (or tap it) and,
-// while it is read, the hero turns to water for a moment: a ring of light runs out, the letters
-// wobble as the wave reaches them, the water drains and the reader becomes the way into the page.
+// The way in is one more sticker: his Creative ID. Carry it to the glass reader (or tap it): the
+// laser reads it, the letters wobble like jelly as the access wave reaches them, and the page
+// glides straight on to the next chapter.
 // "Enter without scanning" opens it too, and nothing is gated without JS.
 import Puppet from './Puppet.astro';
 import { getData, t, type Lang } from '../i18n';
@@ -32,33 +32,8 @@ const stickers = [
   { id: 'claqueta', group: '3d', label: h.claqueta, x: 72, y: 76, r: 12, s: 9.5, d: 1, mx: 79, my: 60, ms: 17 },
 ];
 const S = h3d.stickers as Record<string, { w: number; h: number }>;
-// Bubbles rising through the water at the gate: fixed pseudo-random spots, sizes and timings.
-const rnd = (i: number, k: number) => ((Math.sin(i * 12.9898 + k * 78.233) * 43758.5453) % 1 + 1) % 1;
-const bubs = Array.from({ length: 22 }, (_, i) => ({
-  x: (rnd(i, 1) * 100).toFixed(1), s: (5 + rnd(i, 2) * 22).toFixed(0), d: (7 + rnd(i, 3) * 9).toFixed(1),
-  dl: (-rnd(i, 4) * 16).toFixed(1), w: ((rnd(i, 5) - 0.5) * 70).toFixed(0),
-}));
 ---
 <section class="hero" id="inicio" aria-labelledby="hero-title" data-scene="hero">
-  <div class="water" aria-hidden="true">
-    <canvas class="water-gl"></canvas>
-    <div class="water-rays"></div>
-    <div class="bubs">
-      {bubs.map((b) => <span style={`--x:${b.x}%;--s:${b.s}px;--d:${b.d}s;--dl:${b.dl}s;--w:${b.w}px`}></span>)}
-    </div>
-    <span class="water-ring"></span>
-    <svg class="water-surface" viewBox="0 0 2880 60" preserveAspectRatio="none">
-      <path d="M0 30 C240 0 480 60 720 30 C960 0 1200 60 1440 30 C1680 0 1920 60 2160 30 C2400 0 2640 60 2880 30 V60 H0 Z" />
-    </svg>
-  </div>
-  <svg class="defs" width="0" height="0" aria-hidden="true">
-    <filter id="underwater" x="-8%" y="-8%" width="116%" height="116%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.016" numOctaves="2" seed="4" result="n">
-        <animate attributeName="baseFrequency" dur="9s" values="0.008 0.016;0.012 0.024;0.008 0.016" repeatCount="indefinite" />
-      </feTurbulence>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-  </svg>
   <header class="nav wrap">
     <nav aria-label={ui.chapters}>
       <ul class="glass" data-liquid='{"bezel":16,"scale":30}'>
@@ -1069,7 +1044,6 @@ const bubs = Array.from({ length: 22 }, (_, i) => ({
     background-size: var(--grid) var(--grid);
   }
 
-  .hero.is-paper .water,
   .hero.is-paper .stickers,
   .hero.is-paper .ghost,
   .hero.is-paper .nav { visibility: hidden; }
@@ -1333,156 +1307,6 @@ const bubs = Array.from({ length: 22 }, (_, i) => ({
     .intro-word span { animation: none; }
   }
 
-  /* ---------- Underwater gate (scripts/water.ts) ---------- */
-  /* Hidden until a card is read: then the hero turns to water for a moment, and drains. */
-  .water {
-    position: absolute;
-    z-index: 0;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.7s ease-out;
-    background: linear-gradient(180deg, #4a8cf0 0%, #2f58d4 42%, #1d2c98 100%);
-    will-change: transform;
-  }
-
-  :global(html:not(.gate)) .water:not(.is-draining),
-  .water.is-gone { display: none; }
-
-  .water-gl {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    mix-blend-mode: screen;
-    opacity: 0.6;
-  }
-
-  .water.no-gl .water-gl { display: none; }
-
-  /* Without WebGL: a slow shimmer of light instead of caustics. */
-  .water.no-gl::before {
-    content: '';
-    position: absolute;
-    inset: -20%;
-    background:
-      radial-gradient(30% 20% at 30% 30%, #ffffff2e, #fff0 70%),
-      radial-gradient(25% 18% at 70% 55%, #ffffff24, #fff0 70%),
-      radial-gradient(35% 22% at 45% 80%, #ffffff1f, #fff0 70%);
-    animation: shimmer 9s ease-in-out infinite alternate;
-  }
-
-  @keyframes shimmer { to { translate: 6% -4%; scale: 1.1; } }
-
-  /* Light shafts from the surface. */
-  .water-rays {
-    position: absolute;
-    inset: -10% -25% 25%;
-    background: repeating-linear-gradient(104deg, #fff0 0 6%, #ffffff26 8.5%, #fff0 12%, #fff0 17%, #ffffff17 19%, #fff0 23%);
-    filter: blur(8px);
-    -webkit-mask-image: linear-gradient(#000, #0000 85%);
-    mask-image: linear-gradient(#000, #0000 85%);
-    mix-blend-mode: screen;
-    animation: rays 11s ease-in-out infinite alternate;
-  }
-
-  @keyframes rays {
-    0% { translate: -3% 0; opacity: 0.7; }
-    100% { translate: 5% 0; opacity: 1; }
-  }
-
-  .bubs span {
-    position: absolute;
-    bottom: -40px;
-    left: var(--x);
-    width: var(--s);
-    height: var(--s);
-    border-radius: 50%;
-    background: radial-gradient(circle at 32% 28%, #ffffffe6 0 10%, #ffffff40 30%, #ffffff12 62%);
-    box-shadow: inset 0 0 0 1px #ffffff80, inset -2px -3px 6px #ffffff26;
-    animation: bub-rise var(--d) linear var(--dl) infinite;
-  }
-
-  @keyframes bub-rise {
-    0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
-    8% { opacity: 1; }
-    35% { transform: translate(var(--w), -38svh) scale(0.85, 1); }
-    65% { transform: translate(calc(var(--w) * -0.6), -78svh) scale(1, 0.9); }
-    100% { transform: translate(0, -120svh) scale(1.05); opacity: 0.25; }
-  }
-
-  /* A ring of light running out from the reader when the card is read. */
-  .water-ring {
-    position: absolute;
-    left: var(--rx, 50%);
-    top: var(--ry, 70%);
-    width: 60px;
-    height: 60px;
-    margin: -30px 0 0 -30px;
-    border-radius: 50%;
-    border: 2px solid #ffffffb3;
-    box-shadow: 0 0 24px #bfe6ff99, inset 0 0 18px #bfe6ff66;
-    opacity: 0;
-  }
-
-  .water.is-rippling .water-ring { animation: water-ring 1.6s cubic-bezier(0.2, 0.7, 0.3, 1); }
-
-  @keyframes water-ring {
-    0% { transform: scale(0.3); opacity: 1; }
-    100% { transform: scale(26); opacity: 0; }
-  }
-
-  .water.is-live { opacity: 1; }
-  .water.is-glow { filter: brightness(1.18) saturate(1.1); transition: filter 0.6s, opacity 0.7s; }
-
-  /* The surface: a wave along the water's top edge, sloshing sideways. It shows when the water drains. */
-  .water-surface {
-    position: absolute;
-    left: 0;
-    top: -44px;
-    width: 200%;
-    height: 46px;
-    max-width: none;
-    fill: #4a8cf0;
-    animation: slosh 2.4s linear infinite;
-  }
-
-  @keyframes slosh { to { translate: -50% 0; } }
-
-  .water.is-draining { animation: drain 1.3s cubic-bezier(0.6, 0, 0.35, 1) forwards; }
-
-  @keyframes drain {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(calc(100% + 60px)); }
-  }
-
-  :global(.bub-burst) {
-    position: absolute;
-    z-index: 6;
-    width: var(--s);
-    height: var(--s);
-    border-radius: 50%;
-    pointer-events: none;
-    background: radial-gradient(circle at 32% 28%, #ffffffee 0 10%, #ffffff4d 30%, #ffffff14 62%);
-    box-shadow: inset 0 0 0 1px #ffffffa6;
-    animation: bub-burst 1.4s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
-  }
-
-  @keyframes bub-burst {
-    0% { transform: translate(0, 0) scale(0.3); opacity: 0; }
-    15% { opacity: 1; }
-    85% { opacity: 1; transform: translate(var(--dx), var(--dy)) scale(1); }
-    100% { transform: translate(var(--dx), calc(var(--dy) - 20px)) scale(1.6); opacity: 0; }
-  }
-
-  .defs { position: absolute; width: 0; height: 0; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .water-rays,
-    .bubs span,
-    .water-surface { animation: none; }
-  }
 </style>
 
 <script>

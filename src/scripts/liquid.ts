@@ -52,7 +52,7 @@ function drawMap(w: number, h: number, r: number, bezel: number) {
   return c.toDataURL();
 }
 
-export function liquid(el: HTMLElement, { bezel = 24, scale = 46, blur = 1.2 } = {}) {
+export function liquid(el: HTMLElement, { bezel = 24, scale = 46, blur = 1.2, chroma = false } = {}) {
   if (!chromium() || matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
   if (!defs) {
     defs = document.createElementNS(NS, 'svg');
@@ -65,7 +65,25 @@ export function liquid(el: HTMLElement, { bezel = 24, scale = 46, blur = 1.2 } =
   filter.id = id;
   filter.setAttribute('filterUnits', 'userSpaceOnUse');
   filter.setAttribute('color-interpolation-filters', 'sRGB');
-  filter.innerHTML = `
+  // With chroma, each colour channel bends a little differently, like a real lens: rainbow rims.
+  const bend = (k: number, out: string) =>
+    `<feDisplacementMap in="soft" in2="map" scale="${(scale * k).toFixed(1)}" xChannelSelector="R" yChannelSelector="G" result="${out}" />`;
+  const only = (src: string, ch: number, out: string) => {
+    const m = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
+    m[ch * 5 + ch] = 1;
+    return `<feColorMatrix in="${src}" type="matrix" values="${m.join(' ')}" result="${out}" />`;
+  };
+  filter.innerHTML = chroma
+    ? `
+    <feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" result="soft" />
+    <feImage x="0" y="0" preserveAspectRatio="none" result="map" />
+    ${bend(1.14, 'dr')}${only('dr', 0, 'r')}
+    ${bend(1, 'dg')}${only('dg', 1, 'g')}
+    ${bend(0.86, 'db')}${only('db', 2, 'b')}
+    <feBlend in="r" in2="g" mode="screen" result="rg" />
+    <feBlend in="rg" in2="b" mode="screen" result="rgb" />
+    <feColorMatrix in="rgb" type="saturate" values="1.35" />`
+    : `
     <feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" result="soft" />
     <feImage x="0" y="0" preserveAspectRatio="none" result="map" />
     <feDisplacementMap in="soft" in2="map" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="bent" />
@@ -90,7 +108,13 @@ export function liquid(el: HTMLElement, { bezel = 24, scale = 46, blur = 1.2 } =
     el.style.backdropFilter = `url(#${id})`;
     el.classList.add('is-liquid');
   };
-  new ResizeObserver(update).observe(el);
+  // Redrawing the map costs a pass over every pixel: wait until a resize settles (the cursor lens
+  // grows and melts continuously), and stretch the last map in the meantime.
+  let wait = 0;
+  new ResizeObserver(() => {
+    clearTimeout(wait);
+    wait = window.setTimeout(update, 120);
+  }).observe(el);
   update();
 }
 

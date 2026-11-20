@@ -1,7 +1,9 @@
-// The site's liquid touch. With a mouse, a small glass droplet trails the pointer on a spring: it
-// stretches along its speed, melts onto buttons and links (taking their shape, pulled a little
-// towards the pointer) and squashes and ripples on a click. On touch screens, every tap leaves a
-// glass drop that swells and wobbles away. Nothing of this with reduced motion.
+// The site's liquid touch. With a mouse, a lens of glass trails the pointer on a spring: it bends
+// what is under it (with rainbow rims where the browser can refract the backdrop), stretches along
+// its speed, melts onto buttons and links, and over pictures and cards marked [data-lens] it swells
+// and reads out their name. A click squashes it and leaves a ripple. On touch screens, every tap
+// leaves a glass drop that swells and wobbles away. Nothing of this with reduced motion.
+import { liquid } from './liquid';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -39,10 +41,16 @@ export function initDroplet() {
   const d = document.createElement('div');
   d.className = 'droplet';
   d.setAttribute('aria-hidden', 'true');
+  const label = document.createElement('span');
+  label.className = 'droplet-label';
+  d.appendChild(label);
   document.body.appendChild(d);
   document.documentElement.classList.add('has-droplet');
+  liquid(d, { bezel: 22, scale: 34, blur: 0.4, chroma: true });
 
-  const SIZE = 30;
+  const SIZE = 54;
+  const BIG = 118;
+  let lensOn: HTMLElement | null = null;
   // Where it is, how fast it goes, and its shape (w, h, radius) easing towards the target shape.
   let x = -100, y = -100, vx = 0, vy = 0;
   let w = SIZE, h = SIZE, rad = SIZE / 2;
@@ -52,7 +60,10 @@ export function initDroplet() {
   let shown = false;
   let raf = 0;
 
+  // Over a picture or card with a name, the lens swells and reads it out.
+  const lensOf = (el: Element | null) => el?.closest<HTMLElement>('[data-lens]') ?? null;
   const pick = (el: Element | null) => {
+    if (lensOf(el)) return null;
     const t = el?.closest<HTMLElement>(TARGET) ?? null;
     if (!t) return null;
     const r = t.getBoundingClientRect();
@@ -63,7 +74,10 @@ export function initDroplet() {
   const tick = () => {
     raf = 0;
     let tx = px, ty = py, tw = SIZE, th = SIZE, tr = SIZE / 2;
-    if (target && target.isConnected) {
+    if (lensOn) {
+      tw = th = BIG;
+      tr = BIG / 2;
+    } else if (target && target.isConnected) {
       const r = target.getBoundingClientRect();
       const cs = getComputedStyle(target);
       // Melted onto the button, but still leaning towards the pointer like a drop of water.
@@ -85,7 +99,7 @@ export function initDroplet() {
     rad += (tr - rad) * 0.24;
     // Stretch along its speed (only while it is a free drop), squash when pressed.
     const speed = Math.hypot(vx, vy);
-    const stretch = target ? 0 : Math.min(0.55, speed * 0.028);
+    const stretch = target ? 0 : Math.min(0.5, speed * (lensOn ? 0.012 : 0.024));
     const angle = Math.atan2(vy, vx);
     press *= 0.82;
     const sx = (1 + stretch) * (1 - press * 0.25);
@@ -115,6 +129,7 @@ export function initDroplet() {
         y = py;
         d.classList.add('is-on');
       }
+      setLens(lensOf(e.target as Element));
       const t = pick(e.target as Element);
       if (t !== target) {
         target = t;
@@ -124,12 +139,20 @@ export function initDroplet() {
     },
     { passive: true },
   );
+  function setLens(el: HTMLElement | null) {
+    if (el === lensOn) return;
+    lensOn = el;
+    d.classList.toggle('is-lens', !!el);
+    if (el) label.textContent = el.dataset.lens || '';
+  }
   // Scrolling moves buttons under a still pointer.
   window.addEventListener(
     'scroll',
     () => {
       if (!shown) return;
-      const t = pick(document.elementFromPoint(px, py));
+      const under = document.elementFromPoint(px, py);
+      setLens(lensOf(under));
+      const t = pick(under);
       if (t !== target) {
         target = t;
         d.classList.toggle('is-melted', !!t);
