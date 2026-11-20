@@ -1,7 +1,7 @@
 ---
 // Who José is, in the quiet column (after Candid's "Studio"): a small heading with his flag, the
-// story, his email in a pill and two square tiles — his Creative ID, which tilts towards the
-// pointer, and a controller he modelled in Blender that turns under it. Then what he has
+// story, his email in a pill and two square tiles — his Creative ID hanging from its lanyard (grab
+// it, swing it, throw it) and a controller he modelled in Blender that turns under the pointer. Then what he has
 // achieved, two by two, and his skills.
 import { getData, t, achievements, type Lang } from '../i18n';
 import h3d from '../data/hero3d.json';
@@ -35,9 +35,27 @@ const li = site.socials.find((s) => s.icon === 'linkedin');
     </div>
 
     <div class="tiles reveal" style="--d:120ms">
-      <a class="tile c-card tile-id" href="#inicio" data-lens={c.idCard}>
-        <span class="id-tilt"><img src={`${base}img/creative-id.webp`} width="889" height="575" loading="lazy" alt={ui.cidAlt} /></span>
-      </a>
+      <div class="tile c-card tile-lanyard" data-lanyard-scope>
+        <div class="lanyard" data-lanyard>
+          <div class="strap" aria-hidden="true"><span class="reel"></span></div>
+          <span class="cord" aria-hidden="true"></span>
+          <div class="swing">
+            <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
+              <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
+              <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
+              <path d="M22 40 L18 70 Q16 84 30 86 Q44 84 42 70 L38 40" fill="none" stroke="#c9cdd5" stroke-width="7" stroke-linecap="round" />
+              <path d="M30 56 L30 74" stroke="#8b919d" stroke-width="5" stroke-linecap="round" />
+            </svg>
+            <div class="badge">
+              <div class="badge-card id-card">
+                <img src={`${base}img/creative-id.webp`} width="889" height="575" loading="lazy" alt={ui.cidAlt} draggable="false" />
+                <span class="slot" aria-hidden="true"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="tile-tag" aria-hidden="true">{c.idCard}</span>
+      </div>
       <div class="tile c-card tile-spin" data-lens={c.spin} role="img" aria-label={lang === 'es' ? 'Control de videojuego en 3D, modelado en Blender, que gira con el puntero' : 'A 3D game controller, modelled in Blender, that turns with the pointer'}>
         <span class="spin" style={`--n:${spin.frames};--ar:${spin.w / spin.h};background-image:url(${base}hero/spin.webp)`}></span>
       </div>
@@ -90,21 +108,146 @@ const li = site.socials.find((s) => s.icon === 'linkedin');
     perspective: 700px;
   }
 
-  /* The ID card leans towards the pointer, like a card picked up off a table. */
-  .id-tilt {
-    display: block;
-    width: 84%;
-    transform: rotateX(var(--ty, 0deg)) rotateY(var(--tx, 0deg)) rotate(-6deg);
-    transition: transform 0.5s var(--ease-out);
-    filter: drop-shadow(0 18px 18px #0000002e);
+  /* The ID hangs from its lanyard inside the tile and can swing out over its edges. */
+  .tile-lanyard {
+    container-type: inline-size;
+    overflow: visible;
+    z-index: 2;
+    --strap: 14cqw;
+    --badge-w: 70cqw;
+    --badge-h: calc(var(--badge-w) / 1.546);
   }
 
-  .tile-id:hover .id-tilt { transition-duration: 0.12s; }
+  /* ---------- The lanyard (scripts/lanyard.ts) ---------- */
+  .lanyard {
+    position: absolute;
+    z-index: 2;
+    left: var(--anchor, 50%);
+    top: 0;
+    width: 0;
+    height: 0;
+    transition: left 1s var(--ease-out);
+  }
 
-  .id-tilt img {
-    width: 100%;
+  .swing {
+    --len: var(--strap);
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  .strap {
+    position: absolute;
+    left: -15px;
+    top: -20px;
+    width: 30px;
+    height: calc(var(--strap-len, var(--strap)) + 24px);
+    transform-origin: 15px 20px;
+    rotate: var(--sa, 0deg);
+    background:
+      linear-gradient(90deg, #00000026 0 3px, #0000 3px calc(100% - 3px), #00000026 0),
+      repeating-linear-gradient(0deg, #ffffff12 0 2px, #0000 2px 5px),
+      var(--red);
+  }
+
+  /* The badge reel at the end of the strap; past it, a thin cord pulls out. */
+  .reel {
+    position: absolute;
+    left: -2px;
+    top: calc(100% - 18px);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #2a2a2e 0 4px, #0000 4.5px),
+      radial-gradient(circle at 35% 30%, #fff 0, #e6e8ee 30%, #a9aeb9 75%, #8b919d);
+    box-shadow: 0 0 0 3px var(--red), 0 4px 6px #0000004d;
+  }
+
+  /* Drawn from the reel to the clip, wherever the card has been pulled. */
+  .cord {
+    position: absolute;
+    left: -1px;
+    top: 0;
+    width: 2px;
+    height: 0;
+    border-radius: 2px;
+    background: #2a2a2e;
+    transform-origin: 1px 0;
+  }
+
+  .clip {
+    position: absolute;
+    left: -21px;
+    top: calc(var(--len) - 6px);
+    width: 42px;
+    max-width: none;
     height: auto;
-    border-radius: 4.5% / 7%;
+    overflow: visible;
+    filter: drop-shadow(0 3px 2px #0000002e);
+  }
+
+  .badge {
+    position: absolute;
+    left: calc(var(--badge-w) / -2);
+    top: calc(var(--len) + 50px);
+    width: var(--badge-w);
+    height: var(--badge-h);
+    transform-origin: 50% -30px;
+    perspective: 900px;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .badge.is-grabbed {
+    cursor: grabbing;
+  }
+
+
+  .lanyard.is-waiting .swing { visibility: hidden; }
+
+  .id-card {
+    position: absolute;
+    inset: 0;
+    border-radius: 5cqw;
+    box-shadow: 0 2px 0 #0000000d, 0 24px 34px -18px #2a2a2e80;
+    transform-style: preserve-3d;
+  }
+
+  .id-card img {
+    width: 100%;
+    height: 100%;
+    border-radius: 5cqw;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  /* A punched slot for the clip. */
+  .slot {
+    position: absolute;
+    left: 50%;
+    top: 1.6cqw;
+    width: 15cqw;
+    height: 2.4cqw;
+    translate: -50% 0;
+    border-radius: 99px;
+    background: #2a2a2e;
+    box-shadow: 0 1px 0 #fff8, inset 0 2px 3px #000;
+  }
+
+  .tile-tag {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #2a2a2e80;
   }
 
   /* The controller, one frame per angle, side by side in one image. */
@@ -134,22 +277,10 @@ const li = site.socials.find((s) => s.icon === 'linkedin');
 </style>
 
 <script>
+  import { initLanyard } from '../scripts/lanyard';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // The ID tilts towards the pointer.
-  const id = document.querySelector<HTMLElement>('.studio .tile-id');
-  const tilt = id?.querySelector<HTMLElement>('.id-tilt');
-  if (id && tilt && !reduced) {
-    id.addEventListener('pointermove', (e) => {
-      const r = id.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
-      tilt.style.setProperty('--tx', `${(x * 26).toFixed(1)}deg`);
-      tilt.style.setProperty('--ty', `${(-y * 22).toFixed(1)}deg`);
-    });
-    id.addEventListener('pointerleave', () => {
-      tilt.style.setProperty('--tx', '0deg');
-      tilt.style.setProperty('--ty', '0deg');
-    });
-  }
+  // The ID swings on its lanyard.
+  initLanyard(document.querySelector<HTMLElement>('.studio [data-lanyard]'));
 
   // The controller turns slowly on its own, and follows the pointer across the tile (or a finger).
   const tile = document.querySelector<HTMLElement>('.studio .tile-spin');
