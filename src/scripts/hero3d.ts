@@ -3,6 +3,7 @@
 import { gsap } from 'gsap';
 import { mountPuppet } from './puppet';
 import { travelTo } from './motion';
+import { initWater } from './water';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -30,7 +31,8 @@ export function fitStrap() {
   const role = hero?.querySelector<HTMLElement>('.role');
   if (!hero || !role) return;
   const fit = () => {
-    if (!matchMedia('(max-width: 900px), (max-aspect-ratio: 1/1)').matches) {
+    // At the gate the card hangs in the middle (CSS); only inside does it hang under the name.
+    if (gated() || !matchMedia('(max-width: 900px), (max-aspect-ratio: 1/1)').matches) {
       hero.style.removeProperty('--strap');
       return;
     }
@@ -41,6 +43,9 @@ export function fitStrap() {
   };
   fit();
   addEventListener('resize', fit);
+  // Registered before the lanyard's own listeners, so it reads the new length.
+  addEventListener('jlp-enter', fit);
+  addEventListener('jlp-loop', fit);
 }
 
 export function initHero3d() {
@@ -96,22 +101,81 @@ export function initHero3d() {
     return tl;
   };
 
-  const done = () => {
+  const water = initWater(hero);
+
+  // After the title: the name and the stickers float up and away like bubbles, and the screen is
+  // left empty, underwater, but for the card.
+  const away = (tl: gsap.core.Timeline, at: number) => {
+    tl.to([...letters, ...items], {
+      y: () => -gsap.utils.random(0.5, 0.9) * innerHeight,
+      x: () => gsap.utils.random(-40, 40),
+      rotation: () => gsap.utils.random(-25, 25),
+      scale: 0.5,
+      opacity: 0,
+      duration: 1.1,
+      ease: 'power2.in',
+      stagger: { each: 0.035, from: 'random' },
+    }, at);
+    tl.to(extras, { opacity: 0, y: -20, duration: 0.4, ease: 'power2.in' }, at);
+    tl.call(() => stage.classList.add('is-away'));
+    tl.set([...letters, ...items, ...extras], { clearProps: 'transform,opacity' });
+    return tl;
+  };
+
+  // The way in: the card drops into the water, then the reader appears.
+  const toGate = () => {
     root.classList.remove('intro');
     window.dispatchEvent(new Event('jlp-drop'));
-    setTimeout(() => ghost.start(), 900);
   };
+
+  // Reading the card sends ripples through the water from the reader.
+  const reader = hero.querySelector<HTMLElement>('[data-reader]');
+  const readerBody = reader?.querySelector<HTMLElement>('.reader-body');
+  if (reader && readerBody && water) {
+    new MutationObserver(() => {
+      const st = reader.dataset.state;
+      const r = readerBody.getBoundingClientRect();
+      if (st === 'scan' || st === 'ok') water.ripple(r.left + r.width / 2, r.top);
+      if (st === 'ok') water.glow();
+    }).observe(reader, { attributes: true, attributeFilter: ['data-state'] });
+  }
+
+  // Access granted: the water drains away like a wave, and the home page lands, dry.
+  addEventListener('jlp-enter', () => {
+    water?.drain();
+    stage.classList.remove('is-away');
+    if (reduced) return;
+    land(gsap.timeline({ onComplete: () => ghost.start() }), 0.55, true);
+  });
+
+  // Another lap (from the end of the page): the water fills again and the card waits.
+  addEventListener('jlp-loop', () => {
+    water?.fill();
+    ghost.stop();
+    stage.classList.add('is-away');
+  });
 
   stage.classList.add('is-ready');
 
-  if (reduced) {
+  if (!gated()) {
+    // Came in by a link to a chapter: no gate, no water, just the home page.
     root.classList.remove('intro');
-    window.dispatchEvent(new Event('jlp-drop'));
+    if (!reduced) land(gsap.timeline({ onComplete: () => ghost.start() }), 0.15, true);
     return;
   }
 
-  if (root.classList.contains('intro')) playIntro(hero, letters, land, done);
-  else land(gsap.timeline({ onComplete: () => ghost.start() }), 0.15, true);
+  if (reduced || !root.classList.contains('intro')) {
+    stage.classList.add('is-away');
+    toGate();
+    return;
+  }
+
+  playIntro(hero, letters, (tl, at) => {
+    land(tl, at);
+    // Hold the title a moment, then let it go.
+    away(tl, tl.duration() + 1.3);
+    return tl;
+  }, toGate, () => stage.classList.add('is-away'));
 }
 
 // ---------- Intro ----------
@@ -120,12 +184,16 @@ function playIntro(
   letters: HTMLElement[],
   land: (tl: gsap.core.Timeline, at: number) => gsap.core.Timeline,
   done: () => void,
+  skipped: () => void,
 ) {
   const intro = hero.querySelector<HTMLElement>('.intro');
   const paper = intro?.querySelector<HTMLElement>('.intro-paper');
   const bar = intro?.querySelector<HTMLElement>('.intro-load i');
   const edge = intro?.querySelector<SVGPathElement>('.intro-edge path');
-  if (!intro || !paper) return done();
+  if (!intro || !paper) {
+    skipped();
+    return done();
+  }
 
   const imgs = letters.filter((l): l is HTMLImageElement => l instanceof HTMLImageElement);
   const loaded = Promise.race([Promise.all(imgs.map((i) => i.decode().catch(() => {}))), wait(2600)]);
@@ -144,11 +212,14 @@ function playIntro(
     if (tl) tl.progress(1);
     else {
       gsap.set(paper, { yPercent: -130 });
+      intro.style.pointerEvents = 'none';
+      skipped();
       finish();
     }
   });
 
   Promise.all([loaded, wait(1250)]).then(() => {
+    if (finished) return;
     tl = gsap.timeline({ onComplete: finish });
     tl.to('.intro-mark', { scale: 0.7, opacity: 0, duration: 0.4, ease: 'back.in(2)' })
       .to('.intro-load', { opacity: 0, y: 10, duration: 0.25 }, '<')
@@ -310,6 +381,11 @@ function initLens(stage: HTMLElement, name: HTMLElement, letters: HTMLElement[])
 
   stage.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse' || bursting) return;
+    if (gated()) {
+      on = false;
+      lens.classList.remove('is-on');
+      return;
+    }
     const n = name.getBoundingClientRect();
     const s = stage.getBoundingClientRect();
     const over = !(e.target as Element).closest('.sticker, a, button');

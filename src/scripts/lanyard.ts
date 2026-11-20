@@ -36,7 +36,12 @@ export function initLanyard(): Lanyard | null {
   if (loopEl) loopEl.textContent = String(getLoop()).padStart(2, '0');
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const restLen = () => parseFloat(getComputedStyle(root.closest('.hero')!).getPropertyValue('--strap')) || 120;
+  // --strap is usually a formula (clamp, calc with svh…): measure it with a hidden probe.
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:absolute;left:0;top:0;width:0;height:var(--strap);visibility:hidden;pointer-events:none';
+  root.closest('.hero')!.appendChild(probe);
+  const restLen = () => probe.offsetHeight || 120;
 
   const dragCbs: ((p: Point) => void)[] = [];
   const releaseCbs: ((p: Point) => void)[] = [];
@@ -298,7 +303,9 @@ export function initLanyard(): Lanyard | null {
   });
 
   // The gate opens and the card's anchor slides aside: it swings after it.
+  // The strap gets shorter too (the gate hangs the card lower): the reel winds it up.
   window.addEventListener('jlp-enter', () => {
+    L0 = restLen();
     va -= 70;
     vb += 40;
     wake();
@@ -306,6 +313,7 @@ export function initLanyard(): Lanyard | null {
 
   // A new lap: the card drops in again with the new number.
   window.addEventListener('jlp-loop', (e) => {
+    L0 = restLen();
     const n = (e as CustomEvent<number>).detail;
     if (loopEl) loopEl.textContent = String(n).padStart(2, '0');
     dockAt = null;
