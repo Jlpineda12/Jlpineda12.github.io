@@ -442,7 +442,17 @@ const driveIcon = ['play', 'story', 'learn'];
   .rows strong { font-size: 15px; color: var(--ink); }
 
   .wins { display: grid; gap: 9px; }
-  .wins li { display: grid; gap: 1px; padding-left: 14px; border-left: 3px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+  /* Each achievement is a line under a small star, like an unlocked badge. */
+  .wins li { position: relative; display: grid; gap: 1px; padding-left: 20px; }
+  .wins li::before {
+    content: '★';
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--accent);
+  }
   .wins strong { font-size: 14px; }
   .wins span { font-size: 13px; color: #2a2a2ea6; line-height: 1.35; }
 
