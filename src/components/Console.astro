@@ -1,7 +1,8 @@
 ---
-// José's projects as cartridges for a handheld console: pick one from the shelf, it flies into the
-// slot, the console boots and the screen plays the project. The page beside it is the game's manual.
-// The newest cartridge, his digital human, can be played right inside the console's screen.
+// José's projects as big cartridges on a 3D carousel beside a handheld console. Spin the carousel
+// (drag sideways, swipe, or the arrows), grab the cartridge in front and drag it into the console's
+// slot (or tap it): it slides in, the console boots and the screen plays the project. The manual
+// under them is the game's page. His digital human can be played right inside the console's screen.
 import Puppet from './Puppet.astro';
 import { getData, t, fill, type Lang } from '../i18n';
 interface Props { lang: Lang }
@@ -26,6 +27,40 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   </div>
 
   <div class="wrap stage">
+    <div class="carousel" data-carousel>
+      <ul class="turntable" aria-label={ui.pickCart}>
+        {list.map((p, i) => {
+          const w = world[p.world];
+          return (
+            <li>
+              <button class:list={['cart', { 'is-in': i === 0 }]} type="button" aria-pressed={i === 0 ? 'true' : 'false'}
+                aria-label={fill(ui.insert, p.name)} data-i={i} data-world={p.world} data-name={p.name}
+                data-poster={`${base}${p.poster}`} data-video={p.video ? `${base}${p.video}` : undefined}
+                data-youtube={p.youtube} data-model={p.models?.[0].uid} data-model-name={p.models?.[0].name}
+                data-url={p.url} data-label={p.linkLabel} data-embed={p.embed} data-react={p.embed ? 'listen' : undefined}
+                style={`--c:${w.bg};--c2:${w.accent}`}>
+                <span class="cart-ridges" aria-hidden="true"></span>
+                {p.isNew && <span class="cart-new" aria-hidden="true">{ui.newTag}</span>}
+                <span class="cart-label">
+                  <img src={`${base}${p.poster}`} width="1400" height="900" loading="lazy" alt="" draggable="false" />
+                  <span class="cart-text">
+                    <span class="cart-world">{w.name}</span>
+                    <span class="cart-name">{p.name}</span>
+                  </span>
+                </span>
+                <span class="cart-in" aria-hidden="true">{ui.inConsole}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <div class="car-nav">
+        <button class="car-btn glass" type="button" data-spin="-1" aria-label={ui.prev}><span aria-hidden="true">◀</span></button>
+        <p class="car-hint hand"><span class="hint-fine">{ui.carDrag}</span><span class="hint-touch">{ui.carDragTouch}</span></p>
+        <button class="car-btn glass" type="button" data-spin="1" aria-label={ui.next}><span aria-hidden="true">▶</span></button>
+      </div>
+    </div>
+
     <div class="rig">
       <div class="peek" aria-hidden="true"><Puppet pose="calm" props /></div>
 
@@ -70,6 +105,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       <p class="controls hand">{ui.controlsHint}</p>
     </div>
 
+  </div>
+
+  <div class="wrap manuals-wrap">
     <div class="manuals">
       {list.map((p, i) => {
         const w = world[p.world];
@@ -99,31 +137,6 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     </div>
   </div>
 
-  <div class="shelf-wrap">
-    <p class="wrap shelf-note hand" aria-hidden="true">{ui.shelfNote} · {total}</p>
-    <ul class="shelf wrap" aria-label={ui.pickCart}>
-      {list.map((p, i) => {
-        const w = world[p.world];
-        return (
-          <li>
-            <button class:list={['cart', { 'is-in': i === 0 }]} type="button" aria-pressed={i === 0 ? 'true' : 'false'}
-              aria-label={fill(ui.insert, p.name)} data-i={i} data-world={p.world} data-name={p.name}
-              data-poster={`${base}${p.poster}`} data-video={p.video ? `${base}${p.video}` : undefined}
-              data-youtube={p.youtube} data-model={p.models?.[0].uid} data-model-name={p.models?.[0].name}
-              data-url={p.url} data-label={p.linkLabel} data-embed={p.embed} data-react={p.embed ? 'listen' : undefined}
-              style={`--c:${w.bg};--c2:${w.accent}`}>
-              <span class="cart-ridges" aria-hidden="true"></span>
-              {p.isNew && <span class="cart-new" aria-hidden="true">{ui.newTag}</span>}
-              <span class="cart-label">
-                <img src={`${base}${p.poster}`} width="1400" height="900" loading="lazy" alt="" />
-                <span class="cart-name">{p.name}</span>
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
-  </div>
 </section>
 
 <style>
@@ -151,12 +164,12 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     rotate: -2deg;
   }
 
-  /* ---------- Stage: console + manual ---------- */
+  /* ---------- Stage: carousel + console, the manual below ---------- */
   .stage {
     display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: clamp(28px, 4vw, 72px);
-    align-items: start;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(20px, 3vw, 56px);
+    align-items: center;
   }
 
   .rig {
@@ -534,7 +547,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    margin-top: clamp(60px, 7vw, 100px);
+    margin-top: clamp(40px, 5vw, 80px);
+    max-width: 1180px;
+    margin-inline: auto;
   }
 
   .manual {
@@ -552,7 +567,23 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   }
 
   :global(.js) .manual { display: none; }
-  :global(.js) .manual.is-on { display: block; animation: page-in 0.45s var(--ease-out); }
+  :global(.js) .manual.is-on { display: grid; animation: page-in 0.45s var(--ease-out); }
+
+  /* Wide: the manual opens like a spread, who-and-what on the left page, the story on the right. */
+  .manual {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    column-gap: clamp(28px, 4vw, 64px);
+    grid-auto-flow: row dense;
+    align-content: start;
+  }
+
+  .manual > * { grid-column: 1; }
+  .manual > .m-top { grid-column: 1 / -1; }
+  .manual > :is(.m-summary, .m-stack, .m-models, .m-cta) { grid-column: 2; }
+  .m-summary { max-width: 60ch; }
+  .manual > .m-summary { margin-top: 18px; }
+  .m-cta { justify-self: start; }
+  .m-world, .m-status { justify-self: start; }
 
   @keyframes page-in {
     from { opacity: 0; translate: 0 14px; rotate: -1deg; }
@@ -685,91 +716,112 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     box-shadow: 0 2px 4px #0003;
   }
 
-  /* ---------- The shelf of cartridges ---------- */
-  .shelf-wrap {
-    margin-top: clamp(48px, 6vw, 88px);
+  /* ---------- The carousel of cartridges ---------- */
+  /* The cartridges stand on a turntable. scripts below place each one on the circle (x, z, turn)
+     from the carousel's angle; the one in front is the one you can grab. */
+  .carousel {
+    --cw: clamp(150px, 15vw, 230px);
+    position: relative;
+    z-index: 2;
+    display: grid;
+    gap: 18px;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
-  .shelf-note {
-    font-size: 24px;
-    margin-bottom: 6px;
+  .carousel.is-carrying { z-index: 6; }
+
+  .turntable {
+    position: relative;
+    height: calc(var(--cw) / 0.86 + 70px);
+    perspective: 760px;
+    perspective-origin: 50% 40%;
+    transform-style: preserve-3d;
+    touch-action: pan-y;
+    cursor: grab;
   }
 
-  .shelf {
-    display: flex;
-    gap: clamp(10px, 1.2vw, 18px);
-    overflow-x: auto;
-    padding-top: 26px;
-    padding-bottom: 26px;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--margin);
-    scrollbar-width: none;
-    /* the shelf board */
-    background: linear-gradient(#0000 calc(100% - 22px), #c9b79c calc(100% - 22px), #b39d7e calc(100% - 6px), #9a8466 0);
+  .carousel.is-spinning .turntable { cursor: grabbing; }
+
+  /* The turntable under them. */
+  .turntable::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: calc(var(--cw) * 2.6);
+    max-width: 100%;
+    height: 46px;
+    translate: -50% 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, #2a2a2e2e, #2a2a2e00);
+    z-index: -1;
   }
 
-  .shelf::-webkit-scrollbar { display: none; }
-
-  .shelf li {
-    flex: none;
-    scroll-snap-align: start;
+  .turntable li {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: var(--cw);
+    aspect-ratio: 0.86;
+    transform-style: preserve-3d;
+    will-change: transform;
   }
 
   .cart {
     position: relative;
     display: block;
-    width: clamp(96px, 8.6vw, 128px);
-    aspect-ratio: 0.86;
+    width: 100%;
+    height: 100%;
     padding: 0;
     border: 0;
-    border-radius: 10px 10px 6px 6px;
+    border-radius: 16px 16px 10px 10px;
     background:
-      linear-gradient(#ffffff26, #0000 30%),
+      linear-gradient(100deg, #ffffff40, #fff0 30%, #fff0 70%, #00000026),
       var(--c);
     clip-path: polygon(0 0, 84% 0, 100% 10%, 100% 100%, 0 100%);
-    box-shadow: inset 0 -6px 0 #00000033;
-    cursor: pointer;
-    transition: translate 0.35s var(--ease-spring), opacity 0.3s, filter 0.3s;
-  }
-
-  .cart:hover,
-  .cart:focus-visible {
-    translate: 0 -10px;
+    box-shadow: inset 0 -10px 0 #00000033, inset 0 3px 0 #ffffff40;
+    cursor: inherit;
+    transition: opacity 0.3s, filter 0.3s;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .cart:focus-visible {
     outline: 3px solid var(--ink);
-    outline-offset: 3px;
+    outline-offset: 4px;
   }
 
-  /* The one in the console leaves an empty spot on the shelf. */
-  .cart.is-in {
-    opacity: 0.22;
-    filter: grayscale(1);
-    translate: 0 -4px;
+  .turntable li.is-front .cart { cursor: grab; }
+  /* The front cartridge takes the whole gesture (sideways spins, down carries); elsewhere the page scrolls. */
+  .turntable li.is-front { touch-action: none; }
+  .turntable li.is-held .cart { cursor: grabbing; }
+
+  /* Grabbed: it lifts off the turntable. */
+  .turntable li.is-held .cart {
+    filter: drop-shadow(0 30px 24px #2a2a2e59);
   }
 
   .cart-ridges {
     position: absolute;
     left: 10%;
-    right: 18%;
-    top: 6%;
-    height: 12%;
-    background: repeating-linear-gradient(90deg, #0000 0 6px, #00000029 6px 8px);
+    right: 20%;
+    top: 5%;
+    height: 11%;
+    background: repeating-linear-gradient(90deg, #0000 0 7px, #00000029 7px 10px);
   }
 
   .cart-label {
     position: absolute;
-    left: 10%;
-    right: 10%;
-    top: 24%;
+    left: 9%;
+    right: 9%;
+    top: 21%;
     bottom: 12%;
     display: grid;
     grid-template-rows: 1fr auto;
-    border-radius: 5px;
+    border-radius: 8px;
     overflow: hidden;
     background: var(--paper);
-    box-shadow: 0 0 0 2px #00000014;
+    box-shadow: 0 0 0 2px #00000014, inset 0 0 0 1px #0000000d;
   }
 
   .cart-label img {
@@ -777,26 +829,115 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     height: 100%;
     min-height: 0;
     object-fit: cover;
+    pointer-events: none;
+  }
+
+  .cart-text {
+    display: grid;
+    gap: 3px;
+    padding: 7px 9px 9px;
+    border-top: 4px solid var(--c2);
+    text-align: left;
+  }
+
+  .cart-world {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c);
   }
 
   .cart-name {
-    padding: 4px 5px 5px;
-    font-size: 10px;
+    font-size: clamp(12px, 1.05vw, 15px);
     font-weight: 900;
-    font-stretch: 112%;
+    font-stretch: 115%;
     line-height: 1.05;
     text-transform: uppercase;
-    text-align: left;
     color: var(--ink);
-    border-top: 3px solid var(--c2);
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
 
+  /* The one in the console leaves its spot empty on the carousel. */
+  .cart-in {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20%;
+    font-family: var(--hand);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    color: var(--ink);
+    opacity: 0;
+  }
 
-  /* The flying copy used while a cartridge travels from the shelf to the slot. */
+  .cart.is-in {
+    background: #2a2a2e0d;
+    box-shadow: inset 0 0 0 3px #2a2a2e33;
+  }
+
+  .cart.is-in > :not(.cart-in) { opacity: 0; }
+  .cart.is-in .cart-in { opacity: 0.6; }
+
+  .car-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .car-btn {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: var(--ink);
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.25s var(--ease-spring);
+  }
+
+  .car-btn:hover { transform: scale(1.08); }
+  .car-btn:active { transform: scale(0.94); }
+
+  .car-hint {
+    max-width: 24ch;
+    font-size: clamp(19px, 1.5vw, 22px);
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .hint-touch { display: none; }
+
+  @media (hover: none) {
+    .hint-fine { display: none; }
+    .hint-touch { display: inline; }
+  }
+
+  /* The console lights up while a cartridge is carried towards it. */
+  .console { transition: box-shadow 0.3s, scale 0.3s var(--ease-spring); }
+
+  .console.is-target {
+    scale: 1.02;
+    box-shadow:
+      inset 0 3px 0 #ffffffcc,
+      inset 0 -10px 0 #c9c2b4,
+      0 0 0 4px var(--yellow),
+      0 0 60px #ffe14d99,
+      0 40px 60px -30px #2a2a2e80;
+  }
+
+  .slot-cart.is-open { translate: 0 -78%; }
+
+  /* The flying copy used while a cartridge travels from the carousel to the slot. */
   :global(.cart-fly) {
     position: fixed;
     z-index: 80;
@@ -806,10 +947,16 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 
   /* ---------- Tablet ---------- */
   @media (max-width: 1100px) {
-    .stage { grid-template-columns: minmax(0, 1fr); }
+    .stage { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .carousel { --cw: clamp(150px, 30vw, 230px); }
     .rig { max-width: 760px; width: 100%; margin-inline: auto; }
-    .manuals { margin-top: 12px; max-width: 760px; width: 100%; margin-inline: auto; }
+    .manuals { margin-top: 28px; max-width: 760px; width: 100%; }
     .manual { rotate: 0.5deg; }
+  }
+
+  @media (max-width: 860px) {
+    .manual { grid-template-columns: minmax(0, 1fr); }
+    .manual > :is(.m-summary, .m-stack, .m-models, .m-cta) { grid-column: 1; }
   }
 
   /* ---------- Phone: the console stands up, screen on top and buttons below ---------- */
@@ -817,6 +964,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     .head h2, .head .lead, .head-note { grid-column: 1 / -1; }
 
     .rig { max-width: 420px; padding-top: 70px; }
+    .carousel { --cw: min(46vw, 210px); }
 
     .console {
       grid-template-columns: minmax(0, 1fr);
@@ -954,13 +1102,20 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       if (busy || i === active) return;
       busy = true;
       const from = carts[i];
-      // The old cartridge pops out of the slot, the new one flies in from the shelf.
+      // The old cartridge pops out of the slot, the new one flies in from the carousel.
       slotCart.classList.add('is-out');
+      const cr = consoleEl.getBoundingClientRect();
+      if (cr.top < 0 || cr.bottom > innerHeight) {
+        consoleEl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+        // Let the page arrive before the cartridge flies, so it lands in the slot.
+        if (!reduced) await new Promise((r) => setTimeout(r, 480));
+      }
       if (!reduced) {
         const r = from.getBoundingClientRect();
         const s = slotCart.getBoundingClientRect();
         const fly = from.cloneNode(true) as HTMLElement;
         fly.classList.add('cart-fly');
+        fly.style.transform = 'none';
         fly.classList.remove('is-in');
         fly.removeAttribute('id');
         fly.setAttribute('aria-hidden', 'true');
@@ -985,14 +1140,218 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
           .then();
         fly.remove();
       }
-      slotCart.classList.remove('is-out');
+      slotCart.classList.remove('is-out', 'is-open');
+      if (wrapD(i - goal) !== 0 && !held) spinTo(Math.round(goal) + wrapD(i - goal));
       gsap.fromTo(consoleEl, { y: 0 }, { y: 5, duration: 0.08, yoyo: true, repeat: 1 });
       active = i;
       await bootUp(i, true);
       busy = false;
     };
 
-    carts.forEach((c, i) => c.addEventListener('click', () => insert(i)));
+    // ---------- The carousel ----------
+    const car = sec.querySelector<HTMLElement>('[data-carousel]')!;
+    const ring = car.querySelector<HTMLElement>('.turntable')!;
+    const items = [...ring.querySelectorAll<HTMLElement>(':scope > li')];
+    const STEP = 32; // degrees between cartridges
+    let pos = n > 1 ? 1 : 0; // the carousel's angle, in cartridges; start with the next one in front
+    let vel = 0;
+    let goal = pos;
+    let spinRaf = 0;
+    let held: { i: number; x: number; y: number; dx: number; dy: number } | null = null;
+
+    const wrapD = (d: number) => ((((d + n / 2) % n) + n) % n) - n / 2;
+    const front = () => ((Math.round(pos) % n) + n) % n;
+
+    const layout = () => {
+      const w = items[0].offsetWidth;
+      const R = w * 1.5;
+      items.forEach((li, i) => {
+        const d = wrapD(i - pos);
+        const a = d * STEP;
+        const hidden = Math.abs(a) > 105;
+        const x = R * Math.sin(a * Math.PI / 180);
+        // The one in front steps forward off the turntable.
+        const z = R * (Math.cos(a * Math.PI / 180) - 1) + Math.max(0, 1 - Math.abs(d)) * w * 0.18;
+        let extra = '';
+        if (held && held.i === i) {
+          const tilt = Math.max(-18, Math.min(18, held.dx * 0.04));
+          extra = ` translate3d(${held.dx}px, ${held.dy}px, 60px) rotate(${tilt}deg) scale(1.04)`;
+        }
+        li.style.transform = `translate(-50%, -50%)${extra} translate3d(${x.toFixed(1)}px, 0, ${z.toFixed(1)}px) rotateY(${a.toFixed(2)}deg)`;
+        li.style.zIndex = String(held?.i === i ? 200 : 100 - Math.round(Math.abs(d) * 10));
+        li.style.opacity = hidden ? '0' : '1';
+        li.style.pointerEvents = hidden ? 'none' : '';
+        li.style.filter = `brightness(${(1 - Math.min(3, Math.abs(d)) * 0.1).toFixed(2)})`;
+        const isFront = Math.abs(d) < 0.5;
+        li.classList.toggle('is-front', isFront);
+        li.querySelector('button')!.tabIndex = isFront ? 0 : -1;
+      });
+    };
+
+    // A spring carries the carousel to the nearest cartridge once it is let go.
+    const spin = () => {
+      spinRaf = 0;
+      if (!spinning) {
+        const f = (goal - pos) * 0.16;
+        vel = vel * 0.72 + f;
+        pos += vel;
+        if (Math.abs(goal - pos) < 0.001 && Math.abs(vel) < 0.001) {
+          pos = goal;
+          vel = 0;
+        }
+      }
+      // Carrying near the top or bottom of the screen scrolls the page (the console may be below).
+      if (held && mode === 'carry') {
+        const edge = 90;
+        const k = lastY > innerHeight - edge ? (lastY - (innerHeight - edge)) / edge : lastY < edge ? (lastY - edge) / edge : 0;
+        if (k) window.scrollBy(0, k * 16);
+        held.dy = lastY - downY + (scrollY - downScroll);
+        consoleEl.classList.toggle('is-target', overConsole(lastX, lastY));
+      }
+      layout();
+      if (spinning || held || pos !== goal) spinRaf = requestAnimationFrame(spin);
+    };
+    const kick = () => {
+      if (!spinRaf) spinRaf = requestAnimationFrame(spin);
+    };
+    const spinTo = (g: number) => {
+      goal = g;
+      if (reduced) pos = g;
+      kick();
+      layout();
+    };
+    const spinBy = (k: number) => spinTo(Math.round(goal) + k);
+
+    car.querySelectorAll<HTMLButtonElement>('[data-spin]').forEach((b) =>
+      b.addEventListener('click', () => spinBy(Number(b.dataset.spin))),
+    );
+
+    // Drag: sideways on the carousel turns it; the cartridge in front can be picked up and carried.
+    // On touch, the front cartridge is carried when the finger moves more down/up than sideways.
+    let spinning = false;
+    let downX = 0, downY = 0, downScroll = 0, lastY = 0, startPos = 0, lastX = 0, lastT = 0, mode: '' | 'spin' | 'carry' | 'pending' = '';
+    let downItem = -1;
+    let moved = 0;
+    const fine = matchMedia('(pointer: fine)').matches;
+
+    const overConsole = (x: number, y: number) => {
+      const r = consoleEl.getBoundingClientRect();
+      return x > r.left - 30 && x < r.right + 30 && y > r.top - 60 && y < r.bottom + 30;
+    };
+
+    ring.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || busy) return;
+      const li = (e.target as HTMLElement).closest<HTMLElement>('li');
+      downItem = li ? items.indexOf(li) : -1;
+      downX = lastX = e.clientX;
+      downY = lastY = e.clientY;
+      downScroll = scrollY;
+      lastT = performance.now();
+      startPos = pos;
+      moved = 0;
+      mode = 'pending';
+      ring.setPointerCapture(e.pointerId);
+    });
+
+    ring.addEventListener('pointermove', (e) => {
+      if (!mode) return;
+      const dx = e.clientX - downX, dy = e.clientY - downY;
+      moved = Math.max(moved, Math.hypot(dx, dy));
+      if (mode === 'pending' && moved > 6) {
+        const onFront = downItem >= 0 && downItem === front() && !carts[downItem].classList.contains('is-in');
+        if (onFront && (fine || Math.abs(dy) > Math.abs(dx))) {
+          mode = 'carry';
+          held = { i: downItem, x: downX, y: downY, dx: 0, dy: 0 };
+          items[downItem].classList.add('is-held');
+          car.classList.add('is-carrying');
+          slotCart.classList.add('is-open');
+        } else {
+          mode = 'spin';
+          spinning = true;
+          car.classList.add('is-spinning');
+        }
+        kick();
+      }
+      if (mode === 'spin') {
+        const w = items[0].offsetWidth;
+        const now = performance.now();
+        const p = startPos - dx / (w * 0.75);
+        vel = (p - pos) / Math.max(1, (now - lastT) / 16);
+        pos = p;
+        lastX = e.clientX;
+        lastT = now;
+      } else if (mode === 'carry' && held) {
+        held.dx = dx;
+        lastX = e.clientX;
+        lastY = e.clientY;
+      }
+    });
+
+    const end = (e: PointerEvent) => {
+      if (!mode) return;
+      const was = mode;
+      mode = '';
+      if (was === 'spin') {
+        spinning = false;
+        car.classList.remove('is-spinning');
+        // Let it coast a little, then settle on a cartridge.
+        spinTo(Math.round(pos + vel * 6));
+      } else if (was === 'carry' && held) {
+        const i = held.i;
+        const drop = overConsole(e.clientX, e.clientY);
+        consoleEl.classList.remove('is-target');
+        car.classList.remove('is-carrying');
+        if (drop) {
+          // It flies from where it was let go.
+          insert(i).then(() => {
+            held = null;
+            items[i].classList.remove('is-held');
+            layout();
+          });
+          setTimeout(() => {
+            held = null;
+            items[i].classList.remove('is-held');
+            layout();
+          }, 30);
+        } else {
+          // Not in the slot: it springs back onto the carousel.
+          slotCart.classList.remove('is-open');
+          items[i].classList.remove('is-held');
+          const li = items[i];
+          li.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          held = null;
+          layout();
+          setTimeout(() => (li.style.transition = ''), 360);
+        }
+      } else if (was === 'pending' && downItem >= 0) {
+        // A tap: the one in front goes in, one at the side turns to the front.
+        const d = wrapD(downItem - pos);
+        if (Math.abs(d) < 0.5) {
+          if (!carts[downItem].classList.contains('is-in')) insert(downItem);
+        } else spinTo(Math.round(pos + d));
+      }
+    };
+    ring.addEventListener('pointerup', end);
+    ring.addEventListener('pointercancel', end);
+
+    // Keyboard: the front cartridge is a button; Enter or Space slots it in.
+    carts.forEach((c, i) =>
+      c.addEventListener('click', (e) => {
+        if ((e as PointerEvent).pointerType) return; // pointer taps are handled above
+        insert(i);
+      }),
+    );
+    ring.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        e.stopPropagation();
+        spinBy(e.key === 'ArrowRight' ? 1 : -1);
+        requestAnimationFrame(() => carts[((Math.round(goal) % n) + n) % n].focus({ preventScroll: true }));
+      }
+    });
+
+    new ResizeObserver(layout).observe(ring);
+    layout();
 
     const press = (el: HTMLElement) => {
       el.classList.add('is-press');
