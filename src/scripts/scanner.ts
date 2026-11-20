@@ -1,9 +1,9 @@
-// The gate: a glass card reader under the hanging Creative ID. Pull the card down onto it (or tap
+// The gate: a glass card reader and José's Creative ID. Carry the card onto it (or tap
 // the card or the reader) and it docks, a laser reads it, the reader beeps, the card is stamped
 // with your lap, and the gate opens: the name, the menu and the way in appear and the page scrolls.
-// Once per visit (sessionStorage); a new lap ("another lap" at the end) closes the gate again.
+// On every load of the home page (Base.astro); a new lap ("another lap" at the end) closes the gate again.
 // "Enter without scanning" and the skip link open it straight away.
-import type { Lanyard, Point } from './lanyard';
+import type { Lanyard, Point } from './pass';
 import { getLoop } from './loop';
 
 type State = 'idle' | 'near' | 'scan' | 'ok';
@@ -101,10 +101,15 @@ export function initScanner(lanyard: Lanyard | null) {
     if (focus) document.querySelector<HTMLElement>('.hero-actions a')?.focus({ preventScroll: true });
   };
 
-  // The card's centre docks so its bottom edge rests on the reader's top edge.
+  // The card docks over the slot: while it is read it sinks in (depth: how much of it is inside);
+  // once read it pops back up, stamped, its bottom edge just above the slot.
+  const slot = parseFloat(body.dataset.slot || '0.15');
+  const pass = card.closest<HTMLElement>('.pass');
+  let depth = 0.42;
   const dockPoint = (): Point => {
     const r = body.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + 12 - card.offsetHeight / 2 };
+    const h = card.offsetHeight;
+    return { x: r.left + r.width / 2, y: r.top + r.height * slot + h * depth - h / 2 };
   };
 
   const isNear = (p: Point) => {
@@ -119,6 +124,8 @@ export function initScanner(lanyard: Lanyard | null) {
     const fromKeys = document.activeElement === pad;
     clear();
     set('scan');
+    depth = 0.42;
+    pass?.classList.add('is-inserted');
     lanyard?.dock(dockPoint);
     say(msg.reading);
     const settle = reduced ? 0 : 650;
@@ -131,6 +138,9 @@ export function initScanner(lanyard: Lanyard | null) {
     }, settle);
     later(() => {
       card.classList.remove('beam-on');
+      // Read: the reader pushes the card back out of the slot, and it is stamped.
+      depth = -0.06;
+      pass?.classList.remove('is-inserted');
       stampCard();
       set('ok');
       buzz([30, 60, 50]);

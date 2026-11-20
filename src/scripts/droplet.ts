@@ -1,15 +1,13 @@
-// The site's liquid touch. With a mouse, a small glass droplet trails the pointer on a spring: it
-// stretches along its speed, melts onto buttons and links (taking their shape, pulled a little
-// towards the pointer) and squashes and ripples on a click. On touch screens, every tap leaves a
-// glass drop that swells and wobbles away. Nothing of this with reduced motion.
+// The site's liquid touch. There is no bubble on the pointer: only while the mouse moves, what is
+// under it bends like liquid — an invisible wake that refracts the page (with faint rainbow rims),
+// stretches along the motion and fades as soon as the pointer stops. Only where the browser can
+// refract the backdrop (Chromium); elsewhere nothing. A click leaves a small ripple. On touch
+// screens, every tap leaves a glass drop that swells and wobbles away. None of it with reduced motion.
+import { liquid } from './liquid';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-// What the droplet melts onto: things you can press, but not big areas (cards, the console).
-const TARGET = 'a, button, [role="button"], label, summary, .chip, .lang-switch';
-const MAX_W = 360;
-const MAX_H = 90;
 
 function ripple(x: number, y: number, big = false) {
   const r = document.createElement('span');
@@ -41,8 +39,9 @@ export function initDroplet() {
   d.setAttribute('aria-hidden', 'true');
   document.body.appendChild(d);
   document.documentElement.classList.add('has-droplet');
+  liquid(d, { bezel: 26, scale: 40, blur: 0.3, chroma: true });
 
-  const SIZE = 30;
+  const SIZE = 64;
   // Where it is, how fast it goes, and its shape (w, h, radius) easing towards the target shape.
   let x = -100, y = -100, vx = 0, vy = 0;
   let w = SIZE, h = SIZE, rad = SIZE / 2;
@@ -52,13 +51,8 @@ export function initDroplet() {
   let shown = false;
   let raf = 0;
 
-  const pick = (el: Element | null) => {
-    const t = el?.closest<HTMLElement>(TARGET) ?? null;
-    if (!t) return null;
-    const r = t.getBoundingClientRect();
-    if (r.width > MAX_W || r.height > MAX_H || t.closest('[data-no-droplet]')) return null;
-    return t;
-  };
+  // The wake never sticks to anything: it only follows the pointer.
+  const pick = (_el: Element | null): HTMLElement | null => null;
 
   const tick = () => {
     raf = 0;
@@ -85,7 +79,9 @@ export function initDroplet() {
     rad += (tr - rad) * 0.24;
     // Stretch along its speed (only while it is a free drop), squash when pressed.
     const speed = Math.hypot(vx, vy);
-    const stretch = target ? 0 : Math.min(0.55, speed * 0.028);
+    const stretch = target ? 0 : Math.min(1.1, speed * 0.05);
+    // Seen only while it moves: the faster, the stronger the bend.
+    d.style.opacity = Math.min(1, speed * 0.09).toFixed(3);
     const angle = Math.atan2(vy, vx);
     press *= 0.82;
     const sx = (1 + stretch) * (1 - press * 0.25);

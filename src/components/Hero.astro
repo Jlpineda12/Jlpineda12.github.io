@@ -1,158 +1,114 @@
 ---
-// The first screen is a gate. At first there is only José's Creative ID, hanging from a red lanyard
-// on a retractable badge reel, and a glass reader below it. Drag the card down onto the reader (or
-// tap either) and it is read and stamped with your lap: access granted. Then the gate opens: the
-// card slides aside, his name and role play as a motion graphic made in Blender, and the menu and
-// the way in appear. "Enter without scanning" opens it too, and nothing is gated without JS.
+// The first screen. An intro in the spirit of a title card: on cream, José's little mark wobbles at
+// the bottom; his letters fly out of it along arcs and set into his name, inked black; then a cut
+// to colour: puffy 3D letters made in Blender (blender/hero3d.py), his own face as the "O", over a
+// surface of moving liquid glass (scripts/liquidbg.ts). A glass lens magnifies the name.
+// Under it, the way in: his Creative ID. Pull it down onto the glass reader (or tap it): the laser
+// reads it, the letters wobble like jelly as the access wave reaches them, the card flies off and
+// the page glides on to "About me", where the card is found hanging from its lanyard.
+// "Enter without scanning" opens it too, and nothing is gated without JS.
 import Puppet from './Puppet.astro';
 import { getData, t, type Lang } from '../i18n';
 import LangSwitch from './LangSwitch.astro';
+import h3d from '../data/hero3d.json';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const { site } = getData(lang);
 const ui = t(lang);
+const h = ui.hero3d;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-// His pastel stars from the old portfolio, big and cropped, drifting behind everything.
-const stars = [
-  { x: -6, y: 10, s: 30, c: '#f4a7b9', r: -14, z: 1.4 },
-  { x: 74, y: -12, s: 24, c: '#4cc3d9', r: 10, z: 0.8 },
-  { x: 80, y: 50, s: 27, c: '#e2b84a', r: -22, z: 1.2 },
-  { x: 4, y: 62, s: 19, c: '#a8d8b9', r: 16, z: 0.6 },
-  { x: 44, y: -16, s: 13, c: '#a8d8b9', r: 32, z: 1 },
-];
+const L = h3d.letters as Record<string, { w: number; h: number; x0: number; y0: number }>;
+const lines = [['J', 'O', 'S', 'E-acute', ' ', 'L', 'U', 'I', 'S'], ['P', 'I', 'N', 'E', 'D', 'A']];
+const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
 ---
-<section class="hero" id="inicio" aria-labelledby="hero-title">
-  <div class="stars" aria-hidden="true">
-    {stars.map((st) => (
-      <svg viewBox="0 0 100 100" style={`left:${st.x}%;top:${st.y}%;width:${st.s}vw;--r:${st.r}deg;--z:${st.z}`}>
-        <path d="M50 4 L61.5 37.5 L97 38 L68.5 59.5 L79 94 L50 73.5 L21 94 L31.5 59.5 L3 38 L38.5 37.5 Z" fill={st.c} stroke={st.c} stroke-width="6" stroke-linejoin="round" />
-      </svg>
-    ))}
-  </div>
-
+<section class="hero" id="inicio" aria-labelledby="hero-title" data-scene="hero">
+  <canvas class="liquid-bg" aria-hidden="true"></canvas>
   <header class="nav wrap">
-    <a class="id" href="#inicio" aria-label={`José Luis Pineda, ${ui.home}`}>
-      <span class="id-face" aria-hidden="true">
-        <Puppet pose="calm" live={false} class="f-calm" />
-        <Puppet pose="celebrate" live={false} class="f-joy" />
-      </span>
-      <span class="id-text">
-        <span class="id-name">José Luis</span>
-        <span class="id-status"><span class="dot" aria-hidden="true"></span>{ui.available}</span>
-      </span>
-    </a>
     <nav aria-label={ui.chapters}>
       <ul class="glass" data-liquid='{"bezel":16,"scale":30}'>
-        <li class="hide-sm gated" style="--i:0"><a class="sketch-pill" href="#quien-soy">{ui.navAbout}</a></li>
-        <li class="hide-sm gated" style="--i:1"><a class="sketch-pill" href="#proyectos">{ui.navWorlds}</a></li>
-        <li class="hide-md gated" style="--i:2"><a class="sketch-pill" href="#como-trabajo">{ui.navProcess}</a></li>
         <li class="li-lang"><LangSwitch lang={lang} /></li>
-        <li class="gated" style="--i:3"><a class="nav-cta" href="#contacto">{ui.writeMe}</a></li>
       </ul>
     </nav>
   </header>
 
-  <div class="lanyard" data-lanyard>
-    <div class="strap" aria-hidden="true"><span class="reel"></span></div>
-    <span class="cord" aria-hidden="true"></span>
-    <div class="swing">
-      <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
-        <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
-        <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
-        <path d="M22 40 L18 70 Q16 84 30 86 Q44 84 42 70 L38 40" fill="none" stroke="#c9cdd5" stroke-width="7" stroke-linecap="round" />
-        <path d="M30 56 L30 74" stroke="#8b919d" stroke-width="5" stroke-linecap="round" />
-      </svg>
-      <div class="badge">
-        <div class="badge-card cid">
-          <img src={`${base}img/creative-id.webp`} width="889" height="575" fetchpriority="high" alt={ui.cidAlt} draggable="false" />
-          <span class="slot" aria-hidden="true"></span>
-          <span class="scan-beam" aria-hidden="true"></span>
-          <span class="pass-stamp" aria-hidden="true"><b>{ui.reader.stamp}</b><small>{ui.reader.lap} 01</small></span>
-          <p class="bubble tape" data-lines={JSON.stringify(ui.bubbles)} data-loop-line={ui.loopLine}><span>{ui.bubbles[0]}</span></p>
-        </div>
+  <div class="stage">
+    <div class="name-wrap">
+      <h1 class="name" id="hero-title" aria-label={`${site.name.first} ${site.name.last}`}>
+        {lines.map((line) => (
+          <span class="line" aria-hidden="true">
+            {line.map((k) =>
+              k === ' ' ? <span class="sp"></span>
+              : k === 'O' ? (
+                <span class="ch face" style={ls('O')}>
+                  <span class="face-in"><Puppet pose="calm" view="450 660 780 700" class="face-pp" /></span>
+                </span>
+              ) : (
+                <img class="ch" src={`${base}hero/l-${k}.webp`} style={ls(k)} alt="" draggable="false"
+                  width={Math.round(L[k].w * 420)} height={Math.round(L[k].h * 420)} fetchpriority="high" />
+              ))}
+          </span>
+        ))}
+      </h1>
+    </div>
+
+    <div class="lens" aria-hidden="true"><div class="lens-in"></div><span class="lens-shine"></span></div>
+    <div class="ghost" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 2 L4 19 L8.5 15 L11.5 22 L14.5 20.7 L11.6 14 L18 14 Z" /></svg>
+      <span class="ghost-tag" data-drag={h.drag} data-pass-hint={ui.reader.hintDrag}>{h.cursor}</span>
+    </div>
+  </div>
+
+  <div class="pass" data-pass role="button" tabindex="0" aria-label={ui.reader.btn}>
+    <div class="badge">
+      <div class="badge-card cid">
+        <img src={`${base}img/creative-id.webp`} width="889" height="575" alt={ui.cidAlt} draggable="false" />
+        <span class="scan-beam" aria-hidden="true"></span>
+        <span class="pass-stamp" aria-hidden="true"><b>{ui.reader.stamp}</b><small>{ui.reader.lap} 01</small></span>
+        <p class="bubble tape" data-lines={JSON.stringify(ui.bubbles)} data-loop-line={ui.loopLine}><span>{ui.bubbles[0]}</span></p>
       </div>
     </div>
   </div>
 
-  <div class="hero-copy wrap">
-    <h1 class="hero-title" id="hero-title" style="--i:0">
-      <span class="sr-only">{site.name.first} {site.name.last}, {site.role}.</span>
-      <video class="title-mg" autoplay muted loop playsinline preload="auto" aria-hidden="true"
-        poster={`${base}video/title-${lang}.jpg`} width="1440" height="720">
-        <source src={`${base}video/title-${lang}.mp4`} type="video/mp4" />
-      </video>
-    </h1>
-    <p class="hero-tag" style="--i:1">{ui.heroTag}</p>
-    <p class="hero-actions" style="--i:2">
-      <a class="btn" href="#quien-soy">{ui.start} <span class="arrow" aria-hidden="true">↓</span></a>
-      <a class="btn-glass glass" href="#proyectos">{ui.navWorlds}</a>
-    </p>
-  </div>
-
   <div class="reader" data-reader data-state="idle" data-msg={JSON.stringify(ui.reader)}>
-    <div class="reader-body glass" data-liquid>
-      <button class="reader-pad" type="button" aria-label={ui.reader.btn} aria-describedby="reader-status">
-        <span class="reader-window" aria-hidden="true">
-          <span class="ring r1"></span><span class="ring r2"></span>
-          <svg class="nfc" viewBox="0 0 48 48">
-            <path d="M14 14 Q22 24 14 34" /><path d="M21 9 Q33 24 21 39" /><path d="M28 4 Q44 24 28 44" />
-          </svg>
-          <svg class="tick" viewBox="0 0 48 48"><path d="M12 25 L21 34 L37 15" /></svg>
-        </span>
-      </button>
+    <div class="reader-body" data-slot="0">
+      <span class="slot-light" aria-hidden="true"></span>
+      <svg class="ring-prog" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="rp-track" cx="50" cy="50" r="44" />
+        <circle class="rp-fill" cx="50" cy="50" r="44" pathLength="100" />
+        <g class="rp-icon">
+          <path class="nfc" d="M38 36 Q46 50 38 64 M46 30 Q60 50 46 70 M54 24 Q74 50 54 76" />
+          <path class="tick" d="M34 51 L45 62 L67 38" />
+        </g>
+      </svg>
       <p class="reader-status" id="reader-status" aria-live="polite">
         <span class="reader-name" aria-hidden="true">JLP · {ui.reader.label}</span>
         <span class="reader-line"><span class="led" aria-hidden="true"></span><span class="reader-text">{ui.reader.idle}</span></span>
         <span class="reader-sub">{ui.reader.sub}</span>
       </p>
+      <button class="reader-pad" type="button" aria-label={ui.reader.btn} aria-describedby="reader-status"></button>
     </div>
   </div>
 
+  <a class="enter-pill gated" href="#quien-soy" style="--i:1">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2 L4 19 L8.5 15 L11.5 22 L14.5 20.7 L11.6 14 L18 14 Z" /></svg>
+    <span>{ui.start} <span aria-hidden="true">↓</span></span>
+  </a>
+
   <button class="gate-skip hand" type="button">{ui.gateSkip}</button>
+
+  <div class="intro" aria-hidden="true">
+    <div class="intro-paper">
+      <div class="intro-mark">
+        <span class="intro-face"><Puppet pose="calm" view="430 640 820 900" live={false} /></span>
+        <span class="intro-word">{'José Luis Pineda'.split('').map((c, i) => <span style={`--i:${i}`}>{c === ' ' ? '\u00a0' : c}</span>)}<sup>®</sup></span>
+      </div>
+      <svg class="intro-edge" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0 0 H1440 V60 C1200 120 960 0 720 60 C480 120 240 0 0 60 Z" /></svg>
+    </div>
+    <button class="intro-skip" type="button" tabindex="-1">{h.skipIntro}</button>
+  </div>
 </section>
 
 <style>
-  .hero {
-    --strap: clamp(84px, 13svh, 150px);
-    --badge-w: min(34vw, 500px, 54svh);
-    --badge-h: calc(var(--badge-w) / 1.546);
-    position: relative;
-    min-height: 100svh;
-    color: var(--ink);
-    overflow: hidden;
-    isolation: isolate;
-    /* Its own paper, so the title video can multiply onto it. */
-    background-color: var(--ground);
-    background-image: radial-gradient(circle at 1px 1px, #2a2a2e24 1px, transparent 1.4px);
-    background-size: var(--grid) var(--grid);
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Pastel stars (his old portfolio's motif), drifting a little with the pointer. */
-  .stars {
-    position: absolute;
-    z-index: -1;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  .stars svg {
-    position: absolute;
-    max-width: none;
-    height: auto;
-    rotate: var(--r);
-    translate: calc(var(--px, 0) * var(--z) * 18px) calc(var(--py, 0) * var(--z) * 14px);
-    animation: star-turn 28s ease-in-out infinite alternate;
-    transition: translate 0.6s var(--ease-out);
-  }
-
-  .stars svg:nth-child(2n) { animation-duration: 36s; animation-direction: alternate-reverse; }
-
-  @keyframes star-turn {
-    to { rotate: calc(var(--r) + 14deg); }
-  }
-
   /* ---------- Navigation ---------- */
   .nav {
     display: flex;
@@ -304,96 +260,6 @@ const stars = [
     box-shadow: 5px 5px 0 var(--red);
   }
 
-  /* ---------- The lanyard and badge ---------- */
-  .lanyard {
-    position: absolute;
-    z-index: 2;
-    left: var(--anchor, 50%);
-    top: 0;
-    width: 0;
-    height: 0;
-    transition: left 1s var(--ease-out);
-  }
-
-  .swing {
-    --len: var(--strap);
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform-origin: 0 0;
-    will-change: transform;
-  }
-
-  .strap {
-    position: absolute;
-    left: -15px;
-    top: -20px;
-    width: 30px;
-    height: calc(var(--strap-len, var(--strap)) + 24px);
-    transform-origin: 15px 20px;
-    rotate: var(--sa, 0deg);
-    background:
-      linear-gradient(90deg, #00000026 0 3px, #0000 3px calc(100% - 3px), #00000026 0),
-      repeating-linear-gradient(0deg, #ffffff12 0 2px, #0000 2px 5px),
-      var(--red);
-  }
-
-  /* The badge reel at the end of the strap; past it, a thin cord pulls out. */
-  .reel {
-    position: absolute;
-    left: -2px;
-    top: calc(100% - 18px);
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 50% 50%, #2a2a2e 0 4px, #0000 4.5px),
-      radial-gradient(circle at 35% 30%, #fff 0, #e6e8ee 30%, #a9aeb9 75%, #8b919d);
-    box-shadow: 0 0 0 3px var(--red), 0 4px 6px #0000004d;
-  }
-
-  /* Drawn from the reel to the clip, wherever the card has been pulled. */
-  .cord {
-    position: absolute;
-    left: -1px;
-    top: 0;
-    width: 2px;
-    height: 0;
-    border-radius: 2px;
-    background: #2a2a2e;
-    transform-origin: 1px 0;
-  }
-
-  .clip {
-    position: absolute;
-    left: -21px;
-    top: calc(var(--len) - 6px);
-    width: 42px;
-    max-width: none;
-    height: auto;
-    overflow: visible;
-    filter: drop-shadow(0 3px 2px #0000002e);
-  }
-
-  .badge {
-    position: absolute;
-    left: calc(var(--badge-w) / -2);
-    top: calc(var(--len) + 50px);
-    width: var(--badge-w);
-    height: var(--badge-h);
-    transform-origin: 50% -30px;
-    perspective: 900px;
-    /* The card can be dragged on phones too (onto the reader); the page scrolls from anywhere else. */
-    touch-action: none;
-    cursor: grab;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  .badge.is-grabbed {
-    cursor: grabbing;
-  }
-
   /* ---------- The Creative ID: José's own card from his old portfolio ---------- */
   .cid {
     position: absolute;
@@ -476,182 +342,171 @@ const stars = [
       0 70px 90px -40px #2a2a2e40;
   }
 
-  /* The access stamp, in green ink, slammed over the photo once the card is read. */
+  /* The access stamp: a holographic seal slammed over the photo once the card is read. */
   .pass-stamp {
     position: absolute;
     z-index: 3;
-    left: 8cqw;
-    top: 52cqw;
+    left: 6cqw;
+    top: 30cqw;
     display: grid;
     justify-items: center;
-    padding: 1cqw 3cqw 1.2cqw;
-    border: 0.7cqw double #23864f;
-    border-radius: 1.6cqw;
-    color: #23864f;
+    padding: 1.4cqw 3.4cqw 1.6cqw;
+    border-radius: 2cqw;
+    background:
+      linear-gradient(115deg, #fff0 30%, #ffffffb3 45%, #fff0 60%) 120% 0 / 250% 100% no-repeat,
+      linear-gradient(120deg, #7cf3ff, #b48cff 30%, #ff8ad8 55%, #ffe17a 80%, #7cf3ff);
+    color: #1b1f4b;
     font-weight: 900;
     font-stretch: 125%;
     line-height: 1;
     rotate: -11deg;
-    mix-blend-mode: multiply;
+    box-shadow: 0 0 0 0.5cqw #ffffffcc, 0 1cqw 3cqw #1b1f4b55;
     opacity: 0;
     scale: 2.4;
     pointer-events: none;
+  }
+
+  .cid.is-stamped .pass-stamp { animation: holo 1.6s ease-in-out 0.3s infinite; }
+
+  @keyframes holo {
+    0% { background-position: 120% 0, 0 0; }
+    100% { background-position: -60% 0, 0 0; }
   }
 
   .pass-stamp b { font-size: 5.4cqw; letter-spacing: 0.06em; }
   .pass-stamp small { font-size: 2.4cqw; font-weight: 800; letter-spacing: 0.18em; }
 
   .cid.is-stamped .pass-stamp {
-    opacity: 0.88;
+    opacity: 1;
     scale: 1;
     transition: scale 0.28s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.12s;
   }
 
-  /* ---------- The access reader (liquid glass) ---------- */
-  /* A glass pill at the bottom of the gate; the card is pulled straight down onto its top edge. */
+  /* ---------- The access reader: a slim bar of dark glass with a slot of light along its top ---------- */
   .reader {
-    --ok: #23864f;
-    --beam: #ff5a4f;
+    --ok: #3ddc84;
+    --beam: #ff6b5e;
+    --idle: #9fd8ff;
     position: absolute;
     z-index: 1;
     left: 50%;
-    bottom: clamp(56px, 10svh, 110px);
+    width: min(30vw, 340px, 80vw);
     translate: -50% 0;
-    width: max-content;
-    max-width: calc(100% - 2 * var(--margin));
     transition: opacity 0.4s, translate 0.6s var(--ease-out), visibility 0s 0.6s;
   }
 
   .reader-body {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 30px 10px 10px;
-    border-radius: 999px;
+    position: relative;
+    height: 58px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff1f, #ffffff0a);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+    box-shadow:
+      inset 0 1px 0 #ffffff40,
+      inset 0 0 0 1px #ffffff1f,
+      0 18px 30px -18px #05082a99;
   }
 
+  /* The whole bar can be tapped to scan. */
   .reader-pad {
-    flex: none;
-    display: block;
-    padding: 0;
+    position: absolute;
+    inset: 0;
     border: 0;
     background: none;
-    border-radius: 50%;
+    border-radius: inherit;
     cursor: pointer;
   }
 
-  .reader-window {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: clamp(60px, 7svh, 76px);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 40%, #ffffffb3, #ffffff26 70%);
-    box-shadow: inset 0 2px 6px #2a2a2e33, inset 0 -2px 0 #ffffffcc, 0 0 0 1px #2a2a2e14;
-    transition: box-shadow 0.3s, background-color 0.3s, scale 0.35s var(--ease-spring);
-  }
-
-  .ring {
+  /* The slot: a line of light along the top edge. It breathes while waiting, brightens when the
+     card comes near, blinks red while reading and goes green on access. */
+  .slot-light {
     position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 2px solid var(--sky);
-    opacity: 0;
-    animation: ping 2.4s var(--ease-out) infinite;
+    left: 10%;
+    right: 10%;
+    top: 0;
+    height: 3px;
+    translate: 0 -50%;
+    border-radius: 3px;
+    background: var(--idle);
+    box-shadow: 0 0 8px 1px var(--idle), 0 0 22px 4px color-mix(in oklab, var(--idle) 45%, transparent);
+    opacity: 0.6;
+    animation: slot-breathe 2.4s ease-in-out infinite;
+    pointer-events: none;
   }
 
-  .ring.r2 { animation-delay: 1.2s; }
+  @keyframes slot-breathe { 50% { opacity: 1; } }
 
-  @keyframes ping {
-    0% { scale: 0.7; opacity: 0.9; }
-    100% { scale: 1.6; opacity: 0; }
+  .reader[data-state='near'] .slot-light { --idle: #ffe066; opacity: 1; animation-duration: 0.5s; }
+  .reader[data-state='scan'] .slot-light { --idle: var(--beam); animation: slot-scan 0.3s steps(2) infinite; opacity: 1; }
+  .reader[data-state='ok'] .slot-light { --idle: var(--ok); animation: none; opacity: 1; }
+
+  @keyframes slot-scan { 50% { opacity: 0.4; } }
+
+  /* A small ring on the left: dashed and turning while waiting, it fills while reading. */
+  .ring-prog {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 32px;
+    height: 32px;
+    translate: 0 -50%;
+    overflow: visible;
+    pointer-events: none;
   }
 
-  .nfc, .tick {
-    width: 46%;
-    height: auto;
-    fill: none;
-    stroke: var(--ink);
-    stroke-width: 4;
+  .ring-prog circle { fill: none; stroke-width: 7; }
+  .rp-track { stroke: #ffffff33; stroke-dasharray: 6 8; transform-origin: 50% 50%; animation: ring-turn 6s linear infinite; }
+  .rp-fill {
+    stroke: var(--beam);
     stroke-linecap: round;
-    stroke-linejoin: round;
-    grid-area: 1 / 1;
-    transition: opacity 0.25s, scale 0.35s var(--ease-spring);
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
   }
 
-  .nfc { rotate: -90deg; }
-  .nfc path { animation: wave 1.8s ease-in-out infinite; }
-  .nfc path:nth-child(2) { animation-delay: 0.15s; }
-  .nfc path:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes ring-turn { to { rotate: 360deg; } }
 
-  @keyframes wave {
-    0%, 60%, 100% { opacity: 1; }
-    30% { opacity: 0.25; }
-  }
+  .reader[data-state='scan'] .rp-fill { stroke-dashoffset: 0; transition: stroke-dashoffset 1.6s cubic-bezier(0.3, 0, 0.4, 1); }
+  .reader[data-state='ok'] .rp-fill { stroke: var(--ok); stroke-dashoffset: 0; }
+  .reader[data-state='ok'] .rp-track { animation: none; }
 
-  .tick { stroke: var(--ok); stroke-width: 5; opacity: 0; scale: 0.4; }
+  .rp-icon path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .nfc { stroke: var(--idle); stroke-width: 6; opacity: 0.9; transition: opacity 0.3s; }
+  .tick { stroke: var(--ok); stroke-width: 9; stroke-dasharray: 60; stroke-dashoffset: 60; }
+  .reader[data-state='near'] .nfc { stroke: #ffe066; }
+  .reader[data-state='scan'] .nfc { stroke: var(--beam); animation: blink 0.25s steps(2) infinite; }
+  .reader[data-state='ok'] .nfc { opacity: 0; }
+  .reader[data-state='ok'] .tick { stroke-dashoffset: 0; transition: stroke-dashoffset 0.45s ease-out 0.1s; }
 
+  /* What the reader is doing, in small type. */
   .reader-status {
+    position: absolute;
+    inset: 0 16px 0 60px;
     display: grid;
-    gap: 2px;
-    line-height: 1.15;
-    min-width: 0;
+    align-content: center;
+    gap: 1px;
+    color: #eef2ff;
+    pointer-events: none;
   }
 
-  .reader-line {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 800;
-    font-size: clamp(15px, 1.2vw, 17px);
-  }
+  .reader-name { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.55; white-space: nowrap; }
+  .reader-line { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .reader-sub { display: none; }
 
   .led {
     flex: none;
-    width: 9px;
-    height: 9px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: var(--sky);
-    box-shadow: 0 0 0 3px #7c90da33;
-    transition: background-color 0.2s, box-shadow 0.2s;
+    background: var(--idle);
+    box-shadow: 0 0 6px var(--idle);
   }
 
-  .reader-sub {
-    min-height: 1.2em;
-    font-family: var(--hand);
-    font-size: 19px;
-    font-weight: 600;
-    color: var(--muted);
-  }
-
-  .reader-name {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: #2a2a2e80;
-    margin-bottom: 2px;
-  }
-
-  .reader-pad:hover .reader-window { scale: 1.06; }
-
-  .reader[data-state='near'] .reader-window {
-    scale: 1.12;
-    background-color: #ffe14d66;
-    box-shadow: inset 0 2px 6px #2a2a2e33, 0 0 0 4px #ffe14d, 0 0 40px #ffe14d;
-  }
-  .reader[data-state='near'] .led { background: #e2b84a; box-shadow: 0 0 0 3px #e2b84a55; }
-
-  .reader[data-state='scan'] .reader-window { box-shadow: inset 0 2px 6px #2a2a2e33, 0 0 0 3px var(--beam), 0 0 36px #ff5a4f99; }
-  .reader[data-state='scan'] .led { background: var(--beam); animation: blink 0.2s steps(2) infinite; }
-  .reader[data-state='scan'] .ring { border-color: var(--beam); animation-duration: 0.8s; }
-
-  .reader[data-state='ok'] .reader-window { box-shadow: inset 0 2px 6px #2a2a2e33, 0 0 0 3px var(--ok), 0 0 36px #23864f66; }
-  .reader[data-state='ok'] .led { background: var(--ok); box-shadow: 0 0 0 3px #23864f40; }
-  .reader[data-state='ok'] .ring { border-color: var(--ok); animation-iteration-count: 2; }
-  .reader[data-state='ok'] .nfc { opacity: 0; scale: 0.5; }
-  .reader[data-state='ok'] .tick { opacity: 1; scale: 1; }
+  .reader[data-state='near'] .led { background: #ffe066; box-shadow: 0 0 6px #ffe066; }
+  .reader[data-state='scan'] .led { background: var(--beam); box-shadow: 0 0 6px var(--beam); animation: blink 0.2s steps(2) infinite; }
+  .reader[data-state='ok'] .led { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
   .reader[data-state='ok'] .reader-line { color: var(--ok); }
 
   @keyframes blink { 50% { opacity: 0.2; } }
@@ -676,47 +531,132 @@ const stars = [
 
   .gate-skip:hover { color: var(--ink); }
 
-  /* ---------- After the gate: name, tagline and the way in ---------- */
-  /* No z-index or transform here: the title video has to multiply onto the hero's paper. */
-  .hero-copy {
+
+  /* ---------- The stage ---------- */
+  .hero {
+    /* One letter unit: the size the Blender letters are laid out in. */
+    --u: clamp(44px, min(12.6vw, 20svh), 196px);
+    --strap: clamp(70px, 11svh, 130px);
+    --badge-w: min(24vw, 380px, 40svh);
+    --badge-h: calc(var(--badge-w) / 1.546);
+    --anchor: 81%;
+    --lr: clamp(64px, 8vw, 120px);
     position: relative;
-    margin-top: calc(var(--strap) + 50px + var(--badge-h) + 4px);
-    padding-bottom: clamp(28px, 6svh, 64px);
+    min-height: 100svh;
+    color: var(--fg);
+    overflow: hidden;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(24px, 4svh, 48px) var(--margin) clamp(220px, 40svh, 420px);
+    transition: opacity 0.3s;
+  }
+
+  /* Until the script has set the scene, so the letters don't flash before they drop. */
+  :global(html.js) .stage:not(.is-ready) {
+    opacity: 0;
+    animation: failsafe 0s 2.5s forwards;
+  }
+
+  @keyframes failsafe { to { opacity: 1; } }
+
+  .name-wrap {
+    position: relative;
+    z-index: 2;
     display: grid;
+    justify-items: start;
+    gap: clamp(10px, 1.6svh, 18px);
     justify-items: center;
-    gap: clamp(12px, 2svh, 20px);
-    text-align: center;
+    /* Its box reaches over the reader on phones: only the real content takes touches. */
+    pointer-events: none;
   }
 
-  /* The name and role: a motion graphic made in Blender (3D, 2D, stop motion, looping). It is
-     rendered on white and multiplied onto the page, so the white disappears and the shadows stay. */
-  .hero-title {
-    margin: 0;
+  .name-wrap > * { pointer-events: auto; }
+
+  .nav .id { color: var(--ink); }
+
+  /* At the gate the menu is only the language switch: no empty glass bar. */
+  :global(.gate) .nav ul {
+    background: none;
+    border-color: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  :global(.gate) .nav ul::before { display: none; }
+  :global(.gate) .nav ul .gated { display: none; }
+
+  /* The name: one image per letter, each with its own size and baseline, set like type. */
+  .name {
+    display: grid;
+    gap: calc(var(--u) * 0.16);
     line-height: 0;
-    width: min(100%, 620px);
+    margin: 0;
   }
 
-  .title-mg {
+  .line {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .ch {
+    flex: none;
+    display: block;
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--h) * var(--u));
+    max-width: none;
+    margin: 0 calc(var(--u) * -0.105) calc(var(--y0) * var(--u));
+    transform-origin: 50% 88%;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 calc(var(--u) * 0.06) calc(var(--u) * 0.05) #0b11404d);
+  }
+
+  .line > .ch:first-child { margin-left: calc(var(--u) * -0.12); }
+  .sp { flex: none; width: calc(var(--u) * 0.3); }
+
+  /* A letter you touch wobbles like jelly. */
+  .ch.is-wobble { animation: jelly 0.7s cubic-bezier(0.3, 0.7, 0.4, 1); }
+
+  @keyframes jelly {
+    0% { transform: none; }
+    18% { transform: scale(1.14, 0.84); }
+    36% { transform: scale(0.9, 1.12) translateY(-6%); }
+    54% { transform: scale(1.06, 0.95); }
+    72% { transform: scale(0.98, 1.03); }
+    100% { transform: none; }
+  }
+
+  /* José's head is the O. */
+  .face {
+    position: relative;
+    display: block;
+  }
+
+  .face-in {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--u) * 0.15);
+    width: calc(var(--u) * 0.74);
+    translate: -40% 0;
+  }
+
+  .face-in :global(.pp) {
     width: 100%;
     height: auto;
-    aspect-ratio: 2 / 1;
-    object-fit: contain;
-    mix-blend-mode: multiply;
-  }
-
-  .hero-tag {
-    max-width: 30ch;
-    font-size: var(--step-lead);
-    line-height: 1.3;
-    font-weight: 500;
-    text-wrap: balance;
-  }
-
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
+    max-width: none;
+    overflow: visible;
+    filter: drop-shadow(0 calc(var(--u) * 0.05) calc(var(--u) * 0.04) #0b11404d);
   }
 
   .btn-glass {
@@ -725,7 +665,7 @@ const stars = [
     min-height: 52px;
     padding: 0 26px;
     border-radius: var(--radius);
-    color: var(--ink);
+    color: var(--fg);
     font-weight: 700;
     font-size: var(--step-body);
     text-decoration: none;
@@ -733,18 +673,463 @@ const stars = [
   }
 
   .btn-glass:hover { transform: translateY(-3px); }
+  .hero .btn-glass.glass { background: linear-gradient(160deg, #ffffff40 0%, #ffffff12 50%, #ffffff26 100%); }
+
+
+  /* ---------- The liquid glass behind the name (scripts/liquidbg.ts) ---------- */
+  .liquid-bg {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    pointer-events: none;
+  }
+
+  /* ---------- The glass lens over the name ---------- */
+  .lens {
+    position: absolute;
+    z-index: 4;
+    left: 0;
+    top: 0;
+    width: calc(var(--lr) * 2);
+    height: calc(var(--lr) * 2);
+    margin: calc(var(--lr) * -1) 0 0 calc(var(--lr) * -1);
+    border-radius: 50%;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--scene-bg, #3e4fd0);
+    box-shadow:
+      inset 0 0 0 1.5px #ffffffd9,
+      inset 0 12px 22px #ffffff59,
+      inset 0 -16px 26px #0a12508c,
+      0 26px 40px -16px #0a125099;
+    opacity: 0;
+    scale: 0.3;
+    transition: opacity 0.25s, scale 0.5s cubic-bezier(0.34, 1.6, 0.5, 1);
+    will-change: transform;
+  }
+
+  .lens.is-on { opacity: 1; scale: 1; }
+
+  .lens.is-burst {
+    opacity: 0;
+    scale: 1.6;
+    transition: opacity 0.3s ease-out, scale 0.3s ease-out;
+  }
+
+  .lens-in {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+  }
+
+  .lens-in .name { pointer-events: none; }
+
+  .lens-shine {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(58% 36% at 34% 18%, #ffffffa6, #fff0 70%),
+      radial-gradient(closest-side, #fff0 82%, #ffffff3d 92%, #fff0 100%);
+  }
+
+  :global(.lens-drop) {
+    position: absolute;
+    z-index: 5;
+    width: var(--sz, 14px);
+    height: var(--sz, 14px);
+    margin: calc(var(--sz, 14px) / -2) 0 0 calc(var(--sz, 14px) / -2);
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle at 35% 30%, #ffffffe6, #ffffff33 60%, #fff0);
+    box-shadow: inset 0 0 0 1px #ffffffb3, 0 6px 10px -4px #0a125080;
+    animation: lens-drop 0.75s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+
+  @keyframes lens-drop {
+    0% { transform: translate(0, 0) scale(0.4); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
+  }
+
+  /* ---------- José's cursor, showing what can be grabbed ---------- */
+  .ghost {
+    position: absolute;
+    z-index: 5;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: flex-start;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .ghost.is-on { opacity: 1; }
+
+  .ghost svg {
+    width: 26px;
+    height: 26px;
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 3px 3px #0b114066);
+  }
+
+  .ghost-tag {
+    margin: 20px 0 0 -6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 #fff9, 0 6px 14px -6px #0b114099;
+  }
+
+  /* ---------- Intro ---------- */
+  .intro {
+    position: fixed;
+    z-index: 300;
+    inset: 0;
+    display: none;
+    cursor: pointer;
+  }
+
+  :global(html.intro) .intro { display: block; }
+
+  .intro-paper {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background-color: var(--ground);
+    background-image: radial-gradient(circle at 1px 1px, #2a2a2e24 1px, transparent 1.4px);
+    background-size: var(--grid) var(--grid);
+    color: var(--ink);
+    will-change: transform;
+  }
+
+  /* The paper's lower edge is a wave, so lifting it reads as liquid rising underneath. */
+  .intro-edge {
+    position: absolute;
+    left: 0;
+    top: calc(100% - 1px);
+    width: 100%;
+    height: 14svh;
+    max-width: none;
+    fill: var(--ground);
+  }
+
+  /* Small, at the bottom, like a title card's signature. */
+  .intro-mark {
+    position: absolute;
+    left: 50%;
+    bottom: 13svh;
+    translate: -50% 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    white-space: nowrap;
+    font-size: clamp(17px, 1.6vw, 22px);
+    font-weight: 900;
+    font-stretch: 130%;
+    letter-spacing: -0.02em;
+  }
+
+  .intro-face {
+    display: block;
+    width: 1.6em;
+  }
+
+  .intro-edge { display: none; }
+
+  .intro-face :global(.pp) { width: 100%; height: auto; overflow: visible; }
+
+  .intro-word span {
+    display: inline-block;
+    animation: wob 1.2s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.1s);
+  }
+
+  .intro-word sup {
+    font-size: 0.36em;
+    vertical-align: 1.3em;
+  }
+
+  @keyframes wob {
+    50% { translate: 0 -0.1em; rotate: -5deg; }
+  }
+
+  .intro-load {
+    position: absolute;
+    left: 50%;
+    bottom: 12svh;
+    translate: -50% 0;
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    font-family: var(--hand);
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .intro-load i {
+    position: relative;
+    width: 160px;
+    height: 5px;
+    border-radius: 3px;
+    background: #2a2a2e1f;
+    overflow: hidden;
+  }
+
+  .intro-load i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--ink);
+    transform-origin: left;
+    scale: var(--p, 0) 1;
+  }
+
+  .intro-skip {
+    position: absolute;
+    right: var(--margin);
+    bottom: 18px;
+    padding: 8px 12px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+
+  /* ---------- Candid-style intro: dark letters on paper, then the cut to colour ---------- */
+  .nav { justify-content: flex-end; }
+
+  .hero.is-paper {
+    background-color: var(--ground);
+    background-image: radial-gradient(circle at 1px 1px, #2a2a2e24 1px, transparent 1.4px);
+    background-size: var(--grid) var(--grid);
+  }
+
+  .hero.is-paper .liquid-bg,
+  .hero.is-paper .ghost,
+  .hero.is-paper .nav { visibility: hidden; }
+
+  /* On paper the cream letters are inked: solid black silhouettes, like a printed wordmark. */
+  .hero.is-paper .ch,
+  .hero.is-paper .face-in :global(.pp) { filter: brightness(0); }
+
+  /* The cut: a white flash as the page turns to colour. */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hero.is-cut::after { animation: cut-flash 0.45s ease-out; }
+
+  @keyframes cut-flash {
+    0% { opacity: 0.85; }
+    100% { opacity: 0; }
+  }
+
+
+
+  /* ---------- The Creative ID, under the name: pull it down to the reader ---------- */
+  .hero { --anchor: 50%; }
+
+  .pass {
+    position: absolute;
+    z-index: 4;
+    left: 50%;
+    top: 62%;
+    width: min(18vw, 260px, 24svh);
+    translate: -50% -50%;
+    transform: translate(var(--px, 0px), var(--py, 0px)) rotate(calc(-4deg + var(--pr, 0deg))) scale(var(--ps, 1));
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    outline-offset: 8px;
+  }
+
+  .pass.is-held { cursor: grabbing; z-index: 6; }
+  .pass.is-waiting { visibility: hidden; }
+
+  .pass .badge {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1.546;
+    transform: none;
+    cursor: inherit;
+    animation: pass-bob 5s ease-in-out infinite;
+  }
+
+  .pass.is-held .badge { animation-play-state: paused; }
+
+  .pass .cid {
+    box-shadow:
+      inset 0 1.5px 0 #ffffffb3,
+      0 2px 0 #0000001a,
+      0 22px 30px -14px #0b1140a6;
+  }
+
+  /* A glossy laminate sheen across the card. */
+  .pass .cid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 5cqw;
+    background: linear-gradient(115deg, #fff0 30%, #ffffff59 45%, #fff0 60%);
+    background-size: 250% 100%;
+    animation: laminate 4.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes laminate {
+    0%, 60% { background-position: 120% 0; }
+    100% { background-position: -40% 0; }
+  }
+
+  @keyframes pass-bob {
+    50% { translate: 0 -6px; rotate: 1.5deg; }
+  }
+
+  /* José's cursor shows the move: the card leans toward the reader. */
+  .pass.is-hint .badge { animation: pass-hint 1.1s ease-in-out, pass-bob 5s ease-in-out 1.1s infinite; }
+
+  @keyframes pass-hint {
+    40% { translate: 14px 22px; rotate: 6deg; }
+  }
+
+  /* Once inside, the card is collected: it flies up and away. */
+  :global(html:not(.gate)) .pass { pointer-events: none; }
+  :global(html:not(.gate)) .pass .badge {
+    translate: 0 -120svh;
+    rotate: -25deg;
+    transition: translate 1s cubic-bezier(0.6, 0, 0.3, 1) 0.6s, rotate 1s ease-in 0.6s;
+    animation: none;
+  }
+
+  /* ---------- The reader becomes the way in ---------- */
+  .enter-pill {
+    position: absolute;
+    z-index: 4;
+    left: 50%;
+    bottom: clamp(48px, 9svh, 104px);
+    translate: -50% 0;
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 2px;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 15px;
+  }
+
+  .enter-pill svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 3px 3px #0b114066);
+    transition: transform 0.3s var(--ease-spring);
+  }
+
+  .enter-pill > span {
+    margin-top: 18px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: inset 0 1.5px 0 #ffffffb3, inset 0 -2px 0 #0000001f, 0 10px 22px -10px #0b1140a6;
+    transition: transform 0.35s var(--ease-spring);
+  }
+
+  .enter-pill:hover > span { transform: translateY(-3px) scale(1.04); }
+  .enter-pill:hover svg { transform: translate(-3px, -3px); }
+
+  @media (max-width: 900px), (max-aspect-ratio: 1/1) {
+    .pass {
+      left: 50%;
+      top: 59%;
+      width: min(62vw, 320px, 27svh);
+    }
+  }
+
+  /* ---------- Placement of the card and the reader ---------- */
+
+  .reader {
+    left: var(--anchor);
+    bottom: clamp(72px, 13svh, 140px);
+  }
+
+  /* While it reads, the card is half inside the slot: everything under the slot line is hidden. */
+  .pass.is-inserted .badge {
+    clip-path: inset(0 0 42% 0);
+    transition: clip-path 0.45s cubic-bezier(0.5, 0, 0.3, 1);
+  }
+
+  .pass .badge { transition: clip-path 0.35s ease-out; clip-path: inset(0 0 0 0); }
+
+  .reader-call {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    translate: -50% 0;
+    font-size: 24px;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--fg);
+    rotate: -2deg;
+  }
+
+  .gate-skip {
+    left: var(--anchor);
+    color: var(--fg);
+    opacity: 0.8;
+  }
+
+  .gate-skip:hover { color: var(--accent); opacity: 1; }
+
+  :global(html.intro) .reader,
+  :global(html.intro) .gate-skip {
+    opacity: 0;
+    visibility: hidden;
+  }
+
 
   /* ---------- The gate (only with JS; html.gate is set in the head before paint) ---------- */
   :global(html.gate) { overflow: hidden; }
   :global(.gate) .hero { height: 100svh; }
 
-  .gated,
-  .hero-copy > * {
+  .gated {
     transition: opacity 0.6s var(--ease-out) calc(0.25s + var(--i, 0) * 0.12s), translate 0.8s var(--ease-out) calc(0.25s + var(--i, 0) * 0.12s), visibility 0s;
   }
 
-  :global(.gate) .gated,
-  :global(.gate) .hero-copy > * {
+  :global(.gate) .gated {
     opacity: 0;
     visibility: hidden;
     translate: 0 18px;
@@ -765,85 +1150,58 @@ const stars = [
 
   :global(html:not(.gate)) .reader { translate: -50% 40px; }
 
-  /* Wide screens: once inside, the card slides right and the name takes the left. */
-  @media (min-width: 1000px) and (min-aspect-ratio: 1/1) {
-    :global(html:not(.gate)) .hero {
-      --anchor: 71%;
-    }
-
-    .hero-copy {
-      margin: auto 0;
-      padding-block: 80px 40px;
-      width: min(56%, 760px);
-      justify-items: start;
-      text-align: left;
-    }
-
-    .hero-title { width: 100%; }
-    .title-mg { object-position: left center; }
-    .hero-actions { justify-content: start; }
-  }
-
   @media (max-width: 1100px) {
     .hide-md { display: none; }
   }
 
-  /* Tablets standing up: more height to fill, so a bigger card and title. */
-  @media (min-width: 761px) and (max-width: 1100px) and (min-aspect-ratio: 1/1.6) and (max-aspect-ratio: 1/1) {
+  /* Narrow or tall screens: the name on top, the card under it, the reader at the bottom. */
+  @media (max-width: 900px), (max-aspect-ratio: 1/1) {
     .hero {
-      --strap: clamp(90px, 12svh, 160px);
-      --badge-w: min(62vw, 560px, 44svh);
+      --u: min(15.5vw, 12svh, 120px);
+      --anchor: 50%;
     }
+
+    .name-wrap { width: 100%; }
+
+    /* Phones: the name in the top third, the card under it, the reader at the bottom. */
+    .stage {
+      align-items: flex-start;
+      padding-top: 15svh;
+    }
+
+    .lens { display: none; }
   }
 
   @media (max-width: 760px) {
     .hide-sm { display: none; }
-
-    .hero {
-      --strap: clamp(64px, 13svh, 150px);
-      --badge-w: min(92vw, 420px);
-    }
-
     .nav { padding-top: 12px; }
     .id-status { font-size: 16px; }
     .nav-cta { padding: 0 14px; font-size: 14px; }
-    .stars svg { scale: 1.7; }
-    .hero-copy { margin-top: calc(var(--strap) + 50px + var(--badge-h) - 8px); }
-    .hero-title { width: 100%; }
+    .reader-call { font-size: 20px; }
   }
 
   @media (max-width: 520px) {
     .id-text { display: none; }
     .id { padding: 5px; }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro-word span { animation: none; }
+  }
+
 </style>
 
 <script>
-  import { initLanyard } from '../scripts/lanyard';
+  import { initPass } from '../scripts/pass';
   import { initScanner } from '../scripts/scanner';
   import { initLiquid } from '../scripts/liquid';
-  initScanner(initLanyard());
+  import { initHero3d } from '../scripts/hero3d';
+  import { initLiquidBg } from '../scripts/liquidbg';
+  initLiquidBg(document.querySelector<HTMLCanvasElement>('.hero .liquid-bg'));
+  initScanner(initPass());
   initLiquid();
-  // The stars lean toward the pointer.
-  const hero = document.querySelector<HTMLElement>('.hero');
-  if (hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    window.addEventListener('pointermove', (e) => {
-      if (e.pointerType !== 'mouse') return;
-      hero.style.setProperty('--px', ((e.clientX / innerWidth) * 2 - 1).toFixed(3));
-      hero.style.setProperty('--py', ((e.clientY / innerHeight) * 2 - 1).toFixed(3));
-    });
-  }
-  // The title loop plays only while it is on screen, and never with reduced motion.
-  const mg = document.querySelector<HTMLVideoElement>('.title-mg');
-  if (mg) {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      mg.removeAttribute('autoplay');
-      mg.pause();
-    } else {
-      new IntersectionObserver((e) => (e[0].isIntersecting ? mg.play().catch(() => {}) : mg.pause())).observe(mg);
-    }
-  }
-  // The greeting on the tape; a new lap gets a welcome back. (The reader writes on it too.)
+  initHero3d();
+  // The greeting on the tape, once the card has dropped in; a new lap gets a welcome back.
   const tape = document.querySelector<HTMLElement>('.badge .bubble');
   if (tape) {
     const lines: string[] = JSON.parse(tape.dataset.lines || '[]');
@@ -855,8 +1213,12 @@ const stars = [
         tape.classList.add('is-on');
       }, 160);
     };
-    const lap = Number(document.querySelector('[data-loop]')?.textContent || 1);
-    setTimeout(() => say(lap > 1 && loopLine ? loopLine.replace('{name}', String(lap)) : lines[0]), 1100);
+    const greet = () => {
+      const lap = Number(document.querySelector('[data-loop]')?.textContent || 1);
+      setTimeout(() => say(lap > 1 && loopLine ? loopLine.replace('{name}', String(lap)) : lines[0]), 1100);
+    };
+    if (document.documentElement.classList.contains('intro')) window.addEventListener('jlp-drop', greet, { once: true });
+    else greet();
     window.addEventListener('jlp-loop', (e) => setTimeout(() => say(loopLine.replace('{name}', String((e as CustomEvent<number>).detail))), 900));
   }
 </script>

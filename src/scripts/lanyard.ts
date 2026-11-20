@@ -1,42 +1,28 @@
-// The hero badge hangs from a lanyard and behaves like one: it drops in on load, sways, swings when
-// you grab and throw it (sideways drags on touch, so the page still scrolls), and bounces on the
-// strap. Two springs: the strap swings from the top of the screen, the badge swings from the clip.
-//
-// The clip is a retractable badge reel: past the strap, a thin cord pulls out so the card can reach
-// the reader. The reader (scanner.ts) can also "dock" the card: the springs carry it over to a
-// point and hold it there, level, until it is released and the reel winds it back.
-import { getLoop } from './loop';
+// José's Creative ID hangs from its lanyard (in "About me") and behaves like one: it drops in when
+// it first comes into view, sways, swings when you grab and throw it, and bounces on the strap.
+// Two springs: the strap swings from the top of its tile, the badge swings from the clip. The clip
+// is a retractable badge reel: past the strap, a thin cord pulls out as far as you pull it.
+// (It can also "dock" the card at a point and hold it there, which the old gate used.)
 
 const D2R = Math.PI / 180;
 
-export type Point = { x: number; y: number };
+import type { Point, Lanyard } from './pass';
 
-export type Lanyard = {
-  /** Centre of the card on screen. */
-  center(): Point;
-  /** Carry the card to a point on screen (its centre) and hold it there. */
-  dock(target: () => Point): void;
-  /** Let go: the reel winds back and the card swings home. */
-  undock(): void;
-  /** Called while the card is dragged, and once when it is let go. */
-  onDrag(cb: (p: Point) => void): void;
-  onRelease(cb: (p: Point) => void): void;
-  /** A tap on the card, not a drag. */
-  onTap(cb: () => void): void;
-};
-
-export function initLanyard(): Lanyard | null {
-  const root = document.querySelector<HTMLElement>('[data-lanyard]');
+export function initLanyard(root = document.querySelector<HTMLElement>('[data-lanyard]')): Lanyard | null {
   const swing = root?.querySelector<HTMLElement>('.swing');
   const badge = root?.querySelector<HTMLElement>('.badge');
   const card = root?.querySelector<HTMLElement>('.badge-card');
   if (!root || !swing || !badge || !card) return null;
 
-  const loopEl = badge.querySelector<HTMLElement>('[data-loop]');
-  if (loopEl) loopEl.textContent = String(getLoop()).padStart(2, '0');
-
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const restLen = () => parseFloat(getComputedStyle(root.closest('.hero')!).getPropertyValue('--strap')) || 120;
+  // --strap is usually a formula (clamp, calc with svh…): measure it with a hidden probe.
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:absolute;left:0;top:0;width:0;height:var(--strap);visibility:hidden;pointer-events:none';
+  // The strap's length and the area it lives in come from the nearest [data-lanyard-scope].
+  const scope = (root.closest('[data-lanyard-scope]') as HTMLElement | null) ?? root.parentElement!;
+  scope.appendChild(probe);
+  const restLen = () => probe.offsetHeight || 120;
 
   const dragCbs: ((p: Point) => void)[] = [];
   const releaseCbs: ((p: Point) => void)[] = [];
@@ -224,7 +210,7 @@ export function initLanyard(): Lanyard | null {
     a = target;
     // The reel lets the cord out far enough to reach anywhere on the first screen.
     const want = Math.hypot(e.clientX - o.x, e.clientY - o.y) - grabDist;
-    const nl = Math.max(L0 * 0.7, Math.min(L0 + innerHeight * 0.75, want));
+    const nl = Math.max(L0 * 0.7, Math.min(L0 + Math.max(160, scope.offsetHeight * 0.6), want));
     vl = (nl - len) / dtm;
     len = nl;
     lastX = e.clientX;
@@ -290,33 +276,27 @@ export function initLanyard(): Lanyard | null {
   new IntersectionObserver((entries) => {
     onScreen = entries[0].isIntersecting;
     if (onScreen) wake();
-  }).observe(root.closest('.hero')!);
+  }).observe(scope);
 
   window.addEventListener('resize', () => {
     L0 = restLen();
     wake();
   });
 
-  // The gate opens and the card's anchor slides aside: it swings after it.
-  window.addEventListener('jlp-enter', () => {
-    va -= 70;
-    vb += 40;
-    wake();
-  });
-
-  // A new lap: the card drops in again with the new number.
-  window.addEventListener('jlp-loop', (e) => {
-    const n = (e as CustomEvent<number>).detail;
-    if (loopEl) loopEl.textContent = String(n).padStart(2, '0');
-    dockAt = null;
-    len = -L0 * 2.4;
+  // It drops in from above the first time it comes into view.
+  let dropped = false;
+  new IntersectionObserver((entries) => {
+    if (dropped || !entries[0].isIntersecting) return;
+    dropped = true;
+    root.classList.remove('is-waiting');
+    if (reduced) return;
+    len = -L0 * 1.6;
     vl = 0;
-    va = 30;
+    a = 14;
+    b = -8;
     wake();
-  });
-
-  // Wait a beat so the drop is seen.
+  }, { threshold: 0.35 }).observe(scope);
+  root.classList.add('is-waiting');
   render();
-  setTimeout(wake, 250);
   return api;
 }
