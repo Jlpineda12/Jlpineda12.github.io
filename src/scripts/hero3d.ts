@@ -126,9 +126,6 @@ function playIntro(
   const bar = intro?.querySelector<HTMLElement>('.intro-load i');
   const edge = intro?.querySelector<SVGPathElement>('.intro-edge path');
   if (!intro || !paper) return done();
-  try {
-    sessionStorage.setItem('jlp-intro', '1');
-  } catch {}
 
   const imgs = letters.filter((l): l is HTMLImageElement => l instanceof HTMLImageElement);
   const loaded = Promise.race([Promise.all(imgs.map((i) => i.decode().catch(() => {}))), wait(2600)]);
