@@ -18,14 +18,6 @@ const ui = t(lang);
 const h = ui.hero3d;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const L = h3d.letters as Record<string, { w: number; h: number; x0: number; y0: number }>;
-// Where the slot, the screen and the ring sit on the rendered reader (fractions of the image).
-const R = (h3d as { reader: { w: number; h: number; slot: { x0: number; x1: number; y: number }; screen: { x0: number; y0: number; x1: number; y1: number }; ring: { cx: number; cy: number; r: number } } }).reader;
-const pct = (v: number) => `${(v * 100).toFixed(2)}%`;
-const readerVars = [
-  `--ar:${R.w / R.h}`, `--sx0:${pct(R.slot.x0)}`, `--sx1:${pct(R.slot.x1)}`, `--sy:${pct(R.slot.y)}`,
-  `--lx0:${pct(R.screen.x0)}`, `--ly0:${pct(R.screen.y0)}`, `--lx1:${pct(R.screen.x1)}`, `--ly1:${pct(R.screen.y1)}`,
-  `--rcx:${pct(R.ring.cx)}`, `--rcy:${pct(R.ring.cy)}`, `--rr:${pct(R.ring.r)}`,
-].join(';');
 const lines = [['J', 'O', 'S', 'E-acute', ' ', 'L', 'U', 'I', 'S'], ['P', 'I', 'N', 'E', 'D', 'A']];
 const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
 ---
@@ -78,8 +70,7 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
   </div>
 
   <div class="reader" data-reader data-state="idle" data-msg={JSON.stringify(ui.reader)}>
-    <div class="reader-body" style={readerVars} data-slot={R.slot.y}>
-      <img class="reader-img" src={`${base}hero/reader.webp`} width={R.w} height={R.h} alt="" draggable="false" />
+    <div class="reader-body" data-slot="0">
       <span class="slot-light" aria-hidden="true"></span>
       <svg class="ring-prog" viewBox="0 0 100 100" aria-hidden="true">
         <circle class="rp-track" cx="50" cy="50" r="44" />
@@ -391,56 +382,56 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
     transition: scale 0.28s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.12s;
   }
 
-  /* ---------- The access reader: a cream box with a slot (rendered in Blender) ---------- */
+  /* ---------- The access reader: a slim bar of dark glass with a slot of light along its top ---------- */
   .reader {
     --ok: #3ddc84;
-    --beam: #ff5a4f;
-    --idle: #8fd3ff;
+    --beam: #ff6b5e;
+    --idle: #9fd8ff;
     position: absolute;
     z-index: 1;
     left: 50%;
-    width: min(36vw, 420px, 50svh);
+    width: min(30vw, 340px, 80vw);
     translate: -50% 0;
     transition: opacity 0.4s, translate 0.6s var(--ease-out), visibility 0s 0.6s;
   }
 
   .reader-body {
     position: relative;
-    aspect-ratio: var(--ar);
-    filter: drop-shadow(0 22px 22px #0b114066);
+    height: 58px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff1f, #ffffff0a);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+    box-shadow:
+      inset 0 1px 0 #ffffff40,
+      inset 0 0 0 1px #ffffff1f,
+      0 18px 30px -18px #05082a99;
   }
 
-  .reader-img {
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    user-select: none;
-  }
-
-  /* The whole box can be tapped to scan. */
+  /* The whole bar can be tapped to scan. */
   .reader-pad {
     position: absolute;
     inset: 0;
     border: 0;
     background: none;
-    border-radius: 18%;
+    border-radius: inherit;
     cursor: pointer;
   }
 
-  /* The light in the slot: it breathes while waiting, brightens when the card comes near, turns
-     into a red scan line while reading and goes green on access. */
+  /* The slot: a line of light along the top edge. It breathes while waiting, brightens when the
+     card comes near, blinks red while reading and goes green on access. */
   .slot-light {
     position: absolute;
-    left: var(--sx0);
-    right: calc(100% - var(--sx1));
-    top: var(--sy);
-    height: 4px;
+    left: 10%;
+    right: 10%;
+    top: 0;
+    height: 3px;
     translate: 0 -50%;
-    border-radius: 4px;
+    border-radius: 3px;
     background: var(--idle);
-    box-shadow: 0 0 10px 2px var(--idle), 0 0 26px 6px color-mix(in oklab, var(--idle) 50%, transparent);
-    opacity: 0.55;
-    animation: slot-breathe 2.2s ease-in-out infinite;
+    box-shadow: 0 0 8px 1px var(--idle), 0 0 22px 4px color-mix(in oklab, var(--idle) 45%, transparent);
+    opacity: 0.6;
+    animation: slot-breathe 2.4s ease-in-out infinite;
     pointer-events: none;
   }
 
@@ -452,19 +443,20 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
 
   @keyframes slot-scan { 50% { opacity: 0.4; } }
 
-  /* The ring light: a dashed ring that turns while waiting, fills up while reading, ticks green. */
+  /* A small ring on the left: dashed and turning while waiting, it fills while reading. */
   .ring-prog {
     position: absolute;
-    left: calc(var(--rcx) - var(--rr) * 1.12);
-    top: calc(var(--rcy) - var(--rr) * 1.12 * var(--ar));
-    width: calc(var(--rr) * 2.24);
-    aspect-ratio: 1;
+    left: 14px;
+    top: 50%;
+    width: 32px;
+    height: 32px;
+    translate: 0 -50%;
     overflow: visible;
     pointer-events: none;
   }
 
   .ring-prog circle { fill: none; stroke-width: 7; }
-  .rp-track { stroke: #ffffff26; stroke-dasharray: 6 8; transform-origin: 50% 50%; animation: ring-turn 6s linear infinite; }
+  .rp-track { stroke: #ffffff33; stroke-dasharray: 6 8; transform-origin: 50% 50%; animation: ring-turn 6s linear infinite; }
   .rp-fill {
     stroke: var(--beam);
     stroke-linecap: round;
@@ -472,51 +464,41 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
     stroke-dashoffset: 100;
     transform: rotate(-90deg);
     transform-origin: 50% 50%;
-    filter: drop-shadow(0 0 4px var(--beam));
   }
 
   @keyframes ring-turn { to { rotate: 360deg; } }
 
   .reader[data-state='scan'] .rp-fill { stroke-dashoffset: 0; transition: stroke-dashoffset 1.6s cubic-bezier(0.3, 0, 0.4, 1); }
-  .reader[data-state='ok'] .rp-fill { stroke: var(--ok); stroke-dashoffset: 0; filter: drop-shadow(0 0 6px var(--ok)); }
+  .reader[data-state='ok'] .rp-fill { stroke: var(--ok); stroke-dashoffset: 0; }
   .reader[data-state='ok'] .rp-track { animation: none; }
 
   .rp-icon path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-  .nfc { stroke: var(--idle); stroke-width: 5; opacity: 0.85; transition: opacity 0.3s; }
-  .tick { stroke: var(--ok); stroke-width: 8; stroke-dasharray: 60; stroke-dashoffset: 60; }
+  .nfc { stroke: var(--idle); stroke-width: 6; opacity: 0.9; transition: opacity 0.3s; }
+  .tick { stroke: var(--ok); stroke-width: 9; stroke-dasharray: 60; stroke-dashoffset: 60; }
   .reader[data-state='near'] .nfc { stroke: #ffe066; }
   .reader[data-state='scan'] .nfc { stroke: var(--beam); animation: blink 0.25s steps(2) infinite; }
   .reader[data-state='ok'] .nfc { opacity: 0; }
   .reader[data-state='ok'] .tick { stroke-dashoffset: 0; transition: stroke-dashoffset 0.45s ease-out 0.1s; }
 
-  /* The little screen: dark glass with what the reader is doing, in light. */
+  /* What the reader is doing, in small type. */
   .reader-status {
     position: absolute;
-    left: var(--lx0);
-    top: var(--ly0);
-    width: calc(var(--lx1) - var(--lx0));
-    height: calc(var(--ly1) - var(--ly0));
+    inset: 0 16px 0 60px;
     display: grid;
     align-content: center;
     gap: 1px;
-    padding: 0 6%;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #0d1330, #18224a);
-    box-shadow: inset 0 1px 2px #000a, inset 0 0 0 1px #ffffff14;
-    color: #dfe8ff;
-    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-    overflow: hidden;
+    color: #eef2ff;
     pointer-events: none;
   }
 
-  .reader-name { font-size: clamp(6px, 0.55vw, 8px); letter-spacing: 0.14em; opacity: 0.55; white-space: nowrap; }
-  .reader-line { display: flex; align-items: center; gap: 6px; font-size: clamp(9px, 0.8vw, 12px); font-weight: 700; white-space: nowrap; }
-  .reader-sub { font-size: clamp(6px, 0.55vw, 8px); opacity: 0.6; white-space: nowrap; }
+  .reader-name { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.55; white-space: nowrap; }
+  .reader-line { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .reader-sub { display: none; }
 
   .led {
     flex: none;
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--idle);
     box-shadow: 0 0 6px var(--idle);
@@ -978,8 +960,8 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
     position: absolute;
     z-index: 4;
     left: 50%;
-    top: 59%;
-    width: min(17vw, 250px, 22svh);
+    top: 62%;
+    width: min(18vw, 260px, 24svh);
     translate: -50% -50%;
     transform: translate(var(--px, 0px), var(--py, 0px)) rotate(calc(-4deg + var(--pr, 0deg))) scale(var(--ps, 1));
     cursor: grab;
@@ -1101,7 +1083,7 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
 
   .reader {
     left: var(--anchor);
-    bottom: clamp(48px, 9svh, 100px);
+    bottom: clamp(72px, 13svh, 140px);
   }
 
   /* While it reads, the card is half inside the slot: everything under the slot line is hidden. */

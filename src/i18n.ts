@@ -52,6 +52,19 @@ const ui = {
       hintTap: 'Deslízame hacia abajo ↓',
     },
     gateSkip: 'Entrar sin escanear',
+    talk: {
+      speaker: 'José',
+      hello: '¡Pasaste el control de acceso! Bienvenido. Soy José Luis y este es mi mundo. ¿Qué quieres saber?',
+      next: 'Siguiente',
+      all: 'Leer todo de una vez',
+      topics: [
+        { q: '¿Quién eres?', anims: ['happy', 'pose'], a: ['Soy José Luis Pineda, ingeniero en multimedia en Bogotá, Colombia.', 'Hago juegos, apps y mundos 3D con técnica, arte y buenas historias.'] },
+        { q: '¿Qué haces?', anims: ['code', 'sculpt'], a: ['Busco que cada producto tenga valor artístico y técnico: desde las mecánicas en Unity hasta los entornos en Blender.', 'Últimamente también entreno redes neuronales y construyo APIs, porque un buen mundo necesita algo sólido por debajo.'] },
+        { q: '¿Qué te mueve?', anims: ['play', 'story', 'learn'], a: ['Jugar: si no se siente bien al jugarlo, todavía no está terminado.', 'Contar historias: cada proyecto tiene un personaje, aunque sea un botón.', 'Y aprender: de Unity a las redes neuronales, siempre hay un nivel nuevo.'] },
+        { q: '¿Dónde estudiaste?', anims: ['learn', 'happy'], a: ['Ingeniería en Multimedia en la Universidad Militar Nueva Granada, en Bogotá.', 'Me formé entre videojuegos, apps educativas, animación y diseño. Hablo español nativo e inglés B2.'] },
+        { q: '¿Cómo te contacto?', anims: ['celebrate', 'happy'], a: ['Escríbeme a {email} y respondo en uno o dos días.', 'También estoy en GitHub y LinkedIn. ¡Hagamos algo juntos!'] },
+      ],
+    },
     candid: {
       reach: 'Me encuentras en GitHub y LinkedIn, o escríbeme a:',
       spin: 'Gíralo',
@@ -237,6 +250,19 @@ const ui = {
       hintTap: 'Slide me down ↓',
     },
     gateSkip: 'Enter without scanning',
+    talk: {
+      speaker: 'José',
+      hello: 'You made it through access control! Welcome. I’m José Luis and this is my world. What would you like to know?',
+      next: 'Next',
+      all: 'Read it all at once',
+      topics: [
+        { q: 'Who are you?', anims: ['happy', 'pose'], a: ['I’m José Luis Pineda, a multimedia engineer in Bogotá, Colombia.', 'I make games, apps and 3D worlds with craft, art and good stories.'] },
+        { q: 'What do you do?', anims: ['code', 'sculpt'], a: ['I want every product to have artistic and technical value: from the mechanics in Unity to the environments in Blender.', 'Lately I also train neural networks and build APIs, because a good world needs something solid underneath.'] },
+        { q: 'What drives you?', anims: ['play', 'story', 'learn'], a: ['Play: if it doesn’t feel good to play, it isn’t finished yet.', 'Telling stories: every project has a character, even if it’s a button.', 'And learning: from Unity to neural networks, there’s always a new level.'] },
+        { q: 'Where did you study?', anims: ['learn', 'happy'], a: ['Multimedia Engineering at Universidad Militar Nueva Granada, in Bogotá.', 'I learned between video games, educational apps, animation and design. I speak native Spanish and B2 English.'] },
+        { q: 'How do I reach you?', anims: ['celebrate', 'happy'], a: ['Write to me at {email} and I’ll reply within a day or two.', 'I’m also on GitHub and LinkedIn. Let’s make something together!'] },
+      ],
+    },
     candid: {
       reach: 'You can find me on GitHub and LinkedIn, or write to me at:',
       spin: 'Spin it',
