@@ -40,9 +40,30 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* ---------- Colour scenes ----------
+   Every chapter has its own colour, chosen from José's palette with colour theory: each background
+   is paired with its complement (or a close neighbour) as the accent. scripts/scenes.ts blends the
+   page from one to the next as you scroll; without scripts each chapter just paints its own. */
+[data-scene] { color: var(--fg); }
+/* Cobalt (his headphones, deepened) + warm yellow: complementary. */
+[data-scene='hero'] { --bg: #3d4ccf; --fg: #fbf0e0; --accent: #ffd23f; }
+/* Peach (his skin) + red (his shirt): analogous, warm and close. */
+[data-scene='about'] { --bg: #fde3d2; --fg: var(--ink); --accent: #b02e2e; }
+/* Mint + coral red: complementary, so the cartridges pop. */
+[data-scene='projects'] { --bg: #cfeedd; --fg: var(--ink); --accent: #e5483b; }
+/* Lilac + amber: complementary. */
+[data-scene='process'] { --bg: #ddd5fb; --fg: var(--ink); --accent: #f2b630; }
+/* Butter + violet: complementary. */
+[data-scene='inventory'] { --bg: #fff1b3; --fg: var(--ink); --accent: #6b4fd8; }
+/* Periwinkle + coral; the yellow notebook is its complement. */
+[data-scene='contact'] { --bg: #b4c6ff; --fg: var(--ink); --accent: #ff6b4a; }
+[data-scene='footer'] { --bg: #2a2a2e; --fg: #ffffff; --accent: #ffd23f; }
+
+html:not(.js) [data-scene] { background-color: var(--bg); }
+
 body {
   margin: 0;
-  background-color: var(--ground);
+  background-color: var(--scene-bg, #3d4ccf);
   /* An engineer's notebook: a faint dot grid under everything. */
   background-image: radial-gradient(circle at 1px 1px, #2a2a2e24 1px, transparent 1.4px);
   background-size: var(--grid) var(--grid);

@@ -9,13 +9,14 @@ interface Props {
   label?: string;
   live?: boolean; // animate (idle loop, blinks); false keeps a still pose
   props?: boolean; // carry the items for worlds and phases (headset, laptop, bulb…)
+  view?: string; // another frame, e.g. just the head
 }
-const { pose = 'calm', class: cls, label, live = true, props = false } = Astro.props;
+const { pose = 'calm', class: cls, label, live = true, props = false, view = '380 640 920 1140' } = Astro.props;
 const p = POSES[pose];
 const show = (on: boolean) => (on ? undefined : 'none');
 const lensFrame = p.lens === 'closed' ? 0 : p.lens;
 ---
-<svg class:list={['pp', cls]} viewBox="380 640 920 1140" data-puppet={live ? pose : undefined} data-pose={pose}
+<svg class:list={['pp', cls]} viewBox={view} data-puppet={live ? pose : undefined} data-pose={pose}
   role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} overflow="visible">
   <g class="pp-rig">
     <g class="pp-body">

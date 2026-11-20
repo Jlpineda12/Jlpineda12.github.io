@@ -315,8 +315,21 @@ export function initLanyard(): Lanyard | null {
     wake();
   });
 
-  // Wait a beat so the drop is seen.
+  // The intro plays first; the card drops in when it ends (jlp-drop). Otherwise, after a beat.
+  const drop = () => {
+    root.classList.remove('is-waiting');
+    len = -L0 * 2.4;
+    vl = 0;
+    a = 9;
+    b = -6;
+    wake();
+  };
   render();
-  setTimeout(wake, 250);
+  if (document.documentElement.classList.contains('intro')) {
+    root.classList.add('is-waiting');
+    window.addEventListener('jlp-drop', drop, { once: true });
+  } else {
+    setTimeout(wake, 250);
+  }
   return api;
 }

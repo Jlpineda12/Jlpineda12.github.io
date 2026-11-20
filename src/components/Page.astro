@@ -1,7 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from './Hero.astro';
-import Divider from './Divider.astro';
 import About from './About.astro';
 import Console from './Console.astro';
 import Process from './Process.astro';
@@ -20,9 +19,7 @@ const { lang } = Astro.props;
   <main id="contenido">
     <About lang={lang} />
     <Console lang={lang} />
-    <Divider shape="clouds" color="var(--sky-light)" bg="transparent" />
     <Process lang={lang} />
-    <Divider shape="hills" color="var(--ground)" bg="var(--sky-light)" />
     <Inventory lang={lang} />
     <Contact lang={lang} />
   </main>
@@ -34,7 +31,9 @@ const { lang } = Astro.props;
   import { initMotion } from '../scripts/motion';
   import { initRewind } from '../scripts/rewind';
   import { initDroplet } from '../scripts/droplet';
+  import { initScenes } from '../scripts/scenes';
   initMotion();
   initRewind();
   initDroplet();
+  initScenes();
 </script>

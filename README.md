@@ -26,6 +26,8 @@ Abre http://localhost:4321. (Con Node 26 el modo `npm run dev` falla por una inc
 | Imágenes de proyectos | `public/img/` |
 | Portadas animadas | `public/video/` |
 | Islas y nubes (Blender) | `public/world/` |
+| Letras 3D del nombre y stickers del inicio (Blender) | `public/hero/`, `src/data/hero3d.json` |
+| Color de cada capítulo (teoría del color) | `src/styles/global.css` → `[data-scene]` |
 
 Para agregar un proyecto, copia uno en `projects` (`site.ts`), elige su `world` (`juegos`, `vr`, `3d`
 o `software`), pon su imagen en `public/img/` y su texto en inglés en `en.ts`.
@@ -40,6 +42,19 @@ o `software`), pon su imagen en `public/img/` y su texto en inglés en `en.ts`.
   (parpadeo, mirar, reír, pensar, idea, construir, celebrar, dormir, viajar y la intro original).
 
 Si cambias el PSD, vuelve a correr los dos scripts.
+
+## El inicio en 3D
+
+`blender/hero3d.py` modela y renderiza en Blender cada letra del nombre (infladas, crema brillante) y
+los stickers de los mundos (control, visor VR, gema 3D, chip de IA y claqueta), cada uno con fondo
+transparente. También escribe sus tamaños en `src/data/hero3d.json`, que la página usa para armar el
+nombre como tipografía y poner la cara de José en la "O":
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/hero3d.py -- "$PWD" all 128
+```
+
+(`letters` o `stickers` en lugar de `all` renderiza solo una parte; el último número son las muestras.)
 
 ## Mundo en Blender
 

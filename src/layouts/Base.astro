@@ -22,7 +22,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <link rel="alternate" hreflang="en" href={alt('en')} />
     <link rel="alternate" hreflang="x-default" href={alt('es')} />
     <link rel="icon" type="image/png" href={`${base}favicon.png`} />
-    <meta name="theme-color" content="#f3f2ee" />
+    <meta name="theme-color" content="#3d4ccf" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={lang === 'es' ? 'es_CO' : 'en_US'} />
     <meta property="og:title" content={site.title} />
@@ -40,6 +40,8 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
         d.classList.add('js');
         try {
           if (!sessionStorage.getItem('jlp-in') && !location.hash) d.classList.add('gate');
+          // The intro plays once per visit, unless a chapter link was followed or motion is reduced.
+          if (!sessionStorage.getItem('jlp-intro') && !location.hash && !matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('intro');
         } catch (e) {}
       })();
     </script>

@@ -15,7 +15,7 @@ const cefr = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const level = (v: string) => (v === 'Nativo' ? 6 : cefr.indexOf(v) + 1);
 const edu = experience[0].rows[0];
 ---
-<section class="inv wrap" id="inventario" aria-labelledby="inv-title">
+<section data-scene="inventory" class="inv wrap" id="inventario" aria-labelledby="inv-title">
   <div class="grid inv-head">
     <h2 class="section-head reveal" id="inv-title">{ui.invTitle}</h2>
     <p class="lead reveal" style="--d:80ms">{ui.invLead}</p>
