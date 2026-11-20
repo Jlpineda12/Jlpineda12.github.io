@@ -506,6 +506,81 @@ def spin(manifest, frames=24):
     manifest['spin'] = {'frames': frames, 'w': sc.render.resolution_x, 'h': sc.render.resolution_y}
 
 
+def reader(manifest):
+    """The access reader: a cream plastic box seen a little from above, a slot along the back of
+    its top for the card, and a dark glass face with a small screen and a ring light. The page
+    draws the light bar, the text and the progress ring over it, at the spots written to the
+    manifest (fractions of the image)."""
+    from bpy_extras.object_utils import world_to_camera_view
+    clear()
+    shell = plastic('shell', '#f4efe5', rough=0.28, coat=0.8)
+    glassm = plastic('face', '#141a33', rough=0.08, coat=1.0)
+    lcd = plastic('lcd', '#1f2a4d', rough=0.2, coat=0.6)
+    ringm = plastic('ring', '#d8dbe3', rough=0.22, metal=1.0, coat=0.0)
+    padm = plastic('pad', '#232b4a', rough=0.35, coat=0.5)
+    hole = plastic('hole', '#0c0f1c', rough=0.6, coat=0.0)
+    W, H, D = 3.0, 1.5, 1.1
+    body = rounded_box('body', (W, H, D), 0.3, shell)
+    # The slot: a dark groove cut along the back of the top face.
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, H / 2, -D * 0.18))
+    cut = bpy.context.active_object
+    cut.scale = (W * 0.74, 0.6, 0.12)
+    bpy.context.view_layer.objects.active = body
+    bpy.ops.object.modifier_apply(modifier='bev')
+    bo = body.modifiers.new('slot', 'BOOLEAN')
+    bo.object, bo.operation = cut, 'DIFFERENCE'
+    bpy.ops.object.modifier_apply(modifier='slot')
+    bpy.data.objects.remove(cut)
+    smooth(body, 35)
+    inner = rounded_box('inner', (W * 0.74, 0.06, 0.12), 0.02, hole, (0, H / 2 - 0.26, -D * 0.18), 2)
+    face = rounded_box('face', (W * 0.86, H * 0.66, 0.08), 0.12, glassm, (0, -H * 0.06, D / 2 + 0.01))
+    screen = rounded_box('screen', (W * 0.5, H * 0.36, 0.04), 0.06, lcd, (-W * 0.13, -H * 0.06, D / 2 + 0.06))
+    ring = None
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.32, minor_radius=0.05, location=(W * 0.3, -H * 0.06, D / 2 + 0.07),
+                                     major_segments=64, minor_segments=16)
+    ring = bpy.context.active_object
+    smooth(ring)
+    ring.data.materials.append(ringm)
+    pad = cyl('pad', 0.27, 0.04, (W * 0.3, -H * 0.06, D / 2 + 0.05), padm, bevel=0.015)
+    parts = [body, inner, face, screen, ring, pad]
+    root = group(parts, (40, 0, 0))
+    bpy.context.view_layer.update()
+    meshes = parts
+    lo, hi = bounds(meshes)
+    pad_ = 0.12
+    x0, x1, y0, y1 = lo.x - pad_, hi.x + pad_, lo.y - pad_, hi.y + pad_
+    w, h = x1 - x0, y1 - y0
+    cam.location = ((x0 + x1) / 2, (y0 + y1) / 2, 20)
+    cam.data.ortho_scale = max(w, h)
+    cam.data.sensor_fit = 'HORIZONTAL' if w >= h else 'VERTICAL'
+    sc.render.resolution_x = round(w * 220)
+    sc.render.resolution_y = round(h * 220)
+    for ob in sc.objects:
+        if ob.type == 'MESH':
+            ob.hide_render = ob not in meshes
+    sc.render.filepath = os.path.join(OUT, 'reader')
+    bpy.ops.render.render(write_still=True)
+
+    def at(local):
+        """A point given in the reader's own coordinates → fraction of the image (0,0 top left)."""
+        co = root.matrix_world @ Vector(local)
+        v = world_to_camera_view(sc, cam, co)
+        return round(v.x, 4), round(1 - v.y, 4)
+
+    sl0 = at((-W * 0.37, H / 2, -D * 0.18))
+    sl1 = at((W * 0.37, H / 2, -D * 0.18))
+    s0 = at((-W * 0.13 - W * 0.25, -H * 0.06 + H * 0.18, D / 2 + 0.08))
+    s1 = at((-W * 0.13 + W * 0.25, -H * 0.06 - H * 0.18, D / 2 + 0.08))
+    rc = at((W * 0.3, -H * 0.06, D / 2 + 0.08))
+    re = at((W * 0.3 + 0.32, -H * 0.06, D / 2 + 0.08))
+    manifest['reader'] = {
+        'w': sc.render.resolution_x, 'h': sc.render.resolution_y,
+        'slot': {'x0': sl0[0], 'x1': sl1[0], 'y': round((sl0[1] + sl1[1]) / 2, 4)},
+        'screen': {'x0': s0[0], 'y0': s0[1], 'x1': s1[0], 'y1': s1[1]},
+        'ring': {'cx': rc[0], 'cy': rc[1], 'r': round(re[0] - rc[0], 4)},
+    }
+
+
 path = os.path.join(ROOT, 'src', 'data', 'hero3d.json')
 manifest = json.load(open(path)) if os.path.exists(path) else {}
 if WHAT in ('letters', 'all'):
@@ -514,5 +589,7 @@ if WHAT in ('stickers', 'all'):
     stickers(manifest)
 if WHAT in ('spin', 'all'):
     spin(manifest)
+if WHAT in ('reader', 'all'):
+    reader(manifest)
 json.dump(manifest, open(path, 'w'), indent=2)
 print('done', list(manifest.get('letters', {})), list(manifest.get('stickers', {})))
