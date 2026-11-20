@@ -16,6 +16,15 @@ export const enSite = {
 };
 
 export const enProjects: Record<string, { name?: string; kind: string; summary: string; linkLabel: string; status?: string; stack?: string[] }> = {
+  'kart-wars': {
+    name: 'Kart Wars · Copa Colombia',
+    kind: 'Arcade Combat Racer + F1 Strategy',
+    summary:
+      'Mario Kart 8 arcade combat fused with Formula 1 telemetry, Pirelli tyre degradation (Soft/Medium/Hard), fighting-game Pit-Stop QTEs, and Constructors 2v2 team tactics across 10 Colombian circuits (2.8 km each, 4 acts, underwater dives, 85 m turbo jumps), 15 Colombian karts/motos, and 10 cel-shaded PEAK pilots built in Blender 5.2 and Unity 6.6. Solo, 2–4P split-screen, and 10-player Online/LAN.',
+    stack: ['Unity 6.6 URP', 'C#', 'Blender 5.2', 'Netcode Relay', 'Procedural Audio'],
+    linkLabel: 'Download & Play (Win / Mac)',
+    status: 'v1.0.0 · Win & Mac',
+  },
   'digital-human': {
     kind: 'AI digital human in pixel art',
     summary:

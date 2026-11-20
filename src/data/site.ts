@@ -43,6 +43,21 @@ export type Project = {
 // Proyectos reales (GitHub, Behance, Sketchfab y YouTube de José).
 export const projects: Project[] = [
   {
+    slug: 'kart-wars',
+    name: 'Kart Wars · Copa Colombia',
+    kind: 'Arcade Combat Racer + Estrategia F1',
+    year: '2026',
+    summary:
+      'El caos arcade de Mario Kart 8 fusionado con telemetría, desgaste de neumáticos Pirelli (Soft/Medium/Hard), Pit-Stop Combo QTE y modo Constructores de Fórmula 1. Incluye 10 circuitos de Colombia de 2.8 km con 4 actos, tramos subacuáticos y saltos de 85 m, 15 karts/motos culturales y 10 pilotos PEAK modelados en Blender 5.2. Jugable en solitario, pantalla dividida (2–4P) y Online/LAN hasta 10 jugadores.',
+    stack: ['Unity 6.6 URP', 'C#', 'Blender 5.2', 'Netcode Relay', 'Audio Procedural'],
+    url: 'https://jlpineda12.github.io/kart-wars/',
+    linkLabel: 'Descargar & Jugar (Win / Mac)',
+    world: 'juegos',
+    poster: 'img/kart-wars.jpg',
+    status: 'v1.0.0 · Win & Mac',
+    isNew: true,
+  },
+  {
     slug: 'digital-human',
     name: 'Jose.exe',
     kind: 'Humano digital con IA en pixel art',
