@@ -300,7 +300,8 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     top: 0;
     height: var(--depth);
     transform-origin: 50% 0;
-    transform: rotateX(90deg);
+    /* Folded back from the top edge of the front, so it runs away from the viewer. */
+    transform: rotateX(-90deg);
     border-radius: 34px 34px 10px 10px;
     background: linear-gradient(#cfc8ba, #ece8e0 70%);
     box-shadow: inset 0 0 0 2px #0000000f;
