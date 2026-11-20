@@ -32,7 +32,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     <h2 class="section-head reveal" id="console-title">{ui.consoleTitle}</h2>
     <div class="chips reveal" style="--d:80ms" role="group" aria-label={ui.worldsTabs}>
       {groups.map((g) => (
-        <button class="chip" type="button" data-group={g} data-first={first[g]} style={`--cc:${CART[g].c}`}>
+        <button class="chip glass" data-liquid='{"bezel":12,"scale":22}' type="button" data-group={g} data-first={first[g]} style={`--cc:${CART[g].c}`}>
           <i aria-hidden="true"></i>{world[g].name}<b>{list.filter((p) => p.world === g).length}</b>
         </button>
       ))}
@@ -81,7 +81,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
       <div class="console-3d">
         <div class="console is-empty" data-console>
           <div class="c-top" aria-hidden="true"><span class="slot-hole"></span></div>
-          <div class="slot-cart is-out" aria-hidden="true"><span class="sc-label"></span></div>
+          <div class="slot-cart is-out" aria-hidden="true" inert></div>
           <span class="slot-arrow" aria-hidden="true"><i></i><i></i><i></i></span>
           <div class="bezel">
             <span class="power"><i></i> POWER</span>
@@ -192,9 +192,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     gap: 8px;
     min-height: 42px;
     padding: 0 7px 0 14px;
-    border: 2px solid var(--ink);
     border-radius: 999px;
-    background: var(--paper);
     color: var(--ink);
     font-weight: 800;
     font-size: 14px;
@@ -220,7 +218,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
   }
 
   .chip:hover { translate: 0 -2px; }
-  .chip.is-on { background: var(--cc); border-color: var(--cc); color: #fff; }
+  .chip.is-on { background: var(--cc); border-color: #ffffff80; color: #fff; }
   .chip.is-on i { background: currentColor; }
   .chip.is-on b { background: #ffffff38; }
   .chip[data-group='software'].is-on { color: var(--ink); }
@@ -365,33 +363,39 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
   .console.is-empty .slot-arrow,
   .console.is-target .slot-arrow { opacity: 1; }
 
-  /* The cartridge that is in the slot sticks out of the top. */
+  /* The cartridge in the slot: a copy of the real one, standing in the slot behind the front of
+     the shell, so only the part above the top shows. --seat moves it (percent of its height):
+     -150 hovering above the slot, -46 seated. */
   .slot-cart {
     position: absolute;
     left: var(--slot-l);
     top: 0;
     width: var(--slot-w);
-    aspect-ratio: 1.05;
-    translate: 0 -46%;
-    border-radius: 10px 10px 0 0;
-    background:
-      repeating-linear-gradient(90deg, #0000 0 7px, #00000022 7px 9px) 0 6px / 100% 22% no-repeat,
-      var(--sc, var(--red));
-    clip-path: polygon(0 0, 86% 0, 100% 12%, 100% 100%, 0 100%);
+    aspect-ratio: 0.86;
+    translate: 0 calc(var(--seat, -46) * 1%);
     transform: translateZ(calc(var(--depth) / -2));
-    transition: translate 0.35s var(--ease-out), opacity 0.2s;
+    pointer-events: none;
   }
 
-  .slot-cart.is-out { translate: 0 -140%; opacity: 0; }
+  .slot-cart.is-out { opacity: 0; }
 
-  .sc-label {
+  .slot-cart > :global(.cart) {
     position: absolute;
-    left: 12%;
-    right: 12%;
-    top: 34%;
-    bottom: 26%;
-    border-radius: 4px;
-    background: #fff var(--sc-img, none) center / cover;
+    inset: 0;
+    transform: none;
+  }
+
+  /* The power light only comes on with a cartridge seated. */
+  .power i { transition: background-color 0.15s, box-shadow 0.15s; }
+  .console:not(.is-on) .power i { background: #6b3a3a; box-shadow: none; }
+
+  /* Between cartridges the screen is off. */
+  .screen.is-off::after {
+    content: '';
+    position: absolute;
+    z-index: 6;
+    inset: 0;
+    background: #0b0c10;
   }
 
   .bezel {
@@ -449,6 +453,20 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     background: #11131a;
     box-shadow: inset 0 0 0 2px #000, 0 0 0 3px #1c1d22;
     isolation: isolate;
+  }
+
+  /* The screen's glass lens: a curved reflection across the top and a bright rim. */
+  .screen::before {
+    content: '';
+    position: absolute;
+    z-index: 8;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(160deg, #ffffff2e 0%, #ffffff12 28%, #fff0 29%),
+      radial-gradient(140% 90% at 50% -30%, #ffffff1f, #fff0 60%);
+    box-shadow: inset 0 1px 0 #ffffff59, inset 0 0 22px #00000059;
+    pointer-events: none;
   }
 
   .scr-img,
@@ -990,6 +1008,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     clip-path: polygon(0 0, 84% 0, 100% 10%, 100% 100%, 0 100%);
     box-shadow: inset 0 -10px 0 #00000033, inset 0 3px 0 #ffffff40;
     transform: translateZ(calc(var(--t) / 2));
+    container-type: inline-size;
     cursor: inherit;
     transition: opacity 0.3s;
     -webkit-tap-highlight-color: transparent;
@@ -1059,7 +1078,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
   .cart-name {
     padding: 7px 9px 8px;
     border-top: 4px solid var(--c);
-    font-size: calc(var(--cw) * 0.068);
+    font-size: 6.8cqw;
     font-weight: 900;
     font-stretch: 115%;
     line-height: 1.05;
@@ -1077,7 +1096,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     position: absolute;
     left: 10%;
     bottom: 2.5%;
-    font-size: calc(var(--cw) * 0.06);
+    font-size: 6cqw;
     font-weight: 900;
     font-stretch: 125%;
     letter-spacing: 0.06em;
@@ -1194,8 +1213,6 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
       0 40px 60px -30px #2a2a2e80;
   }
 
-  .slot-cart.is-open { translate: 0 -140%; opacity: 0; }
-
   /* The flying copy used while a cartridge travels from the carousel to the slot. */
   :global(.cart-fly) {
     position: fixed;
@@ -1298,10 +1315,78 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
 
     const pad = (i: number) => String(i + 1).padStart(2, '0');
 
-    const setSlot = (c: HTMLButtonElement) => {
-      slotCart.style.setProperty('--sc', c.style.getPropertyValue('--c'));
-      slotCart.style.setProperty('--sc-img', c.dataset.poster ? `url("${c.dataset.poster}")` : 'none');
+    // Copies of a cartridge (the one flying, the one in the slot) need its world colours.
+    const dress = (el: HTMLElement, i: number) => {
+      const li = carts[i].closest('li')!;
+      for (const v of ['--c', '--cink', '--c2']) el.style.setProperty(v, li.style.getPropertyValue(v));
     };
+    const copyOf = (i: number) => {
+      const k = carts[i].cloneNode(true) as HTMLElement;
+      k.classList.remove('is-in');
+      // Drop its data and labels, but keep Astro's scoping attribute so it keeps its styles.
+      for (const a of [...k.attributes]) {
+        if ((a.name.startsWith('data-') && !a.name.startsWith('data-astro-cid')) || a.name.startsWith('aria-')) k.removeAttribute(a.name);
+      }
+      k.tabIndex = -1;
+      k.style.transform = 'none';
+      return k;
+    };
+    const setSlot = (c: HTMLButtonElement) => {
+      const i = carts.indexOf(c);
+      slotCart.replaceChildren(copyOf(i));
+      dress(slotCart, i);
+    };
+
+    // The console's sounds: a plastic click out, a clack in, and a two-note boot. Short and quiet,
+    // and only ever after someone has touched something.
+    let ac: AudioContext | null = null;
+    const sfx = (kind: 'out' | 'in' | 'boot') => {
+      try {
+        ac ??= new AudioContext();
+        const t0 = ac.currentTime;
+        const noise = (dur: number, freq: number, vol: number) => {
+          const b = ac!.createBuffer(1, Math.ceil(ac!.sampleRate * dur), ac!.sampleRate);
+          const d = b.getChannelData(0);
+          for (let k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / d.length) ** 3;
+          const src = ac!.createBufferSource();
+          const f = ac!.createBiquadFilter();
+          const g = ac!.createGain();
+          src.buffer = b;
+          f.type = 'bandpass';
+          f.frequency.value = freq;
+          g.gain.value = vol;
+          src.connect(f).connect(g).connect(ac!.destination);
+          src.start(t0);
+        };
+        const tone = (at: number, freq: number, dur: number, vol: number, type: OscillatorType = 'square') => {
+          const o = ac!.createOscillator();
+          const g = ac!.createGain();
+          o.type = type;
+          o.frequency.setValueAtTime(freq, t0 + at);
+          g.gain.setValueAtTime(vol, t0 + at);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + dur);
+          o.connect(g).connect(ac!.destination);
+          o.start(t0 + at);
+          o.stop(t0 + at + dur + 0.02);
+        };
+        if (kind === 'out') noise(0.05, 3200, 0.5);
+        if (kind === 'in') {
+          noise(0.06, 1600, 0.9);
+          tone(0, 110, 0.1, 0.25, 'sine');
+        }
+        if (kind === 'boot') {
+          tone(0, 1047, 0.08, 0.035);
+          tone(0.09, 2093, 0.4, 0.035);
+        }
+      } catch {}
+    };
+    const buzz = (p: number | number[]) => {
+      try {
+        navigator.vibrate?.(p);
+      } catch {}
+    };
+    const rig3d = consoleEl.parentElement!;
+    const bump = () => gsap.fromTo(rig3d, { y: 0 }, { y: 4, duration: 0.06, yoyo: true, repeat: 1, ease: 'power1.out' });
 
     const stopMedia = () => {
       vid.pause();
@@ -1350,6 +1435,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
           screen.classList.remove('is-static');
           paint(i);
           boot.hidden = false;
+          sfx('boot');
           gsap.fromTo(boot.children, { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, stagger: 0.08, ease: 'back.out(2)' });
           setTimeout(() => {
             gsap.to(boot, {
@@ -1365,52 +1451,80 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
         }, 220);
       });
 
+    // Slotting a cartridge in, the way it feels with a real one: the old one clicks out, the new one
+    // arcs over and lines up above the slot, slides in with a little friction and seats with a clack
+    // (the console jolts, phones buzz), the power light comes on and the console boots.
     const insert = async (i: number) => {
       i = ((i % n) + n) % n;
       if (busy || i === active) return;
       busy = true;
       const from = carts[i];
-      // The old cartridge pops out of the slot, the new one flies in from the carousel.
-      slotCart.classList.add('is-out');
       const cr = consoleEl.getBoundingClientRect();
       if (cr.top < 0 || cr.bottom > innerHeight) {
         consoleEl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
         // Let the page arrive before the cartridge flies, so it lands in the slot.
         if (!reduced) await new Promise((r) => setTimeout(r, 480));
       }
-      if (!reduced) {
+
+      // Out with the old one.
+      if (active >= 0) {
+        stopMedia();
+        screen.classList.add('is-off');
+        consoleEl.classList.remove('is-on');
+        // Nothing of the old game is left on the screen.
+        img.hidden = true;
+        vid.hidden = true;
+        title.textContent = '';
+        if (!reduced) {
+          sfx('out');
+          buzz(8);
+          await gsap.to(slotCart, { '--seat': -150, duration: 0.3, ease: 'back.in(1.7)' }).then();
+        }
+      }
+      gsap.set(slotCart, { opacity: 0, '--seat': -150 });
+      slotCart.classList.remove('is-out');
+      setSlot(from);
+
+      if (reduced) {
+        from.classList.add('is-in');
+        gsap.set(slotCart, { opacity: 1, '--seat': -46 });
+      } else {
+        // In flight: from where it is to just above the slot, at the size it will have there.
         const r = from.getBoundingClientRect();
         const s = slotCart.getBoundingClientRect();
-        const fly = from.cloneNode(true) as HTMLElement;
+        const fly = copyOf(i);
+        dress(fly, i);
         fly.classList.add('cart-fly');
-        fly.style.transform = 'none';
-        fly.classList.remove('is-in');
-        fly.removeAttribute('id');
         fly.setAttribute('aria-hidden', 'true');
-        fly.tabIndex = -1;
         Object.assign(fly.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
         document.body.appendChild(fly);
         from.classList.add('is-in');
-        const onScreen = r.bottom > 0 && r.top < innerHeight;
+        const top = Math.min(r.top, s.top) - Math.min(120, innerHeight * 0.12);
         await gsap
           .timeline()
-          .fromTo(fly, { opacity: onScreen ? 1 : 0 }, { opacity: 1, duration: 0.1 })
-          .to(fly, {
-            left: s.left,
-            top: s.top - s.height * 0.75,
-            width: s.width,
-            height: s.width / 0.86,
-            rotate: -8,
-            duration: 0.5,
-            ease: 'power3.inOut',
-          })
-          .to(fly, { top: s.top + s.height * 0.1, rotate: 0, duration: 0.18, ease: 'power2.in' })
+          .to(fly, { left: (r.left + s.left) / 2, top, width: (r.width + s.width) / 2, height: (r.height + s.height) / 2, rotate: -9, duration: 0.34, ease: 'power2.out' })
+          .to(fly, { left: s.left, top: s.top, width: s.width, height: s.height, rotate: 0, duration: 0.3, ease: 'power2.inOut' })
           .then();
+        // Hand over to the cartridge standing in the slot, which can go behind the shell.
+        gsap.set(slotCart, { opacity: 1 });
         fly.remove();
+        await gsap
+          .timeline()
+          .to(slotCart, { '--seat': -62, duration: 0.34, ease: 'power1.in' })
+          .call(() => {
+            sfx('in');
+            buzz(18);
+            bump();
+            consoleEl.classList.add('is-on');
+          })
+          .to(slotCart, { '--seat': -40, duration: 0.06, ease: 'power2.out' })
+          .to(slotCart, { '--seat': -46, duration: 0.16, ease: 'power2.out' })
+          .then();
       }
-      slotCart.classList.remove('is-out', 'is-open');
+
+      consoleEl.classList.add('is-on');
+      screen.classList.remove('is-off');
       if (wrapD(i - goal) !== 0 && !held) spinTo(Math.round(goal) + wrapD(i - goal));
-      gsap.fromTo(consoleEl, { y: 0 }, { y: 5, duration: 0.08, yoyo: true, repeat: 1 });
       active = i;
       await bootUp(i, true);
       busy = false;
@@ -1546,7 +1660,6 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
           held = { i: downItem, x: downX, y: downY, dx: 0, dy: 0 };
           items[downItem].classList.add('is-held');
           car.classList.add('is-carrying');
-          slotCart.classList.add('is-open');
         } else {
           mode = 'spin';
           spinning = true;
@@ -1597,7 +1710,6 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
           }, 30);
         } else {
           // Not in the slot: it springs back onto the carousel.
-          slotCart.classList.remove('is-open');
           items[i].classList.remove('is-held');
           const li = items[i];
           li.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -1656,8 +1768,15 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     // front cartridge and carries it to the glowing slot, twice. Any touch of the carousel stops it.
     const hand = sec.querySelector<HTMLElement>('.demo-hand')!;
     let touched = false;
-    ring.addEventListener('pointerdown', () => (touched = true));
-    chips.forEach((c) => c.addEventListener('click', () => (touched = true)));
+    let demoTl: gsap.core.Timeline | null = null;
+    // Whatever the visitor does first, the hand steps aside.
+    const stopDemo = () => {
+      touched = true;
+      demoTl?.kill();
+      gsap.to(hand, { opacity: 0, duration: 0.2 });
+    };
+    sec.addEventListener('pointerdown', stopDemo, { capture: true });
+    sec.addEventListener('keydown', stopDemo, { capture: true });
     function demo() {
       if (reduced || touched || active >= 0) return;
       const st = sec!.querySelector<HTMLElement>('.stage')!.getBoundingClientRect();
@@ -1665,7 +1784,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
       const sl = consoleEl!.querySelector<HTMLElement>('.slot-hole')!.getBoundingClientRect();
       const from = { x: fr.left + fr.width * 0.5 - st.left, y: fr.top + fr.height * 0.55 - st.top };
       const to = { x: sl.left + sl.width / 2 - st.left, y: sl.top - st.top - 10 };
-      gsap.timeline({ repeat: 1, repeatDelay: 0.6 })
+      demoTl = gsap.timeline({ repeat: 1, repeatDelay: 0.6 })
         .set(hand, { x: from.x, y: from.y + 30, opacity: 0, scale: 1 })
         .to(hand, { y: from.y, opacity: 1, duration: 0.35, ease: 'power2.out' })
         .to(hand, { scale: 0.88, duration: 0.15 })

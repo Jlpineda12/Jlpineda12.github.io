@@ -42,7 +42,7 @@ const stars = [
       </span>
     </a>
     <nav aria-label={ui.chapters}>
-      <ul>
+      <ul class="glass" data-liquid='{"bezel":16,"scale":30}'>
         <li class="hide-sm gated" style="--i:0"><a class="sketch-pill" href="#quien-soy">{ui.navAbout}</a></li>
         <li class="hide-sm gated" style="--i:1"><a class="sketch-pill" href="#proyectos">{ui.navWorlds}</a></li>
         <li class="hide-md gated" style="--i:2"><a class="sketch-pill" href="#como-trabajo">{ui.navProcess}</a></li>
@@ -164,11 +164,31 @@ const stars = [
     z-index: 3;
   }
 
+  /* The menu is a liquid-glass bar; inside it the links are plain handwriting that lights up. */
   .nav ul {
     display: flex;
-    gap: clamp(8px, 1.4vw, 20px);
+    gap: clamp(2px, 0.6vw, 8px);
     align-items: center;
+    padding: 5px;
+    border-radius: 999px;
   }
+
+  .nav :global(.sketch-pill)::before {
+    border-color: transparent;
+    border-radius: 999px;
+    rotate: 0deg;
+    inset: 0;
+  }
+
+  .nav :global(.sketch-pill):hover::before,
+  .nav :global(.sketch-pill):focus-visible::before {
+    inset: 0;
+    rotate: 0deg;
+    background: #ffffffb3;
+    box-shadow: inset 0 1px 0 #fff, 0 4px 10px -4px #2a2a2e40;
+  }
+
+  .nav :global(.lang-switch) { background: #ffffff8c; }
 
   /* José's tag: his face and name in a box drawn with a pen. */
   .id {
@@ -261,7 +281,7 @@ const stars = [
   }
 
   .nav :global(.lang-switch) {
-    box-shadow: inset 0 0 0 2px var(--ink);
+    box-shadow: inset 0 1px 0 #fff, 0 0 0 1px #2a2a2e1f;
   }
 
   .nav-cta {
