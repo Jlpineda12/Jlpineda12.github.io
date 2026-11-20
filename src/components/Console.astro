@@ -27,7 +27,7 @@ const total = list.length;
 const num = (i: number) => String(i + 1).padStart(2, '0');
 const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.world === g)]));
 ---
-<section data-scene="projects" class="console-sec" id="consola" aria-labelledby="console-title">
+<section data-scene="projects" class="console-sec" id="proyectos" aria-labelledby="console-title">
   <div class="col-wide head">
     <h2 class="c-head reveal" id="console-title">{ui.consoleTitle}</h2>
     <div class="chips reveal" style="--d:80ms" role="group" aria-label={ui.worldsTabs}>
@@ -132,13 +132,14 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     </span>
   </div>
 
-  <div class="col-wide manuals-wrap">
+  <div class="col-wide manuals-wrap" data-fp-free>
     <div class="manuals">
       {list.map((p, i) => {
         const w = world[p.world];
         return (
           <article class="manual" data-i={i} style={`--c:${CART[p.world].c === '#e9b93a' ? '#a87b12' : CART[p.world].c};--c2:${w.accent}`}>
             <p class="m-top"><span>{ui.manual}</span><span>{num(i)}/{num(total - 1)}</span></p>
+            <button class="m-close" type="button" aria-label={lang === 'es' ? 'Cerrar el manual' : 'Close the manual'}>×</button>
             <p class="m-world" style={`--c:${w.bg}`}>{w.name}</p>
             <h3 class="m-name">{p.name}</h3>
             <p class="m-kind">{p.kind}{p.year && ` · ${p.year}`}</p>
@@ -1305,6 +1306,65 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     .manual { padding: 22px 20px 26px 48px; rotate: 0deg; }
     .m-models { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
+
+  /* ---------- In the deck: the whole console on one screen ---------- */
+  :global(html.fp) .console-sec { padding-block: clamp(56px, 8svh, 96px) clamp(70px, 10svh, 110px); }
+  :global(html.fp) .console-sec .head { margin-bottom: clamp(8px, 2svh, 28px); }
+
+  @media (min-width: 760px) and (min-aspect-ratio: 1/1) {
+    :global(html.fp) .stage { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(16px, 3vw, 48px); }
+    :global(html.fp) .carousel { --cw: clamp(120px, min(14vw, 25svh), 220px); }
+    :global(html.fp) .rig { max-width: min(100%, 92svh); padding-top: clamp(30px, 6svh, 90px); }
+  }
+
+  @media (max-aspect-ratio: 1/1) {
+    :global(html.fp) .carousel { --cw: min(32vw, 18svh); }
+    :global(html.fp) .rig { max-width: min(92vw, 52svh); margin-inline: auto; padding-top: 40px; }
+  }
+
+  /* The manual opens as a sheet over the console, and closes with ×. */
+  :global(html.fp) .manuals-wrap {
+    position: fixed;
+    z-index: 40;
+    right: max(16px, 3vw);
+    bottom: 84px;
+    width: min(500px, calc(100vw - 32px));
+    max-height: min(68svh, 640px);
+    overflow-y: auto;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+    scrollbar-width: none;
+  }
+
+  :global(html.fp) .manuals { margin: 0; max-width: none; }
+
+  :global(html.fp) .manual {
+    grid-template-columns: minmax(0, 1fr);
+    rotate: 0deg;
+    pointer-events: auto;
+    box-shadow: 0 2px 0 #0000000f, 0 34px 60px -24px #1b1f6b99;
+  }
+
+  :global(html.fp) .manual > * { grid-column: 1 !important; }
+
+  .m-close {
+    position: absolute;
+    right: 14px;
+    top: 10px;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: #2a2a2e14;
+    color: var(--ink);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .m-close:hover { background: #2a2a2e24; }
+  .manual { position: relative; }
 </style>
 
 <script>
@@ -1316,6 +1376,7 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
   const screen = sec?.querySelector<HTMLElement>('.screen');
   const carts = [...(sec?.querySelectorAll<HTMLButtonElement>('.cart') ?? [])];
   const manuals = [...(sec?.querySelectorAll<HTMLElement>('.manual') ?? [])];
+  manuals.forEach((m) => m.querySelector('.m-close')?.addEventListener('click', () => m.classList.remove('is-on')));
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (sec && consoleEl && screen && carts.length) {

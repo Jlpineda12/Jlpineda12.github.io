@@ -54,6 +54,13 @@ const ui = {
     gateSkip: 'Entrar sin escanear',
     bento: {
       kicker: 'Quién soy',
+      short: 'Hago juegos, apps y mundos 3D con técnica, arte y buenas historias.',
+      age: 'años',
+      role: 'Profesión',
+      qaKicker: 'Experiencia',
+      qaTitle: 'QA Tester',
+      qaText: 'Pruebo, rompo y documento: encuentro los bugs antes que los jugadores.',
+      native: 'Nativo',
       open: 'Abierto a trabajo',
       time: 'en Bogotá',
       study: 'Estudios',
@@ -187,6 +194,8 @@ const ui = {
     lab: {
       lead: 'Así trabajo, contado con una gota: tú la transformas, fase por fase.',
       launchName: 'Lanzar',
+      turn: 'Desliza para pasar la página',
+      cover: 'Mi libreta de proceso',
       launchTitle: 'Sale al mundo',
       hints: [
         'Arrastra las gotitas hasta la gota grande (o tócalas): son las voces que escucho.',
@@ -271,6 +280,13 @@ const ui = {
     gateSkip: 'Enter without scanning',
     bento: {
       kicker: 'About me',
+      short: 'I make games, apps and 3D worlds with craft, art and good stories.',
+      age: 'years old',
+      role: 'Profession',
+      qaKicker: 'Experience',
+      qaTitle: 'QA Tester',
+      qaText: 'I test, break and document: I find the bugs before the players do.',
+      native: 'Native',
       open: 'Open to work',
       time: 'in Bogotá',
       study: 'Studies',
@@ -404,6 +420,8 @@ const ui = {
     lab: {
       lead: 'How I work, told with a drop: you shape it, phase by phase.',
       launchName: 'Launch',
+      turn: 'Scroll to turn the page',
+      cover: 'My process notebook',
       launchTitle: 'Out into the world',
       hints: [
         'Drag the little drops into the big one (or tap them): they are the voices I listen to.',

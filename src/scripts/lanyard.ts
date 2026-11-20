@@ -18,8 +18,8 @@ export type Lanyard = {
   onTap(cb: () => void): void;
 };
 
-/** `waitFor`: drop in when this window event fires (the hero waits for its intro); otherwise the
- *  card drops in the first time its area comes into view. */
+/** `waitFor`: drop in when this window event fires (its screen is shown); otherwise the card drops
+ *  in the first time its area comes into view. */
 export function initLanyard(root = document.querySelector<HTMLElement>('[data-lanyard]'), opts: { waitFor?: string } = {}): Lanyard | null {
   const swing = root?.querySelector<HTMLElement>('.swing');
   const badge = root?.querySelector<HTMLElement>('.badge');
@@ -309,8 +309,7 @@ export function initLanyard(root = document.querySelector<HTMLElement>('[data-la
     wake();
   };
   if (opts.waitFor) {
-    if (document.documentElement.classList.contains('intro')) addEventListener(opts.waitFor, drop, { once: true });
-    else setTimeout(drop, 200);
+    addEventListener(opts.waitFor, drop, { once: true });
   } else {
     new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) drop();

@@ -1,20 +1,23 @@
 ---
-// Who José is, at a glance. His Creative ID hangs from its lanyard on the left (grab it, swing it,
-// pull the cord, throw it) and stays in view while the cards on the right are read: his name and
-// story, whether he is free and the time in Bogotá, studies, languages, what he makes (his four
-// worlds), a controller he modelled in Blender, what drives him, what he has achieved, his skills
-// and how to reach him. Everything fits in about one screen.
-import SocialLinks from './SocialLinks.astro';
-import { getData, t, achievements, type Lang } from '../i18n';
-import h3d from '../data/hero3d.json';
+// Who José is, only the essentials. His Creative ID hangs from its lanyard on the left (grab it,
+// swing it, pull the cord, throw it) and stays in view; on the right, a few cards stuck on like
+// stickers: his name, his age, his profession and studies, his experience as a QA tester, what he
+// makes (his four worlds) and his languages.
+import { getData, t, type Lang } from '../i18n';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const { site, softSkills, worlds, languages } = getData(lang);
+const { site, worlds, languages } = getData(lang);
 const ui = t(lang);
 const b = ui.bento;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const spin = (h3d as { spin?: { frames: number; w: number; h: number } }).spin ?? { frames: 24, w: 552, h: 347 };
 const study = site.facts.find((f) => /Estudios|Studies/.test(f.label))?.value ?? '';
+// His age, from his birthday (on his Creative ID); the page recounts it when it loads.
+const BORN = '2004-08-31';
+const ageOn = (d: Date) => {
+  const b = new Date(BORN);
+  return d.getFullYear() - b.getFullYear() - (d < new Date(d.getFullYear(), b.getMonth(), b.getDate()) ? 1 : 0);
+};
+const age = ageOn(new Date());
 // Simple line icons, drawn on a 24px grid.
 const ICON: Record<string, string> = {
   pin: 'M12 21s-6-5.4-6-10.2a6 6 0 1 1 12 0C18 15.6 12 21 12 21z M12 13a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4z',
@@ -29,9 +32,9 @@ const ICON: Record<string, string> = {
   learn: 'M12 3l2.3 5.6 6 .5-4.6 3.9 1.4 5.9L12 15.8 6.9 18.9l1.4-5.9L3.7 9.1l6-.5z',
   trophy: 'M8 4h8v5a4 4 0 0 1-8 0z M8 6H5a3 3 0 0 0 3 4 M16 6h3a3 3 0 0 1-3 4 M12 13v4 M9 20h6 M10 17h4',
   mail: 'M3 6h18v12H3z M3 7l9 6 9-6',
+  bug: 'M9 7a3 3 0 0 1 6 0 M8 9h8v5a4 4 0 0 1-8 0z M12 9v9 M4 10l4 1 M20 10l-4 1 M4 15h4 M20 15h-4 M5 20l3.5-2.5 M19 20l-3.5-2.5',
 };
 const icon = (k: string) => ICON[k] ?? ICON.learn;
-const driveIcon = ['play', 'story', 'learn'];
 ---
 <section data-scene="about" class="studio" id="quien-soy" aria-labelledby="about-title">
   <div class="col-wide about-grid">
@@ -60,9 +63,9 @@ const driveIcon = ['play', 'story', 'learn'];
       </div>
     </aside>
 
-    <!-- Everything else, in cards. -->
+    <!-- The essentials, in cards stuck on like stickers. -->
     <div class="bento">
-      <article class="card c-card b-intro reveal">
+      <article class="card c-card b-intro reveal" style="--rot:-0.6deg">
         <p class="kicker">
           {b.kicker}
           <svg class="flag" viewBox="0 0 30 20" aria-label="Colombia" role="img">
@@ -70,35 +73,29 @@ const driveIcon = ['play', 'story', 'learn'];
           </svg>
         </p>
         <h2 class="me-name" id="about-title">{site.name.first} {site.name.last}</h2>
-        <p class="me-role">{site.role}</p>
-        <p class="me-bio"><strong>{ui.aboutLead}</strong> {ui.aboutRest}</p>
+        <p class="me-bio">{b.short}</p>
       </article>
 
-      <article class="card c-card b-status reveal" style="--d:60ms">
-        <p class="open"><span class="dot" aria-hidden="true"></span>{b.open}</p>
-        <p class="where">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('pin')} /></svg>
-          Bogotá, Colombia
-        </p>
-        <p class="clock"><time data-bogota>--:--</time> <span>{b.time}</span></p>
+      <article class="card b-age reveal" style="--d:60ms;--rot:2deg" data-born={BORN}>
+        <p class="age-n"><span data-age>{age}</span></p>
+        <p class="age-l">{b.age}</p>
       </article>
 
-      <article class="card c-card b-study reveal" style="--d:90ms">
-        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('cap')} /></svg>{b.study}</p>
-        <p class="big">{study.split(',')[0]}</p>
-        <p class="small">Universidad Militar Nueva Granada · Bogotá</p>
+      <article class="card c-card b-role reveal" style="--d:90ms;--rot:1deg">
+        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('cap')} /></svg>{b.role}</p>
+        <p class="big">{site.role}</p>
+        <p class="small">{study.split(',')[1]?.trim() ?? 'UMNG'} · Universidad Militar Nueva Granada</p>
+        <p class="open"><span class="dot" aria-hidden="true"></span>{b.open} · Bogotá</p>
       </article>
 
-      <article class="card c-card b-langs reveal" style="--d:120ms">
-        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('chat')} /></svg>{b.langs}</p>
-        <ul class="langs">
-          {languages.map((l, i) => (
-            <li><span>{l.group}</span><em>{l.items}</em><i style={`--lv:${i === 0 ? 1 : 0.7}`}></i></li>
-          ))}
-        </ul>
+      <article class="card b-qa reveal" style="--d:120ms;--rot:-1.4deg">
+        <span class="qa-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d={icon('bug')} /></svg></span>
+        <p class="qa-k">{b.qaKicker}</p>
+        <p class="qa-t">{b.qaTitle}</p>
+        <p class="qa-x">{b.qaText}</p>
       </article>
 
-      <article class="card c-card b-does reveal" style="--d:150ms">
+      <article class="card c-card b-does reveal" style="--d:150ms;--rot:0.5deg">
         <p class="label">{b.does}</p>
         <ul class="worlds">
           {worlds.map((w) => (
@@ -110,39 +107,18 @@ const driveIcon = ['play', 'story', 'learn'];
         </ul>
       </article>
 
-      <div class="card c-card b-spin tile-spin reveal" style="--d:180ms" role="img" aria-label={lang === 'es' ? 'Control de videojuego en 3D, modelado en Blender, que gira con el puntero' : 'A 3D game controller, modelled in Blender, that turns with the pointer'}>
-        <span class="spin" style={`--n:${spin.frames};--ar:${spin.w / spin.h};background-image:url(${base}hero/spin.webp)`}></span>
-        <span class="tag">{b.blender}</span>
-      </div>
-
-      <article class="card c-card b-drives reveal" style="--d:210ms">
-        <p class="label">{b.drives}</p>
-        <ul class="rows">
-          {ui.drives.map((d, i) => (
-            <li>
-              <span class="r-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon(driveIcon[i])} /></svg></span>
-              <span><strong>{d.title}</strong><span>{d.text}</span></span>
+      <article class="card c-card b-langs reveal" style="--d:180ms;--rot:-1deg">
+        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('chat')} /></svg>{b.langs}</p>
+        <ul class="rings">
+          {languages.map((l, i) => (
+            <li style={`--lv:${i === 0 ? 1 : 0.7}`}>
+              <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rt" cx="22" cy="22" r="18" /><circle class="rf" cx="22" cy="22" r="18" pathLength="100" /></svg>
+              <span class="r-code">{i === 0 ? 'ES' : 'EN'}</span>
+              <span class="r-name">{l.group}</span>
+              <span class="r-lv">{l.items}</span>
             </li>
           ))}
         </ul>
-      </article>
-
-      <article class="card c-card b-wins reveal" style="--d:240ms">
-        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('trophy')} /></svg>{b.wins}</p>
-        <ul class="wins">
-          {achievements[lang].map((a) => <li><strong>{a.title}</strong><span>{a.text}</span></li>)}
-        </ul>
-      </article>
-
-      <article class="card c-card b-skills reveal" style="--d:270ms">
-        <p class="label">{b.skills}</p>
-        <ul class="chips">{softSkills.map((s) => <li>{s}</li>)}</ul>
-      </article>
-
-      <article class="card c-card b-talk reveal" style="--d:300ms">
-        <p class="label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon('mail')} /></svg>{b.talk}</p>
-        <a class="mail" href={`mailto:${site.email}?subject=${encodeURIComponent(ui.subject)}`}>{site.email}</a>
-        <SocialLinks lang={lang} />
       </article>
     </div>
   </div>
@@ -220,22 +196,24 @@ const driveIcon = ['play', 'story', 'learn'];
     rotate: -3deg;
   }
 
-  /* ---------- The cards ---------- */
+  /* ---------- The cards: stickers, each a little askew, straightening when pointed at ---------- */
   .bento {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 12px;
+    gap: 14px;
   }
 
   .card {
     position: relative;
-    padding: clamp(16px, 1.6vw, 22px);
-    border-radius: 26px;
+    padding: clamp(18px, 1.8vw, 26px);
+    border-radius: 28px;
     color: var(--ink);
-    transition: transform 0.35s var(--ease-spring);
+    rotate: var(--rot, 0deg);
+    box-shadow: inset 0 1.5px 0 #ffffffe6, 0 18px 34px -22px #1b1f6b66;
+    transition: rotate 0.45s var(--ease-spring), translate 0.45s var(--ease-spring);
   }
 
-  .card:hover { transform: translateY(-3px); }
+  .card:hover { rotate: 0deg; translate: 0 -4px; }
 
   .label {
     display: flex;
@@ -249,8 +227,7 @@ const driveIcon = ['play', 'story', 'learn'];
     color: #2a2a2e99;
   }
 
-  .label svg,
-  .where svg {
+  .label svg {
     width: 18px;
     height: 18px;
     fill: none;
@@ -260,8 +237,8 @@ const driveIcon = ['play', 'story', 'learn'];
     stroke-linejoin: round;
   }
 
-  /* Name and story */
-  .b-intro { grid-column: span 4; display: grid; gap: 8px; align-content: center; }
+  /* Name */
+  .b-intro { grid-column: span 4; display: grid; gap: 10px; align-content: center; }
 
   .kicker {
     display: inline-flex;
@@ -277,43 +254,46 @@ const driveIcon = ['play', 'story', 'learn'];
   .flag { width: 22px; height: auto; border-radius: 3px; box-shadow: 0 0 0 1px #0000001a; }
 
   .me-name {
-    font-size: clamp(2rem, 1.3rem + 2.6vw, 3.4rem);
+    font-size: clamp(2.2rem, 1.3rem + 3vw, 3.8rem);
     font-weight: 900;
     font-stretch: 125%;
     letter-spacing: -0.03em;
-    line-height: 0.92;
+    line-height: 0.9;
   }
 
-  .me-role {
-    justify-self: start;
-    padding: 5px 12px;
-    border-radius: 999px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 12.5px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
+  .me-bio { font-size: 1.05rem; font-weight: 600; color: #2a2a2ec4; line-height: 1.45; }
 
-  .me-bio { color: #2a2a2ec4; line-height: 1.5; }
-  .me-bio strong { color: var(--ink); }
-
-  /* Free to work, where, and what time it is there */
-  .b-status {
+  /* Age: one big number */
+  .b-age {
     grid-column: span 2;
     display: grid;
-    align-content: space-between;
-    gap: 10px;
-    background: var(--ink);
+    place-content: center;
+    justify-items: center;
+    background: var(--accent);
     color: #fff;
+    text-align: center;
   }
 
-  .open { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+  .age-n {
+    font-size: clamp(4.5rem, 2.5rem + 6vw, 8rem);
+    font-weight: 900;
+    font-stretch: 125%;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    text-shadow: 0 6px 0 #0000002e;
+  }
+
+  .age-l { font-size: 14px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
+
+  /* Profession and studies */
+  .b-role { grid-column: span 3; display: grid; align-content: start; gap: 4px; }
+  .big { font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.7rem); font-weight: 900; font-stretch: 112%; line-height: 1.1; }
+  .small { font-size: 14px; color: #2a2a2ea6; }
+  .open { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; font-weight: 800; }
 
   .dot {
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: #3fbf6f;
     animation: live 2s ease-out infinite;
@@ -324,48 +304,36 @@ const driveIcon = ['play', 'story', 'learn'];
     100% { box-shadow: 0 0 0 10px #3fbf6f00; }
   }
 
-  .where { display: flex; align-items: center; gap: 6px; font-weight: 700; opacity: 0.9; }
-  .where svg { stroke: #ffd23f; }
-
-  .clock time {
-    display: block;
-    font-size: clamp(1.5rem, 1rem + 1.3vw, 2.2rem);
-    font-weight: 900;
-    font-stretch: 105%;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-  }
-
-  .clock span { font-size: 13px; opacity: 0.7; }
-
-  /* Studies and languages */
-  .b-study { grid-column: span 3; }
-  .b-langs { grid-column: span 3; }
-
-  .big { font-size: 1.15rem; font-weight: 800; line-height: 1.25; }
-  .small { margin-top: 4px; font-size: 14px; color: #2a2a2ea6; }
-
-  .langs { display: grid; gap: 10px; }
-
-  .langs li {
+  /* QA experience: a dark card with a bug */
+  .b-qa {
+    grid-column: span 3;
     display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: baseline;
-    gap: 2px 8px;
+    align-content: start;
+    gap: 4px;
+    padding-right: 90px;
+    background: var(--ink);
+    color: #fff;
   }
 
-  .langs span { font-weight: 800; }
-  .langs em { justify-self: end; font-style: normal; font-size: 13px; font-weight: 700; color: #2a2a2ea6; }
-
-  .langs i {
-    grid-column: 1 / -1;
-    height: 6px;
-    border-radius: 6px;
-    background: linear-gradient(90deg, var(--accent) calc(var(--lv) * 100%), #2a2a2e1a 0);
+  .qa-ico {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    background: #ffd23f;
+    rotate: 8deg;
   }
 
-  /* His four worlds */
+  .qa-ico svg { width: 32px; height: 32px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .qa-k { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+  .qa-t { font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.7rem); font-weight: 900; font-stretch: 112%; }
+  .qa-x { font-size: 14.5px; line-height: 1.45; opacity: 0.85; }
+
+  /* What he makes: his four worlds */
   .b-does { grid-column: span 4; }
 
   .worlds {
@@ -374,110 +342,57 @@ const driveIcon = ['play', 'story', 'learn'];
     gap: 12px;
   }
 
-  .worlds li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: start; }
+  .worlds li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: start; }
 
   .w-ico {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 13px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
     background: var(--wc);
     box-shadow: inset 0 2px 0 #ffffff40, inset 0 -2px 0 #0000002e;
+    transition: rotate 0.4s var(--ease-spring), scale 0.4s var(--ease-spring);
   }
 
-  .w-ico svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .worlds li:hover .w-ico { rotate: -8deg; scale: 1.08; }
+  .w-ico svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 
   .w-txt { display: grid; gap: 2px; font-size: 13.5px; line-height: 1.35; color: #2a2a2eb3; }
   .w-txt strong { font-size: 15px; color: var(--ink); }
 
-  /* The controller */
-  .b-spin {
-    grid-column: span 2;
+  /* Languages: two dials */
+  .b-langs { grid-column: span 2; }
+
+  .rings { display: grid; gap: 14px; }
+
+  .rings li {
+    position: relative;
     display: grid;
-    place-items: center;
-    overflow: hidden;
-    min-height: 180px;
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    align-items: center;
   }
 
-  .spin {
-    display: block;
-    width: 100%;
-    aspect-ratio: var(--ar);
-    background-size: calc(var(--n) * 100%) 100%;
-    background-position: calc(var(--f, 0) / (var(--n) - 1) * 100%) 0;
-    background-repeat: no-repeat;
-    filter: drop-shadow(0 14px 12px #0000002e);
-  }
+  .rings svg { grid-row: 1 / 3; width: 56px; height: 56px; rotate: -90deg; }
+  .rings circle { fill: none; stroke-width: 6; }
+  .rt { stroke: #2a2a2e14; }
+  .rf { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: calc(var(--lv) * 100) 100; }
 
-  .tag {
-    position: absolute;
-    left: 16px;
-    bottom: 12px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #2a2a2e80;
-  }
-
-  /* What drives him, and what he has done */
-  .b-drives { grid-column: span 3; }
-  .b-wins { grid-column: span 3; }
-
-  .rows { display: grid; gap: 12px; }
-  .rows li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
-
-  .r-ico {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 11px;
-    background: color-mix(in oklab, var(--accent) 14%, #fff);
-  }
-
-  .r-ico svg { width: 19px; height: 19px; fill: none; stroke: var(--accent); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-  .rows li > span:last-child { display: grid; gap: 1px; font-size: 13.5px; line-height: 1.35; color: #2a2a2eb3; }
-  .rows strong { font-size: 15px; color: var(--ink); }
-
-  .wins { display: grid; gap: 9px; }
-  /* Each achievement is a line under a small star, like an unlocked badge. */
-  .wins li { position: relative; display: grid; gap: 1px; padding-left: 20px; }
-  .wins li::before {
-    content: '★';
+  .r-code {
     position: absolute;
     left: 0;
-    top: 0;
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--accent);
-  }
-  .wins strong { font-size: 14px; }
-  .wins span { font-size: 13px; color: #2a2a2ea6; line-height: 1.35; }
-
-  /* Skills and how to reach him */
-  .b-skills { grid-column: span 4; }
-  .b-talk { grid-column: span 2; display: grid; align-content: start; gap: 10px; }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
-
-  .chips li {
-    padding: 7px 12px;
-    border-radius: 999px;
-    background: #2a2a2e0f;
-    font-size: 13.5px;
-    font-weight: 700;
+    top: 50%;
+    width: 56px;
+    translate: 0 -50%;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 900;
   }
 
-  .mail {
-    font-weight: 800;
-    font-size: 14.5px;
-    color: var(--accent);
-    word-break: break-all;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
+  .r-name { font-weight: 800; align-self: end; }
+  .r-lv { font-size: 13px; font-weight: 700; color: #2a2a2ea6; align-self: start; }
 
   @media (max-width: 1100px) {
     .about-grid { grid-template-columns: minmax(0, 1fr); }
@@ -486,53 +401,26 @@ const driveIcon = ['play', 'story', 'learn'];
   }
 
   @media (max-width: 700px) {
-    .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .b-intro, .b-does, .b-drives, .b-wins, .b-skills, .b-talk { grid-column: 1 / -1; }
-    .b-status, .b-spin { grid-column: span 1; }
-    .b-study, .b-langs { grid-column: 1 / -1; }
+    .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .b-intro, .b-does, .b-role, .b-qa { grid-column: 1 / -1; }
+    .b-age, .b-langs { grid-column: span 1; }
     .worlds { grid-template-columns: minmax(0, 1fr); }
+    .rings li { grid-template-columns: 48px minmax(0, 1fr); }
+    .rings svg, .r-code { width: 48px; height: 48px; }
   }
 </style>
 
 <script>
   import { initLanyard } from '../scripts/lanyard';
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // The ID swings on its lanyard.
-  initLanyard(document.querySelector<HTMLElement>('.studio [data-lanyard]'));
+  initLanyard(document.querySelector<HTMLElement>('.studio [data-lanyard]'), { waitFor: 'fp-enter-quien-soy' });
 
-  // The time in Bogotá, kept up to date.
-  const clock = document.querySelector<HTMLElement>('[data-bogota]');
-  if (clock) {
-    const fmt = new Intl.DateTimeFormat(document.documentElement.lang === 'en' ? 'en-US' : 'es-CO', {
-      timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit',
-    });
-    const tick = () => { clock.textContent = fmt.format(new Date()); };
-    tick();
-    setInterval(tick, 30000);
-  }
-
-  // The controller turns slowly on its own, and follows the pointer across the card (or a finger).
-  const tile = document.querySelector<HTMLElement>('.studio .tile-spin');
-  const spin = tile?.querySelector<HTMLElement>('.spin');
-  if (tile && spin) {
-    const n = Number(getComputedStyle(spin).getPropertyValue('--n')) || 24;
-    let f = 0, held = false, timer = 0;
-    const show = (k: number) => {
-      f = ((Math.round(k) % n) + n) % n;
-      spin.style.setProperty('--f', String(f));
-    };
-    const idle = () => {
-      if (reduced || timer) return;
-      timer = window.setInterval(() => { if (!held) show(f + 1); }, 110);
-    };
-    const rest = () => { clearInterval(timer); timer = 0; };
-    tile.addEventListener('pointermove', (e) => {
-      const r = tile.getBoundingClientRect();
-      held = true;
-      show(((e.clientX - r.left) / r.width) * n * 1.5);
-    });
-    tile.addEventListener('pointerleave', () => { held = false; });
-    new IntersectionObserver((e) => (e[0].isIntersecting ? idle() : rest())).observe(tile);
+  // His age, counted again on the visitor's day (the page may be older than his last birthday).
+  const ageEl = document.querySelector<HTMLElement>('[data-age]');
+  const born = ageEl?.closest<HTMLElement>('[data-born]')?.dataset.born;
+  if (ageEl && born) {
+    const b = new Date(born), d = new Date();
+    ageEl.textContent = String(d.getFullYear() - b.getFullYear() - (d < new Date(d.getFullYear(), b.getMonth(), b.getDate()) ? 1 : 0));
   }
 </script>

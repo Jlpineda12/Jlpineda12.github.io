@@ -148,7 +148,15 @@ const stops = [
       head.style.transform = `translateX(${x}px)`;
     };
     let on = false;
+    // In the deck of screens: it follows the screen shown, and hides on the first one.
+    window.addEventListener('fp-change', (e) => {
+      const { index } = (e as CustomEvent<{ index: number }>).detail;
+      on = index > 0;
+      nav.classList.toggle('is-on', on);
+      if (on) requestAnimationFrame(() => moveTo(index));
+    });
     const update = () => {
+      if (document.documentElement.classList.contains('fp')) return;
       const mid = window.innerHeight * 0.45;
       let idx = 0;
       sections.forEach((s, i) => { if (s.getBoundingClientRect().top <= mid) idx = i; });
