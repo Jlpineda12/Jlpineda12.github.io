@@ -1,421 +1,401 @@
 ---
+// How José works, told with a drop of liquid that the visitor shapes, phase by phase (design
+// thinking, then the launch): drag the voices in to empathise, squeeze it clear to define, split it
+// into ideas and keep the best, pour it into a mould to prototype, catch the bugs to test, and hold
+// and let go to launch it. The drops are SVG circles under a "goo" filter that melts them together
+// and lights them like glossy jelly (scripts/droplab.ts). José follows along beside the text.
+// Without scripts, every phase is simply listed.
 import Puppet from './Puppet.astro';
 import { getData, t, type Lang } from '../i18n';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const { process } = getData(lang);
 const ui = t(lang);
-const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const alts: Record<string, string> = ui.alts;
-const doing: Record<string, string> = ui.doing;
+const lab = ui.lab;
+const steps = [
+  ...process.map((s) => ({ name: s.name, title: s.title, text: s.text })),
+  { name: lab.launchName, title: lab.launchTitle, text: ui.outro },
+];
+// One colour per phase, travelling round the wheel from his headphone blue to the launch coral.
+const colors = ['#7c90da', '#6b4fd8', '#f2b630', '#e5483b', '#2fae7a', '#ff6b4a'];
 ---
-<section data-scene="process" class="process" id="como-trabajo" aria-labelledby="process-title">
-  <div class="pin">
-    <div class="track">
-      <svg class="route" aria-hidden="true"><path class="route-bg" /><path class="route-fg" /></svg>
-      <div class="intro">
-        <h2 class="section-head" id="process-title">{ui.processTitle}</h2>
-        <p class="lead">{ui.processLead}</p>
-        <p class="hint small" aria-hidden="true">{ui.processHint}</p>
+<section class="process" id="como-trabajo" data-scene="process" aria-labelledby="process-title">
+  <div class="wrap">
+    <header class="p-head">
+      <h2 class="section-head reveal" id="process-title">{ui.processTitle}</h2>
+      <p class="lead reveal" style="--d:80ms">{ui.processLead} <span class="lead-more">{lab.lead}</span></p>
+    </header>
+
+    <div class="lab" data-lab data-hints={JSON.stringify(lab.hints)} data-done={JSON.stringify(lab.done)} data-colors={JSON.stringify(colors)}>
+      <ol class="phases" aria-label={ui.processTitle}>
+        {steps.map((s, i) => (
+          <li style={`--pc:${colors[i]}`}>
+            <button type="button" data-go={i} class:list={[{ 'is-on': i === 0 }]}>
+              <b>{i + 1}</b><span>{s.name}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      <div class="tank" role="group" aria-label={lab.tankLabel}>
+        <svg class="goo-svg" viewBox="0 0 600 600" aria-hidden="true">
+          <defs>
+            <!-- Goo: blur the drops together, then cut the blur back to a sharp edge; a soft
+                 specular light on top makes it read as thick, glossy liquid. -->
+            <filter id="goo" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="13" result="blur" />
+              <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="goo" />
+              <feGaussianBlur in="goo" stdDeviation="5" result="soft" />
+              <feSpecularLighting in="soft" surfaceScale="7" specularConstant="1.05" specularExponent="26" lighting-color="#ffffff" result="spec">
+                <fePointLight x="190" y="70" z="260" />
+              </feSpecularLighting>
+              <feComposite in="spec" in2="goo" operator="in" result="shine" />
+              <feComposite in="goo" in2="shine" operator="arithmetic" k1="0" k2="1" k3="0.85" k4="0" />
+            </filter>
+          </defs>
+          <ellipse class="floor" cx="300" cy="560" rx="210" ry="18" />
+          <circle class="target" cx="300" cy="300" r="132" />
+          <path class="mold" d="M150 372 Q300 352 450 372 Q505 384 500 450 Q494 522 440 522 Q398 522 378 486 L222 486 Q202 522 160 522 Q106 522 100 450 Q95 384 150 372 Z" />
+          <g class="goo" filter="url(#goo)"></g>
+          <g class="fx"></g>
+        </svg>
+        <p class="tank-hint" aria-live="polite">{lab.hints[0]}</p>
+        <div class="meter" aria-hidden="true"><i></i></div>
       </div>
-      {process.map((s, i) => (
-        <article class:list={['stop', { low: i % 2 === 0 }]} data-pose={s.pose} data-doing={doing[s.pose]}>
-          <div class="stop-art" style={`--delay:${-i * 1.3}s`}>
-            <img class="stop-island" src={`${base}world/${s.island}.webp`} width="900" height="960" loading="lazy" alt={alts[s.island]} />
-          </div>
-          <div class="stop-text">
-            <h3 class="stop-name">{s.name}</h3>
-            <p class="stop-title">{s.title}</p>
-            <p>{s.text}</p>
-          </div>
-        </article>
-      ))}
-      <div class="outro">
-        <img class="outro-island" src={`${base}world/lanzamiento.webp`} width="900" height="960" loading="lazy"
-          alt={ui.alts.lanzamiento} />
-        <p class="outro-text">{ui.outro}</p>
-        <a class="btn" href="#contacto">{ui.outroBtn} <span class="arrow" aria-hidden="true">→</span></a>
+
+      <div class="story">
+        <div class="story-pp" aria-hidden="true"><Puppet pose="calm" props /></div>
+        {steps.map((s, i) => (
+          <article class:list={['story-step', { 'is-on': i === 0 }]} data-i={i} style={`--pc:${colors[i]}`}>
+            <p class="story-num">{lab.step} {i + 1}/{steps.length}</p>
+            <h3 class="story-name">{s.name}</h3>
+            <p class="story-title">{s.title}</p>
+            <p class="story-text">{s.text}</p>
+          </article>
+        ))}
+        <div class="story-actions">
+          <button class="btn-next" type="button">{lab.next} <span aria-hidden="true">→</span></button>
+          <a class="btn outro-btn" href="#contacto" hidden>{ui.outroBtn} <span class="arrow" aria-hidden="true">→</span></a>
+          <button class="again" type="button" hidden>{lab.again}</button>
+        </div>
       </div>
     </div>
-    <div class="walker" aria-hidden="true" data-go={ui.go} data-launch={ui.launch}>
-      <p class="walker-say"><span>{ui.go}</span></p>
-      <Puppet pose="calm" props />
-    </div>
-    <img class="p-cloud" loading="lazy" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:58%;top:8%;width:12vw" />
-    <img class="p-cloud" loading="lazy" src={`${base}world/nube.webp`} alt="" aria-hidden="true" width="390" height="165" style="left:8%;top:14%;width:8vw;animation-delay:-10s" />
   </div>
 </section>
 
 <style>
-  /* Blueprint paper: a white engineering grid over the chapter's colour. */
   .process {
     position: relative;
+    padding-block: var(--section);
+    /* Blueprint paper: a white engineering grid over the chapter's colour. */
     background:
-      linear-gradient(#ffffff2e 1px, transparent 1px) 0 0 / 112px 112px,
-      linear-gradient(90deg, #ffffff2e 1px, transparent 1px) 0 0 / 112px 112px,
-      linear-gradient(#ffffff17 1px, transparent 1px) 0 0 / 28px 28px,
-      linear-gradient(90deg, #ffffff17 1px, transparent 1px) 0 0 / 28px 28px;
-    color: var(--ink);
+      linear-gradient(#ffffff3d 1px, transparent 1px) 0 0 / 112px 112px,
+      linear-gradient(90deg, #ffffff3d 1px, transparent 1px) 0 0 / 112px 112px,
+      linear-gradient(#ffffff1f 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(90deg, #ffffff1f 1px, transparent 1px) 0 0 / 28px 28px;
   }
 
-  .pin {
+  .p-head {
+    display: grid;
+    gap: 18px;
+    max-width: 62ch;
+    margin-bottom: clamp(28px, 4vw, 56px);
+  }
+
+  .lead-more { font-weight: 700; }
+
+  .lab {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    grid-template-areas: 'phases phases' 'tank story';
+    gap: clamp(16px, 2.4vw, 32px) clamp(20px, 3vw, 48px);
+    align-items: center;
+  }
+
+  /* ---------- Phase tabs ---------- */
+  .phases {
+    grid-area: phases;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .phases button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px 0 6px;
+    border: 0;
+    border-radius: 999px;
+    background: #ffffff8c;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 #fff, 0 0 0 1px #2a2a2e14;
+    transition: background-color 0.25s, transform 0.3s var(--ease-spring);
+  }
+
+  .phases b {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--pc);
+    color: #fff;
+    font-size: 13px;
+    box-shadow: inset 0 2px 0 #ffffff59, inset 0 -2px 0 #0000002e;
+  }
+
+  .phases button:hover { transform: translateY(-2px); }
+  .phases button.is-on { background: #fff; box-shadow: inset 0 1px 0 #fff, 0 0 0 2px var(--pc), 0 8px 18px -10px var(--pc); }
+  .phases button.is-done b { font-size: 0; }
+  .phases button.is-done b::after { content: '✓'; font-size: 15px; }
+
+  /* ---------- The tank ---------- */
+  .tank {
+    grid-area: tank;
     position: relative;
-    height: 100svh;
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 620px;
+    justify-self: center;
+    border-radius: 40px;
+    background:
+      radial-gradient(80% 60% at 50% 20%, #ffffffa6, #ffffff33 60%, #ffffff1a),
+      #ffffff40;
+    box-shadow:
+      inset 0 2px 0 #ffffffe6,
+      inset 0 -18px 40px #6b4fd81a,
+      inset 0 0 0 1.5px #ffffffb3,
+      0 40px 70px -40px #3b2a8a80;
     overflow: hidden;
     isolation: isolate;
   }
 
-  .track {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 5vw;
-    height: 100%;
-    width: max-content;
-    padding: 0 var(--margin);
-    will-change: transform;
-  }
-
-  .route {
+  .goo-svg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    overflow: visible;
-    pointer-events: none;
-    z-index: -1;
+    touch-action: manipulation;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
-  .route path {
+  .goo-svg.is-dragging { cursor: grabbing; }
+
+  .floor { fill: #3b2a8a1f; }
+
+  .target {
     fill: none;
-    stroke-width: 8;
-    stroke-linecap: round;
+    stroke: #2a2a2e59;
+    stroke-width: 3;
+    stroke-dasharray: 10 12;
+    opacity: 0;
+    transition: opacity 0.4s;
+    transform-origin: 300px 300px;
   }
 
-  .route-bg {
-    stroke: color-mix(in oklab, var(--paper) 40%, var(--sky-light));
-    stroke-dasharray: 0.1 20;
+  .tank[data-phase='1'] .target { opacity: 1; animation: target-spin 16s linear infinite; }
+  .tank[data-phase='1'].is-done .target { stroke: var(--ink); stroke-dasharray: none; }
+
+  @keyframes target-spin { to { rotate: 360deg; } }
+
+  .mold {
+    fill: #ffffff59;
+    stroke: #2a2a2e66;
+    stroke-width: 3;
+    stroke-dasharray: 12 10;
+    opacity: 0;
+    transition: opacity 0.4s, stroke 0.3s;
   }
 
-  .route-fg {
-    stroke: var(--paper);
+  .tank[data-phase='3'] .mold,
+  .tank[data-phase='4'] .mold { opacity: 1; }
+  .tank .mold.is-hot { stroke: var(--ink); stroke-dasharray: none; }
+
+  :global(.goo-svg .bug) { pointer-events: none; }
+  :global(.goo-svg .bug.is-caught) { animation: splat 0.45s ease-out forwards; transform-box: fill-box; transform-origin: center; }
+
+  @keyframes splat {
+    to { scale: 2.2; opacity: 0; }
   }
 
-  .intro {
-    width: min(32vw, 500px);
-    display: grid;
-    gap: 24px;
-    padding-left: var(--margin);
-  }
-
-  .hint {
+  .tank-hint {
+    position: absolute;
+    left: 50%;
+    top: 18px;
+    translate: -50% 0;
+    width: max-content;
+    max-width: calc(100% - 36px);
+    padding: 9px 16px;
+    border-radius: 18px;
+    background: #ffffffd9;
+    box-shadow: inset 0 1px 0 #fff, 0 8px 22px -12px #3b2a8a80;
+    font-size: 14px;
     font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+    pointer-events: none;
+    transition: background-color 0.3s, color 0.3s;
   }
 
-  .stop {
-    width: 28vw;
-    min-width: 330px;
-    display: grid;
-    gap: 10px;
-    align-self: flex-start;
-    margin-top: 7vh;
+  .tank-hint.is-done { background: var(--ink); color: #fff; }
+
+  .meter {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    width: 46%;
+    height: 10px;
+    translate: -50% 0;
+    border-radius: 99px;
+    background: #2a2a2e1f;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s;
   }
 
-  .stop.low {
-    align-self: flex-end;
-    margin-bottom: 9vh;
-    margin-top: 0;
+  .meter i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--ink);
+    transform-origin: left;
+    scale: var(--p, 0) 1;
   }
 
-  .stop-art {
+  .tank[data-phase='1'] .meter,
+  .tank[data-phase='5'] .meter { opacity: 1; }
+
+  /* ---------- The story beside it ---------- */
+  .story {
+    grid-area: story;
     position: relative;
-    width: 68%;
-    animation: float 6s ease-in-out infinite;
-    animation-delay: var(--delay);
-  }
-
-  .stop-island {
-    width: 100%;
-    height: auto;
-  }
-
-  .stop-name {
-    color: var(--deep);
-    font-weight: 800;
-    font-stretch: 150%;
-    text-transform: uppercase;
-    font-size: clamp(32px, 2.9vw, 48px);
-    line-height: 1;
-  }
-
-  .stop-title {
-    font-size: clamp(20px, 1.6vw, 26px);
-    font-weight: 800;
-    line-height: 1.15;
-  }
-
-  .stop p:last-child {
-    max-width: 36ch;
-  }
-
-  .outro {
-    width: min(30vw, 460px);
     display: grid;
-    gap: 20px;
-    justify-items: start;
-    padding-right: 12vw;
+    gap: 18px;
+    align-content: center;
+    padding: clamp(24px, 3vw, 40px);
+    border-radius: 32px;
+    background: linear-gradient(160deg, #ffffffd9, #ffffffa6);
+    box-shadow: inset 0 1.5px 0 #fff, 0 30px 60px -36px #3b2a8a80;
   }
 
-  .outro-island {
-    width: 70%;
-    height: auto;
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .outro-text {
-    font-size: clamp(24px, 2.2vw, 32px);
-    font-weight: 800;
-    line-height: 1.1;
-  }
-
-  .walker {
+  .story-pp {
     position: absolute;
-    left: 5vw;
-    bottom: 0;
-    width: clamp(130px, 11vw, 190px);
-    aspect-ratio: 420 / 520;
-    z-index: 2;
+    right: 18px;
+    top: -64px;
+    width: 120px;
     pointer-events: none;
   }
 
-  .walker :global(.pp) {
-    width: 100%;
-    height: 100%;
+  .story-pp :global(.pp) { width: 100%; height: auto; overflow: visible; }
+
+  .story-step {
+    display: grid;
+    gap: 8px;
   }
 
-  .walker-say {
-    position: absolute;
-    left: 70%;
-    top: 4%;
-    padding: 10px 16px;
-    border-radius: 20px 20px 20px 4px;
-    background: var(--paper);
+  :global(.js) .story-step:not(.is-on) { display: none; }
+  :global(.js) .story-step.is-on { animation: step-in 0.5s var(--ease-out); }
+
+  @keyframes step-in {
+    from { opacity: 0; translate: 0 12px; }
+  }
+
+  .story-num {
+    font-size: 13px;
     font-weight: 800;
-    font-size: 16px;
-    white-space: nowrap;
-    transform-origin: 0 100%;
-    transition: transform 0.35s var(--ease-spring);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--pc) 70%, var(--ink));
   }
 
-  .walker-say.pop {
-    transform: scale(1.12);
+  .story-name {
+    font-size: clamp(2rem, 1.4rem + 2.2vw, 3.4rem);
+    font-weight: 900;
+    font-stretch: 125%;
+    line-height: 1;
+    text-transform: uppercase;
+    max-width: 75%;
   }
 
-  .p-cloud {
-    position: absolute;
-    z-index: -2;
-    height: auto;
-    pointer-events: none;
-    animation: drift 30s ease-in-out infinite;
+  .story-title {
+    font-weight: 800;
+    font-size: var(--step-lead);
   }
 
-  /* Phones and tablets take the same trip, sized down: one phase per screen, José below them. */
+  .story-text { max-width: 44ch; }
+
+  .story-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    margin-top: 6px;
+  }
+
+  .btn-next {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.3s var(--ease-spring), box-shadow 0.3s;
+  }
+
+  .btn-next:hover { transform: translateY(-2px); }
+  .btn-next.is-ready { box-shadow: 0 0 0 4px var(--accent), 0 10px 24px -10px #2a2a2e99; }
+
+  .again {
+    padding: 8px 4px;
+    border: 0;
+    background: none;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  :global(html:not(.js)) .tank,
+  :global(html:not(.js)) .phases,
+  :global(html:not(.js)) .story-actions,
+  :global(html:not(.js)) .story-pp { display: none; }
+
+  :global(html:not(.js)) .lab { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'story'; }
+
   @media (max-width: 900px) {
-    .track {
-      gap: 14vw;
+    .lab {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'phases' 'tank' 'story';
     }
 
-    .intro {
-      width: 80vw;
-      gap: 18px;
+    .phases {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin-inline: calc(var(--margin) * -1);
+      padding: 4px var(--margin) 8px;
+      scrollbar-width: none;
     }
 
-    .stop,
-    .stop.low {
-      width: 74vw;
-      min-width: 0;
-      align-self: center;
-      margin: 0 0 140px;
-    }
-
-    .stop-art {
-      width: 54%;
-    }
-
-    .stop-name {
-      font-size: 28px;
-    }
-
-    .stop-title {
-      font-size: 19px;
-    }
-
-    .stop p:last-child {
-      font-size: 16px;
-    }
-
-    .outro {
-      width: 78vw;
-      padding-right: 14vw;
-    }
-
-    .outro-island {
-      width: 56%;
-    }
-
-    .walker {
-      left: 4vw;
-      bottom: 76px;
-      width: 88px;
-    }
-
-    .walker-say {
-      font-size: 14px;
-      padding: 8px 12px;
-    }
-
-    .p-cloud:first-of-type {
-      width: 26vw !important;
-    }
-  }
-
-  @media (max-width: 900px) and (max-height: 700px) {
-    .stop-art {
-      width: 44%;
-    }
+    .phases button { flex: none; }
+    .tank { max-width: 520px; border-radius: 30px; }
+    .story-pp { width: 92px; top: -48px; }
+    .tank-hint { font-size: 13px; top: 12px; }
   }
 </style>
 
 <script>
-  import { gsap } from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-  import { mountPuppet, type Anim } from '../scripts/puppet';
-
-  gsap.registerPlugin(ScrollTrigger);
-  // The phone address bar showing or hiding should not restart the pinned trip.
-  ScrollTrigger.config({ ignoreMobileResize: true });
-  const section = document.querySelector<HTMLElement>('.process');
-  const track = section?.querySelector<HTMLElement>('.track');
-  const svg = section?.querySelector<SVGSVGElement>('.route');
-  const bg = section?.querySelector<SVGPathElement>('.route-bg');
-  const fg = section?.querySelector<SVGPathElement>('.route-fg');
-  const canvas = section?.querySelector<SVGSVGElement>('.walker svg.pp');
-  const say = section?.querySelector<HTMLElement>('.walker-say');
-  const stops = [...(section?.querySelectorAll<HTMLElement>('.stop') ?? [])];
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (section && track && svg && bg && fg && canvas && say) {
-    const mm = gsap.matchMedia();
-    mm.add('all', () => {
-      const puppet = mountPuppet(canvas, 'idle');
-      let len = 0;
-      let current: HTMLElement | null = null;
-
-      // The route runs through every island, in the track's own coordinates.
-      const build = () => {
-        const t = track.getBoundingClientRect();
-        const pts = [...track.querySelectorAll<HTMLElement>('.stop-island, .outro-island')].map((img) => {
-          const r = img.getBoundingClientRect();
-          return { x: r.left - t.left + r.width / 2, y: r.top - t.top + r.height * 0.74 };
-        });
-        const all = [{ x: 0, y: t.height * 0.88 }, ...pts];
-        let d = `M${all[0].x},${all[0].y}`;
-        for (let i = 1; i < all.length; i++) {
-          const a = all[i - 1], b = all[i];
-          const mx = (a.x + b.x) / 2;
-          d += ` C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`;
-        }
-        svg.setAttribute('viewBox', `0 0 ${t.width} ${t.height}`);
-        bg.setAttribute('d', d);
-        fg.setAttribute('d', d);
-        len = fg.getTotalLength();
-        fg.style.strokeDasharray = `${len}`;
-        fg.style.strokeDashoffset = `${len}`;
-      };
-      build();
-
-      // On phones the trip settles with one phase centred on screen.
-      // Each phase settles at the anchor, next to José: centred on phones, a third in on desktop.
-      const narrow = () => window.innerWidth < 901;
-      const anchor = () => window.innerWidth * (narrow() ? 0.5 : 0.36);
-      let snaps: number[] = [];
-      const measureSnaps = () => {
-        const dist = track.scrollWidth - window.innerWidth;
-        const x0 = Number(gsap.getProperty(track, 'x')) || 0;
-        snaps = [0, ...stops.map((st) => {
-          const r = st.getBoundingClientRect();
-          return Math.min(1, Math.max(0, (r.left - x0 + r.width / 2 - anchor()) / dist));
-        }), 1];
-      };
-
-      // Which phase is passing the walker right now.
-      const nearest = () => {
-        const x = anchor();
-        let best: HTMLElement | null = null;
-        let dist = Infinity;
-        for (const s of stops) {
-          const r = s.getBoundingClientRect();
-          const d = Math.abs(r.left + r.width / 2 - x);
-          if (d < dist) { dist = d; best = s; }
-        }
-        return dist < window.innerWidth * (narrow() ? 0.3 : 0.17) ? best : null;
-      };
-
-      const setSay = (text: string) => {
-        const span = say.firstElementChild as HTMLElement;
-        if (span.textContent === text) return;
-        span.textContent = text;
-        say.classList.add('pop');
-        setTimeout(() => say.classList.remove('pop'), 200);
-      };
-
-      let rest = 0;
-      const settle = (progress: number) => {
-        current = nearest();
-        if (current) {
-          puppet.play(current.dataset.pose as Anim);
-          setSay(current.dataset.doing || '');
-        } else {
-          puppet.play(progress > 0.95 ? 'celebrate' : 'idle');
-          const w = say.parentElement as HTMLElement;
-          setSay(progress > 0.95 ? w.dataset.launch || '' : w.dataset.go || '');
-        }
-      };
-
-      const tween = gsap.to(track, {
-        x: () => -(track.scrollWidth - window.innerWidth),
-        ease: 'none',
-        scrollTrigger: {
-          trigger: section,
-          pin: true,
-          scrub: reduced ? true : 0.8,
-          start: 'top top',
-          end: () => `+=${track.scrollWidth - window.innerWidth}`,
-          invalidateOnRefresh: true,
-          onRefresh: () => { build(); measureSnaps(); },
-          snap: {
-            // Directional, like turning pages: a scroll forward goes to the next phase, back to the previous one.
-            snapTo: (v: number, self?: ScrollTrigger) => {
-              if (!snaps.length) return v;
-              const fwd = snaps.find((x) => x >= v - 0.002) ?? 1;
-              const back = [...snaps].reverse().find((x) => x <= v + 0.002) ?? 0;
-              return (self?.direction ?? 1) > 0 ? fwd : back;
-            },
-            inertia: false,
-            duration: { min: 0.2, max: 0.6 },
-            delay: 0.08,
-            ease: 'power2.inOut',
-          },
-          onUpdate: (self) => {
-            fg.style.strokeDashoffset = `${len * (1 - self.progress)}`;
-            // José walks while the page moves, and acts out each phase when it stops.
-            if (Math.abs(self.getVelocity()) > 40) puppet.play('travel');
-            clearTimeout(rest);
-            rest = window.setTimeout(() => settle(self.progress), 180);
-          },
-        },
-      });
-      return () => tween.scrollTrigger?.kill();
-    });
-  }
+  import { initDropLab } from '../scripts/droplab';
+  initDropLab();
 </script>

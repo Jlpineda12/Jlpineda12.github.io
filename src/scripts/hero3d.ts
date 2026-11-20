@@ -24,30 +24,6 @@ function wobble(el: Element) {
   el.classList.add('is-wobble');
 }
 
-/** On narrow screens the card hangs right under the name: size the strap to reach past it.
- *  Runs before the lanyard reads --strap, and again on resize (before the lanyard does). */
-export function fitStrap() {
-  const hero = document.querySelector<HTMLElement>('.hero');
-  const role = hero?.querySelector<HTMLElement>('.role');
-  if (!hero || !role) return;
-  const fit = () => {
-    // At the gate the card hangs in the middle (CSS); only inside does it hang under the name.
-    if (gated() || !matchMedia('(max-width: 900px), (max-aspect-ratio: 1/1)').matches) {
-      hero.style.removeProperty('--strap');
-      return;
-    }
-    const top = hero.getBoundingClientRect().top;
-    const below = role.getBoundingClientRect().bottom - top;
-    // The card's top sits 50px under the end of the strap (the clip and its cord).
-    hero.style.setProperty('--strap', `${Math.round(below + 34 - 50)}px`);
-  };
-  fit();
-  addEventListener('resize', fit);
-  // Registered before the lanyard's own listeners, so it reads the new length.
-  addEventListener('jlp-enter', fit);
-  addEventListener('jlp-loop', fit);
-}
-
 export function initHero3d() {
   const root = document.documentElement;
   const hero = document.querySelector<HTMLElement>('.hero');
@@ -60,7 +36,6 @@ export function initHero3d() {
   const faceSvg = name.querySelector<SVGSVGElement>('.face-pp');
   const puppet = faceSvg ? mountPuppet(faceSvg, 'idle', { follow: true }) : null;
   const items = [...stage.querySelectorAll<HTMLElement>('.sticker-li')];
-  const extras = [...stage.querySelectorAll<HTMLElement>('.hello, .role')];
 
   letters.forEach((l) => l.addEventListener('pointerenter', () => wobble(l)));
 
@@ -95,7 +70,6 @@ export function initHero3d() {
       scale: 0, rotation: () => gsap.utils.random(-70, 70), opacity: 0,
       duration: 1.1, ease: 'elastic.out(1, 0.5)', stagger: 0.08,
     }, at + drop + letters.length * gap * 0.5);
-    tl.from(extras, { y: 24, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.1 }, at + drop + letters.length * gap);
     tl.set(letters, { clearProps: 'transform,opacity' });
     tl.set(items, { clearProps: 'transform,opacity' });
     return tl;
@@ -116,9 +90,8 @@ export function initHero3d() {
       ease: 'power2.in',
       stagger: { each: 0.035, from: 'random' },
     }, at);
-    tl.to(extras, { opacity: 0, y: -20, duration: 0.4, ease: 'power2.in' }, at);
     tl.call(() => stage.classList.add('is-away'));
-    tl.set([...letters, ...items, ...extras], { clearProps: 'transform,opacity' });
+    tl.set([...letters, ...items], { clearProps: 'transform,opacity' });
     return tl;
   };
 
@@ -170,66 +143,116 @@ export function initHero3d() {
     return;
   }
 
-  playIntro(hero, letters, (tl, at) => {
-    land(tl, at);
-    // Hold the title a moment, then let it go.
-    away(tl, tl.duration() + 1.3);
-    return tl;
-  }, toGate, () => stage.classList.add('is-away'));
+  playIntro({
+    hero, stage, letters, items, ghost, puppet,
+    away: (tl, at) => away(tl, at),
+    done: toGate,
+    skipped: () => stage.classList.add('is-away'),
+  });
 }
 
-// ---------- Intro ----------
-function playIntro(
-  hero: HTMLElement,
-  letters: HTMLElement[],
-  land: (tl: gsap.core.Timeline, at: number) => gsap.core.Timeline,
-  done: () => void,
-  skipped: () => void,
-) {
+// ---------- Intro (after Candid's title card) ----------
+// 1. Paper, and a tiny wobbling mark at the bottom.
+// 2. The letters fly out of the mark along arcs, growing, and set into the big name, inked black.
+// 3. The cut: a flash, the paper turns to cobalt water, the letters to cream, the stickers pop in.
+// 4. A moment to look at it; then the title floats away and the card drops in for the gate.
+function playIntro(o: {
+  hero: HTMLElement;
+  stage: HTMLElement;
+  letters: HTMLElement[];
+  items: HTMLElement[];
+  ghost: { start(): void; stop(): void };
+  puppet: ReturnType<typeof mountPuppet> | null;
+  away: (tl: gsap.core.Timeline, at: number) => gsap.core.Timeline;
+  done: () => void;
+  skipped: () => void;
+}) {
+  const { hero, letters, items } = o;
   const intro = hero.querySelector<HTMLElement>('.intro');
-  const paper = intro?.querySelector<HTMLElement>('.intro-paper');
-  const bar = intro?.querySelector<HTMLElement>('.intro-load i');
-  const edge = intro?.querySelector<SVGPathElement>('.intro-edge path');
-  if (!intro || !paper) {
-    skipped();
-    return done();
+  const mark = intro?.querySelector<HTMLElement>('.intro-mark');
+  const face = hero.querySelector<HTMLElement>('.name .face-in');
+  if (!intro || !mark) {
+    o.skipped();
+    return o.done();
   }
 
   const imgs = letters.filter((l): l is HTMLImageElement => l instanceof HTMLImageElement);
   const loaded = Promise.race([Promise.all(imgs.map((i) => i.decode().catch(() => {}))), wait(2600)]);
-  if (bar) gsap.fromTo(bar, { '--p': 0 }, { '--p': 1, duration: 1.3, ease: 'power2.inOut' });
 
   let tl: gsap.core.Timeline | null = null;
   let finished = false;
   const finish = () => {
     if (finished) return;
     finished = true;
-    done();
+    hero.classList.remove('is-paper');
+    intro.style.display = 'none';
+    o.done();
   };
 
-  // A click anywhere skips to the end.
-  intro.addEventListener('click', () => {
+  // A click skips to the end.
+  const skip = () => {
     if (tl) tl.progress(1);
     else {
-      gsap.set(paper, { yPercent: -130 });
-      intro.style.pointerEvents = 'none';
-      skipped();
+      o.skipped();
       finish();
     }
+  };
+  intro.addEventListener('click', skip);
+  hero.addEventListener('click', () => {
+    if (!finished && hero.classList.contains('is-paper')) skip();
   });
 
-  Promise.all([loaded, wait(1250)]).then(() => {
+  Promise.all([loaded, wait(1300)]).then(() => {
     if (finished) return;
+    const m = mark.getBoundingClientRect();
+    const mx = m.left + m.width / 2, my = m.top + m.height / 2;
+    const flyers = [...letters];
     tl = gsap.timeline({ onComplete: finish });
-    tl.to('.intro-mark', { scale: 0.7, opacity: 0, duration: 0.4, ease: 'back.in(2)' })
-      .to('.intro-load', { opacity: 0, y: 10, duration: 0.25 }, '<')
-      // The paper lifts; its wavy edge sloshes as it goes, like liquid rising behind it.
-      .to(paper, { yPercent: -125, duration: 1.05, ease: 'power3.inOut' }, '-=0.05');
-    if (edge) {
-      tl.to(edge, { attr: { d: 'M0 0 H1440 V40 C1180 0 980 120 720 70 C460 20 260 120 0 80 Z' }, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: 1 }, '<');
-    }
-    tl.set(intro, { pointerEvents: 'none' }, '<+0.5');
-    land(tl, tl.duration() - 0.55);
+
+    // The paper behind the overlay is the hero itself, so the overlay can go without a seam.
+    tl.call(() => {
+      hero.classList.add('is-paper');
+      const paper = intro.querySelector<HTMLElement>('.intro-paper');
+      if (paper) paper.style.background = 'transparent';
+    });
+    tl.to(mark, { scale: 1.15, duration: 0.18, ease: 'power2.out' })
+      .to(mark, { scale: 0.2, opacity: 0, duration: 0.25, ease: 'power2.in' });
+    tl.set(items, { opacity: 0, scale: 0 }, 0);
+
+    // Each letter leaves the mark and flies along an arc into its place.
+    const start = 0.25;
+    flyers.forEach((l, i) => {
+      const r = l.getBoundingClientRect();
+      const dx = mx - (r.left + r.width / 2);
+      const dy = my - (r.top + r.height / 2);
+      const lift = gsap.utils.random(140, 260);
+      tl!.fromTo(l, { x: dx, y: dy, scale: 0.06, rotation: gsap.utils.random(-40, 40), opacity: 0 }, {
+        keyframes: [
+          { x: dx * 0.5, y: dy * 0.35 - lift, scale: 0.55, rotation: gsap.utils.random(-20, 20), opacity: 1, duration: 0.42, ease: 'power2.out' },
+          { x: 0, y: 0, scale: 1, rotation: 0, duration: 0.5, ease: 'power3.in' },
+        ],
+      }, start + i * 0.06);
+      // Lands with a squash.
+      tl!.fromTo(l, { scaleX: 1.2, scaleY: 0.78 }, { scaleX: 1, scaleY: 1, duration: 0.7, ease: 'elastic.out(1, 0.4)', immediateRender: false }, start + i * 0.06 + 0.92);
+    });
+    const landed = start + flyers.length * 0.06 + 0.92;
+    if (face) tl.call(() => o.puppet?.play('happy'), [], landed);
+
+    // The cut.
+    const cut = landed + 0.45;
+    tl.call(() => {
+      hero.classList.remove('is-paper');
+      hero.classList.remove('is-cut');
+      void hero.offsetWidth;
+      hero.classList.add('is-cut');
+      intro.style.display = 'none';
+    }, [], cut);
+    tl.to(items, { opacity: 1, scale: 1, duration: 0.9, ease: 'elastic.out(1, 0.55)', stagger: 0.07 }, cut + 0.05);
+    tl.set([...letters, ...items], { clearProps: 'transform,opacity' }, cut + 1.1);
+    tl.call(() => o.puppet?.play('idle'), [], cut + 1.6);
+
+    // Look at it a moment, then the title floats off and the gate opens up.
+    o.away(tl, cut + 2.1);
   });
 }
 
