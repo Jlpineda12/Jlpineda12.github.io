@@ -465,3 +465,146 @@ button {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* ---------- Liquid glass ----------
+   A thick, clear pane: frosted where SVG backdrop filters aren't available, and bending what is
+   behind it near the rim where they are (scripts/liquid.ts adds .is-liquid). The highlights are a
+   bright top rim, a soft inner glow and a darker bottom edge, so it reads as a solid piece of glass. */
+.glass {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(160deg, #ffffff73 0%, #ffffff26 45%, #ffffff40 100%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  border: 1px solid #ffffffb3;
+  box-shadow:
+    inset 0 1.5px 0 #ffffffe6,
+    inset 0 -1px 0 #2a2a2e1f,
+    inset 0 0 24px #ffffff4d,
+    0 1px 1px #2a2a2e14,
+    0 24px 48px -24px #2a2a2e66;
+}
+
+.glass.is-liquid {
+  background: linear-gradient(160deg, #ffffff4d 0%, #ffffff0d 45%, #ffffff26 100%);
+}
+
+/* A curved sheen across the top, the way light catches the edge of a lens. */
+.glass::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 1px;
+  border-radius: inherit;
+  background: radial-gradient(120% 60% at 30% 0%, #ffffff8c, #fff0 60%);
+  pointer-events: none;
+}
+
+/* Smoked glass, for bars that sit over anything (the journey bar). */
+.glass.glass-dark {
+  background: linear-gradient(160deg, #2a2a2ed9 0%, #2a2a2e99 55%, #2a2a2eb3 100%);
+  border-color: #ffffff2e;
+  box-shadow:
+    inset 0 1px 0 #ffffff4d,
+    inset 0 -1px 0 #0000004d,
+    inset 0 0 18px #ffffff14,
+    0 18px 40px -18px #000000a6;
+}
+
+.glass.glass-dark::before {
+  background: radial-gradient(120% 70% at 30% 0%, #ffffff2e, #fff0 60%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass.glass-dark { background: var(--ink); }
+  .glass {
+    background: #ffffffe6;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ---------- The liquid touch (scripts/droplet.ts) ---------- */
+/* A drop of glass that trails the mouse and melts onto buttons. */
+.droplet {
+  position: fixed;
+  z-index: 9998;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 32% 28%, #ffffffd9 0 8%, #ffffff40 22%, #ffffff0d 60%), #7c90da1a;
+  -webkit-backdrop-filter: blur(1.5px) saturate(180%) brightness(1.06);
+  backdrop-filter: blur(1.5px) saturate(180%) brightness(1.06);
+  box-shadow:
+    inset 0 1px 1px #ffffffe6,
+    inset 0 -2px 4px #2a2a2e26,
+    inset 0 0 0 1px #ffffff8c,
+    0 6px 14px -6px #2a2a2e59;
+  transition: opacity 0.25s, background-color 0.25s;
+  will-change: transform, width, height;
+}
+
+.droplet.is-on { opacity: 1; }
+
+/* Melted onto a button: clear, so the label underneath stays sharp. */
+.droplet.is-melted {
+  background: linear-gradient(160deg, #ffffff47, #ffffff0a 55%, #ffffff26);
+  -webkit-backdrop-filter: saturate(140%);
+  backdrop-filter: saturate(140%);
+  box-shadow:
+    inset 0 1.5px 0 #ffffffcc,
+    inset 0 -1px 0 #2a2a2e1f,
+    inset 0 0 0 1px #ffffff99,
+    0 8px 22px -10px #2a2a2e66;
+}
+
+/* A ring of water where a click or a tap lands. */
+.drop-ripple {
+  position: fixed;
+  z-index: 9997;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, #ffffffb3, #ffffff1a 60%);
+  box-shadow: inset 0 0 0 1.5px #ffffffcc, 0 0 0 1px #2a2a2e1a;
+  /* Saturation only, never blur: the ring passes over text. */
+  -webkit-backdrop-filter: saturate(170%);
+  backdrop-filter: saturate(170%);
+  animation: drop-ripple 0.6s var(--ease-out) forwards;
+}
+
+.drop-ripple.is-big { animation-duration: 0.75s; }
+
+@keyframes drop-ripple {
+  0% { transform: scale(0.4); opacity: 1; }
+  35% { transform: scale(2.6, 2.3); opacity: 0.9; }
+  60% { transform: scale(3.4, 3.6); }
+  100% { transform: scale(4.4); opacity: 0; }
+}
+
+.drop-ripple.is-big {
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+}
+
+/* Jelly buttons: pressed, they squash and spring back. */
+:is(.btn, .btn-glass, .nav-cta, .chip, .car-btn, .sketch-pill, .lang-switch, .reader-pad):active {
+  transition-duration: 0.08s;
+  transform: scale(1.06, 0.9);
+}
+
+:is(.btn, .btn-glass, .nav-cta, .chip, .car-btn, .sketch-pill, .lang-switch, .reader-pad) {
+  transition: transform 0.45s cubic-bezier(0.34, 1.8, 0.5, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .droplet,
+  .drop-ripple { display: none; }
+}

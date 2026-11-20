@@ -1,7 +1,10 @@
 ---
-// José's projects as cartridges for a handheld console: pick one from the shelf, it flies into the
-// slot, the console boots and the screen plays the project. The page beside it is the game's manual.
-// The newest cartridge, his digital human, can be played right inside the console's screen.
+// José's projects as cartridges, grouped by world (each world has its own cartridge colour), on a
+// 3D carousel beside a 3D handheld console. The console starts empty, its slot glowing and its
+// screen asking for a cartridge; a ghost hand shows the move once. Spin the carousel (drag sideways,
+// swipe, the arrows, or a world's chip), then drag the cartridge in front into the slot, tap it,
+// or press A: it slides in, the console boots and the screen plays the project, and the game's
+// manual opens below. His digital human can be played right inside the console's screen.
 import Puppet from './Puppet.astro';
 import { getData, t, fill, type Lang } from '../i18n';
 interface Props { lang: Lang }
@@ -9,72 +12,132 @@ const { lang } = Astro.props;
 const { projects, worlds } = getData(lang);
 const ui = t(lang);
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const order = ['digital-human', 'arcade-station', 'misterios-trigonometricos', 'ojos-del-planeta', 'lingopulse', 'melodia-ai', 'neurotext', 'personajes-3d', 'threejs-lab', 'gamevault', 'rigging', 'stop-motion'];
-const list = order.map((s) => projects.find((p) => p.slug === s)!).filter(Boolean);
+// One colour per world, far apart on the wheel, so the groups read at a glance.
+const CART: Record<string, { c: string; ink: string }> = {
+  juegos: { c: '#c8372f', ink: '#ffffff' },
+  vr: { c: '#4656d6', ink: '#ffffff' },
+  '3d': { c: '#2f7a52', ink: '#ffffff' },
+  software: { c: '#e9b93a', ink: '#2a2a2e' },
+};
+const groups = worlds.map((w) => w.id);
+// Grouped by world, in the order of site.ts inside each world (newest first there).
+const list = groups.flatMap((g) => projects.filter((p) => p.world === g));
 const world = Object.fromEntries(worlds.map((w) => [w.id, w]));
 const total = list.length;
 const num = (i: number) => String(i + 1).padStart(2, '0');
+const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.world === g)]));
 ---
 <section class="console-sec" id="proyectos" aria-labelledby="console-title">
   <div class="wrap head">
     <h2 class="section-head reveal" id="console-title">{ui.consoleTitle}</h2>
-    <p class="lead reveal" style="--d:80ms">{ui.consoleLead}</p>
-    <p class="note head-note reveal" style="--d:160ms" aria-hidden="true">
-      <span>{ui.consoleNote}</span>
-      <svg viewBox="0 0 70 40"><path d="M4 8 C24 6 46 14 60 32 M60 32 L46 30 M60 32 L60 18" /></svg>
-    </p>
+    <div class="chips reveal" style="--d:80ms" role="group" aria-label={ui.worldsTabs}>
+      {groups.map((g) => (
+        <button class="chip glass" data-liquid='{"bezel":12,"scale":22}' type="button" data-group={g} data-first={first[g]} style={`--cc:${CART[g].c}`}>
+          <i aria-hidden="true"></i>{world[g].name}<b>{list.filter((p) => p.world === g).length}</b>
+        </button>
+      ))}
+    </div>
   </div>
 
   <div class="wrap stage">
+    <div class="carousel" data-carousel>
+      <ul class="turntable" aria-label={ui.pickCart}>
+        {list.map((p, i) => {
+          const w = world[p.world];
+          return (
+            <li data-world={p.world} style={`--c:${CART[p.world].c};--cink:${CART[p.world].ink};--c2:${w.accent}`}>
+              <span class="cart-side l" aria-hidden="true"></span>
+              <span class="cart-side r" aria-hidden="true"></span>
+              <button class="cart" type="button" aria-pressed="false"
+                aria-label={fill(ui.insert, p.name)} data-i={i} data-world={p.world} data-name={p.name}
+                data-poster={`${base}${p.poster}`} data-video={p.video ? `${base}${p.video}` : undefined}
+                data-youtube={p.youtube} data-model={p.models?.[0].uid} data-model-name={p.models?.[0].name}
+                data-url={p.url} data-label={p.linkLabel} data-embed={p.embed} data-react={p.embed ? 'listen' : undefined}>
+                <span class="cart-ridges" aria-hidden="true"></span>
+                <span class="cart-num" aria-hidden="true">{num(i)}</span>
+                {p.isNew && <span class="cart-new" aria-hidden="true">{ui.newTag}</span>}
+                <span class="cart-label">
+                  <img src={`${base}${p.poster}`} width="1400" height="900" loading="lazy" alt="" draggable="false" />
+                  <span class="cart-name">{p.name}</span>
+                </span>
+                <span class="cart-in" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6" /></svg></span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <div class="car-nav">
+        <button class="car-btn glass" type="button" data-spin="-1" aria-label={ui.prev}><span aria-hidden="true">◀</span></button>
+        <ol class="pager" aria-hidden="true">
+          {list.map((p) => <li style={`--c:${CART[p.world].c}`}></li>)}
+        </ol>
+        <button class="car-btn glass" type="button" data-spin="1" aria-label={ui.next}><span aria-hidden="true">▶</span></button>
+      </div>
+    </div>
+
     <div class="rig">
       <div class="peek" aria-hidden="true"><Puppet pose="calm" props /></div>
 
-      <div class="console" data-console>
-        <div class="slot-cart" aria-hidden="true"><span class="sc-label"></span></div>
-        <div class="bezel">
-          <span class="power"><i></i> POWER</span>
-          <div class="screen" aria-live="polite">
-            <img class="scr-img" alt="" width="1400" height="900" loading="lazy" decoding="async" src={`${base}${list[0].poster}`} />
-            <video class="scr-vid" muted loop playsinline preload="none" hidden></video>
-            <div class="scr-embed"></div>
-            <div class="scr-hud">
-              <span class="scr-title">{list[0].name}</span>
-              <span class="scr-count">{num(0)}/{num(total - 1)}</span>
+      <div class="console-3d">
+        <div class="console is-empty" data-console>
+          <div class="c-top" aria-hidden="true"><span class="slot-hole"></span></div>
+          <div class="slot-cart is-out" aria-hidden="true" inert></div>
+          <span class="slot-arrow" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="bezel">
+            <span class="power"><i></i> POWER</span>
+            <div class="screen" aria-live="polite">
+              <img class="scr-img" alt="" width="1400" height="900" loading="lazy" decoding="async" hidden />
+              <video class="scr-vid" muted loop playsinline preload="none" hidden></video>
+              <div class="scr-embed"></div>
+              <div class="scr-hud">
+                <span class="scr-title"></span>
+                <span class="scr-press"><b>A</b> {ui.pressA}</span>
+              </div>
+              <div class="scr-empty">
+                <span class="boot-logo">JLP</span>
+                <span class="scr-insert">{ui.insertCart}</span>
+                <svg class="scr-up" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V6M6 12l6-6 6 6" /></svg>
+              </div>
+              <div class="scr-boot" hidden>
+                <span class="boot-face"><Puppet pose="happy" live={false} /></span>
+                <span class="boot-logo">JLP</span>
+              </div>
+              <div class="scr-noise"></div>
+              <div class="scr-lines"></div>
             </div>
-            <div class="scr-boot" hidden>
-              <span class="boot-face"><Puppet pose="happy" live={false} /></span>
-              <span class="boot-logo">JLP</span>
-            </div>
-            <div class="scr-noise"></div>
-            <div class="scr-lines"></div>
+            <span class="brand">JLP <b>SYSTEM</b></span>
           </div>
-          <span class="brand">JLP <b>SYSTEM</b></span>
-        </div>
 
-        <div class="pad">
-          <div class="dpad" role="group" aria-label={ui.pickCart}>
-            <button class="d-left" type="button" data-step="-1" aria-label={ui.prev}></button>
-            <button class="d-right" type="button" data-step="1" aria-label={ui.next}></button>
-            <span class="d-up" aria-hidden="true"></span>
-            <span class="d-down" aria-hidden="true"></span>
-            <span class="d-mid" aria-hidden="true"></span>
+          <div class="pad">
+            <div class="dpad" role="group" aria-label={ui.pickCart}>
+              <button class="d-left" type="button" data-step="-1" aria-label={ui.prev}></button>
+              <button class="d-right" type="button" data-step="1" aria-label={ui.next}></button>
+              <span class="d-up" aria-hidden="true"></span>
+              <span class="d-down" aria-hidden="true"></span>
+              <span class="d-mid" aria-hidden="true"></span>
+            </div>
+            <div class="ab">
+              <button class="b-btn" type="button" data-b aria-label={ui.btnB}><span>B</span></button>
+              <button class="a-btn" type="button" data-a aria-label={ui.btnA}><span>A</span></button>
+            </div>
+            <div class="ss" aria-hidden="true"><span>SELECT</span><span>START</span></div>
+            <div class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
           </div>
-          <div class="ab">
-            <button class="b-btn" type="button" data-b aria-label={ui.btnB}><span>B</span></button>
-            <button class="a-btn" type="button" data-a aria-label={ui.btnA}><span>A</span></button>
-          </div>
-          <div class="ss" aria-hidden="true"><span>SELECT</span><span>START</span></div>
-          <div class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
         </div>
       </div>
-      <p class="controls hand">{ui.controlsHint}</p>
     </div>
 
+    <span class="demo-hand" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><path d="M18 26V10a3 3 0 0 1 6 0v12m0-3a3 3 0 0 1 6 0v4m0-2a3 3 0 0 1 6 0v3m0-1a3 3 0 0 1 6 0v9c0 7-5 12-12 12h-3c-4 0-7-2-9-5l-7-10a3 3 0 0 1 5-4l4 4" /></svg>
+    </span>
+  </div>
+
+  <div class="wrap manuals-wrap">
     <div class="manuals">
       {list.map((p, i) => {
         const w = world[p.world];
         return (
-          <article class:list={['manual', { 'is-on': i === 0 }]} data-i={i} style={`--c:${w.bg};--c2:${w.accent}`}>
+          <article class="manual" data-i={i} style={`--c:${CART[p.world].c === '#e9b93a' ? '#a87b12' : CART[p.world].c};--c2:${w.accent}`}>
             <p class="m-top"><span>{ui.manual}</span><span>{num(i)}/{num(total - 1)}</span></p>
             <p class="m-world" style={`--c:${w.bg}`}>{w.name}</p>
             <h3 class="m-name">{p.name}</h3>
@@ -99,31 +162,6 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     </div>
   </div>
 
-  <div class="shelf-wrap">
-    <p class="wrap shelf-note hand" aria-hidden="true">{ui.shelfNote} · {total}</p>
-    <ul class="shelf wrap" aria-label={ui.pickCart}>
-      {list.map((p, i) => {
-        const w = world[p.world];
-        return (
-          <li>
-            <button class:list={['cart', { 'is-in': i === 0 }]} type="button" aria-pressed={i === 0 ? 'true' : 'false'}
-              aria-label={fill(ui.insert, p.name)} data-i={i} data-world={p.world} data-name={p.name}
-              data-poster={`${base}${p.poster}`} data-video={p.video ? `${base}${p.video}` : undefined}
-              data-youtube={p.youtube} data-model={p.models?.[0].uid} data-model-name={p.models?.[0].name}
-              data-url={p.url} data-label={p.linkLabel} data-embed={p.embed} data-react={p.embed ? 'listen' : undefined}
-              style={`--c:${w.bg};--c2:${w.accent}`}>
-              <span class="cart-ridges" aria-hidden="true"></span>
-              {p.isNew && <span class="cart-new" aria-hidden="true">{ui.newTag}</span>}
-              <span class="cart-label">
-                <img src={`${base}${p.poster}`} width="1400" height="900" loading="lazy" alt="" />
-                <span class="cart-name">{p.name}</span>
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
-  </div>
 </section>
 
 <style>
@@ -132,31 +170,66 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     padding-block: var(--section) calc(var(--section) * 0.7);
   }
 
-  /* ---------- Heading ---------- */
+  /* ---------- Heading: the title and one chip per world ---------- */
   .head {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--gap);
-    row-gap: 14px;
+    display: flex;
+    flex-wrap: wrap;
     align-items: end;
-    margin-bottom: clamp(36px, 5vw, 72px);
+    justify-content: space-between;
+    gap: 18px 32px;
+    margin-bottom: clamp(20px, 3vw, 44px);
   }
 
-  .head h2 { grid-column: 1 / span 6; }
-  .head .lead { grid-column: 8 / span 5; max-width: 36ch; }
-
-  .head-note {
-    grid-column: 8 / span 5;
-    justify-self: start;
-    rotate: -2deg;
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
-  /* ---------- Stage: console + manual ---------- */
-  .stage {
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 7px 0 14px;
+    border-radius: 999px;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, translate 0.25s var(--ease-spring);
+  }
+
+  .chip i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--cc);
+  }
+
+  .chip b {
     display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: clamp(28px, 4vw, 72px);
-    align-items: start;
+    place-items: center;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: #2a2a2e12;
+    font-size: 12px;
+  }
+
+  .chip:hover { translate: 0 -2px; }
+  .chip.is-on { background: var(--cc); border-color: #ffffff80; color: #fff; }
+  .chip.is-on i { background: currentColor; }
+  .chip.is-on b { background: #ffffff38; }
+  .chip[data-group='software'].is-on { color: var(--ink); }
+
+  /* ---------- Stage: carousel + console, the manual below ---------- */
+  .stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(20px, 3vw, 56px);
+    align-items: center;
   }
 
   .rig {
@@ -184,8 +257,20 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     overflow: visible;
   }
 
+  /* The console stands in 3D, seen a little from above so its top, with the slot, shows. */
+  .console-3d {
+    perspective: 1500px;
+    perspective-origin: 50% -20%;
+  }
+
   /* The console: a warm grey plastic handheld, screen on the left, buttons on the right. */
   .console {
+    --depth: clamp(44px, 5vw, 72px);
+    --slot-l: 16%;
+    --slot-w: 22%;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, -20deg)) rotateY(var(--ry, -10deg));
+    transition: transform 0.5s var(--ease-out), box-shadow 0.3s, scale 0.3s var(--ease-spring);
     --plastic: #ebe7df;
     position: relative;
     z-index: 1;
@@ -201,37 +286,117 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       inset 0 3px 0 #ffffffcc,
       inset 0 -10px 0 #c9c2b4,
       inset 0 0 0 2px #00000014,
-      0 40px 60px -30px #2a2a2e80,
-      0 14px 24px -14px #2a2a2e59;
+      0 6px 0 #d2cbbd,
+      0 12px 0 #bdb5a5,
+      0 50px 60px -30px #2a2a2e80,
+      0 24px 24px -14px #2a2a2e59;
   }
 
-  /* The cartridge that is in the slot sticks out of the top. */
+  /* The top of the console, with the cartridge slot cut into it. */
+  .c-top {
+    position: absolute;
+    left: 3%;
+    right: 3%;
+    top: 0;
+    height: var(--depth);
+    transform-origin: 50% 0;
+    /* Folded back from the top edge of the front, so it runs away from the viewer. */
+    transform: rotateX(-90deg);
+    border-radius: 34px 34px 10px 10px;
+    background: linear-gradient(#cfc8ba, #ece8e0 70%);
+    box-shadow: inset 0 0 0 2px #0000000f;
+  }
+
+  .slot-hole {
+    position: absolute;
+    left: calc((var(--slot-l) - 3%) * 1.0638 - 2%);
+    width: calc(var(--slot-w) * 1.0638 + 4%);
+    top: 28%;
+    height: 44%;
+    border-radius: 6px;
+    background: #1d1e24;
+    box-shadow: inset 0 3px 4px #000, 0 1px 0 #ffffffb3;
+  }
+
+  /* Empty, or a cartridge on its way: the slot glows and chevrons point into it. */
+  .console.is-empty .slot-hole,
+  .console.is-target .slot-hole {
+    animation: slot-glow 1.4s ease-in-out infinite;
+  }
+
+  @keyframes slot-glow {
+    0%, 100% { box-shadow: inset 0 3px 4px #000, 0 0 0 3px #ffe14d, 0 0 18px #ffe14d; }
+    50% { box-shadow: inset 0 3px 4px #000, 0 0 0 5px #ffe14d, 0 0 34px #ffe14d; }
+  }
+
+  .slot-arrow {
+    position: absolute;
+    left: var(--slot-l);
+    width: var(--slot-w);
+    top: calc(var(--depth) * -1 - 46px);
+    display: grid;
+    justify-items: center;
+    transform: translateZ(calc(var(--depth) / -2));
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .slot-arrow i {
+    width: 22px;
+    height: 22px;
+    margin-top: -10px;
+    border-right: 5px solid #e2b84a;
+    border-bottom: 5px solid #e2b84a;
+    border-radius: 3px;
+    rotate: 45deg;
+    animation: chevron 1.2s ease-in-out infinite;
+  }
+
+  .slot-arrow i:nth-child(2) { animation-delay: 0.15s; }
+  .slot-arrow i:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes chevron {
+    0%, 100% { opacity: 0.2; translate: 0 -4px; }
+    50% { opacity: 1; translate: 0 4px; }
+  }
+
+  .console.is-empty .slot-arrow,
+  .console.is-target .slot-arrow { opacity: 1; }
+
+  /* The cartridge in the slot: a copy of the real one, standing in the slot behind the front of
+     the shell, so only the part above the top shows. --seat moves it (percent of its height):
+     -150 hovering above the slot, -46 seated. */
   .slot-cart {
     position: absolute;
-    z-index: -1;
-    left: 16%;
+    left: var(--slot-l);
     top: 0;
-    width: 22%;
-    aspect-ratio: 1.05;
-    translate: 0 -46%;
-    border-radius: 10px 10px 0 0;
-    background:
-      repeating-linear-gradient(90deg, #0000 0 7px, #00000022 7px 9px) 0 6px / 100% 22% no-repeat,
-      var(--sc, var(--red));
-    clip-path: polygon(0 0, 86% 0, 100% 12%, 100% 100%, 0 100%);
-    transition: translate 0.35s var(--ease-out);
+    width: var(--slot-w);
+    aspect-ratio: 0.86;
+    translate: 0 calc(var(--seat, -46) * 1%);
+    transform: translateZ(calc(var(--depth) / -2));
+    pointer-events: none;
   }
 
-  .slot-cart.is-out { translate: 0 -140%; }
+  .slot-cart.is-out { opacity: 0; }
 
-  .sc-label {
+  .slot-cart > :global(.cart) {
     position: absolute;
-    left: 12%;
-    right: 12%;
-    top: 34%;
-    bottom: 26%;
-    border-radius: 4px;
-    background: #fff var(--sc-img, none) center / cover;
+    inset: 0;
+    transform: none;
+  }
+
+  /* The power light only comes on with a cartridge seated. */
+  .power i { transition: background-color 0.15s, box-shadow 0.15s; }
+  .console:not(.is-on) .power i { background: #6b3a3a; box-shadow: none; }
+
+  /* Between cartridges the screen is off. */
+  .screen.is-off::after {
+    content: '';
+    position: absolute;
+    z-index: 6;
+    inset: 0;
+    background: #0b0c10;
   }
 
   .bezel {
@@ -291,6 +456,20 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     isolation: isolate;
   }
 
+  /* The screen's glass lens: a curved reflection across the top and a bright rim. */
+  .screen::before {
+    content: '';
+    position: absolute;
+    z-index: 8;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(160deg, #ffffff2e 0%, #ffffff12 28%, #fff0 29%),
+      radial-gradient(140% 90% at 50% -30%, #ffffff1f, #fff0 60%);
+    box-shadow: inset 0 1px 0 #ffffff59, inset 0 0 22px #00000059;
+    pointer-events: none;
+  }
+
   .scr-img,
   .scr-vid,
   .scr-embed :global(iframe) {
@@ -324,7 +503,65 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     pointer-events: none;
   }
 
-  .scr-count { color: var(--yellow); }
+  .scr-press {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    font-size: 0.8em;
+    color: var(--yellow);
+    animation: blink 1.2s steps(2) infinite;
+  }
+
+  .scr-press b {
+    display: grid;
+    place-items: center;
+    width: 1.6em;
+    height: 1.6em;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    text-shadow: none;
+  }
+
+  @keyframes blink { 50% { opacity: 0.35; } }
+
+  .scr-empty {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 12px;
+    background: radial-gradient(circle at 50% 40%, #232742, #0d0f16 75%);
+    color: #fff;
+  }
+
+  .console:not(.is-empty) .scr-empty { display: none; }
+  .console.is-empty .scr-hud { display: none; }
+
+  .scr-insert {
+    font-size: clamp(11px, 1.15vw, 16px);
+    font-weight: 900;
+    font-stretch: 125%;
+    letter-spacing: 0.1em;
+    animation: blink 1.1s steps(2) infinite;
+  }
+
+  .scr-up {
+    width: 30px;
+    height: auto;
+    fill: none;
+    stroke: var(--yellow);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    order: -1;
+    animation: bob 1s ease-in-out infinite;
+  }
+
+  @keyframes bob { 50% { translate: 0 -6px; } }
 
   .scr-boot {
     position: absolute;
@@ -399,6 +636,12 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   }
 
   /* Buttons */
+  /* Screen and controls stand a hair proud of the shell, so they sit (and are clicked) on top. */
+  .pad,
+  .bezel {
+    transform: translateZ(2px);
+  }
+
   .pad {
     position: relative;
     display: grid;
@@ -523,18 +766,14 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     box-shadow: inset 0 2px 2px #0000004d;
   }
 
-  .controls {
-    margin-top: 18px;
-    text-align: center;
-    font-size: clamp(19px, 1.5vw, 22px);
-  }
-
   /* ---------- The manual page ---------- */
   .manuals {
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    margin-top: clamp(60px, 7vw, 100px);
+    margin-top: clamp(40px, 5vw, 80px);
+    max-width: 1180px;
+    margin-inline: auto;
   }
 
   .manual {
@@ -552,7 +791,23 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   }
 
   :global(.js) .manual { display: none; }
-  :global(.js) .manual.is-on { display: block; animation: page-in 0.45s var(--ease-out); }
+  :global(.js) .manual.is-on { display: grid; animation: page-in 0.45s var(--ease-out); }
+
+  /* Wide: the manual opens like a spread, who-and-what on the left page, the story on the right. */
+  .manual {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    column-gap: clamp(28px, 4vw, 64px);
+    grid-auto-flow: row dense;
+    align-content: start;
+  }
+
+  .manual > * { grid-column: 1; }
+  .manual > .m-top { grid-column: 1 / -1; }
+  .manual > :is(.m-summary, .m-stack, .m-models, .m-cta) { grid-column: 2; }
+  .m-summary { max-width: 60ch; }
+  .manual > .m-summary { margin-top: 18px; }
+  .m-cta { justify-self: start; }
+  .m-world, .m-status { justify-self: start; }
 
   @keyframes page-in {
     from { opacity: 0; translate: 0 14px; rotate: -1deg; }
@@ -685,91 +940,132 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     box-shadow: 0 2px 4px #0003;
   }
 
-  /* ---------- The shelf of cartridges ---------- */
-  .shelf-wrap {
-    margin-top: clamp(48px, 6vw, 88px);
-  }
-
-  .shelf-note {
-    font-size: 24px;
-    margin-bottom: 6px;
-  }
-
-  .shelf {
-    display: flex;
-    gap: clamp(10px, 1.2vw, 18px);
-    overflow-x: auto;
-    padding-top: 26px;
-    padding-bottom: 26px;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--margin);
-    scrollbar-width: none;
-    /* the shelf board */
-    background: linear-gradient(#0000 calc(100% - 22px), #c9b79c calc(100% - 22px), #b39d7e calc(100% - 6px), #9a8466 0);
-  }
-
-  .shelf::-webkit-scrollbar { display: none; }
-
-  .shelf li {
-    flex: none;
-    scroll-snap-align: start;
-  }
-
-  .cart {
+  /* ---------- The carousel of cartridges ---------- */
+  /* The cartridges stand on a turntable. scripts below place each one on the circle (x, z, turn)
+     from the carousel's angle; the one in front is the one you can grab. */
+  .carousel {
+    --cw: clamp(150px, 15vw, 230px);
     position: relative;
-    display: block;
-    width: clamp(96px, 8.6vw, 128px);
+    z-index: 2;
+    display: grid;
+    gap: 18px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .carousel.is-carrying { z-index: 6; }
+
+  .turntable {
+    position: relative;
+    height: calc(var(--cw) / 0.86 + 70px);
+    perspective: 760px;
+    perspective-origin: 50% 40%;
+    transform-style: preserve-3d;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .carousel.is-spinning .turntable { cursor: grabbing; }
+
+  /* The turntable under them. */
+  .turntable::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: calc(var(--cw) * 2.6);
+    max-width: 100%;
+    height: 46px;
+    translate: -50% 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, #2a2a2e2e, #2a2a2e00);
+    z-index: -1;
+  }
+
+  .turntable li {
+    --t: calc(var(--cw) * 0.1);
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: var(--cw);
     aspect-ratio: 0.86;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* A cartridge is a box: the label side faces out, the plastic sides show as it turns. */
+  .cart {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
     padding: 0;
     border: 0;
-    border-radius: 10px 10px 6px 6px;
+    border-radius: 16px 16px 10px 10px;
     background:
-      linear-gradient(#ffffff26, #0000 30%),
+      linear-gradient(100deg, #ffffff47, #fff0 30%, #fff0 70%, #00000026),
       var(--c);
     clip-path: polygon(0 0, 84% 0, 100% 10%, 100% 100%, 0 100%);
-    box-shadow: inset 0 -6px 0 #00000033;
-    cursor: pointer;
-    transition: translate 0.35s var(--ease-spring), opacity 0.3s, filter 0.3s;
+    box-shadow: inset 0 -10px 0 #00000033, inset 0 3px 0 #ffffff40;
+    transform: translateZ(calc(var(--t) / 2));
+    container-type: inline-size;
+    cursor: inherit;
+    transition: opacity 0.3s;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .cart:hover,
-  .cart:focus-visible {
-    translate: 0 -10px;
+  .cart-side {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: var(--t);
+    margin-left: calc(var(--t) / -2);
+    border-radius: 4px;
+    background: linear-gradient(#0000002e, #00000059), var(--c);
+    transition: opacity 0.3s;
   }
+
+  .cart-side.l { transform: rotateY(-90deg) translateZ(calc(var(--cw) / 2)); }
+  .cart-side.r { top: 10%; transform: rotateY(90deg) translateZ(calc(var(--cw) / 2)); }
 
   .cart:focus-visible {
     outline: 3px solid var(--ink);
-    outline-offset: 3px;
+    outline-offset: 4px;
   }
 
-  /* The one in the console leaves an empty spot on the shelf. */
-  .cart.is-in {
-    opacity: 0.22;
-    filter: grayscale(1);
-    translate: 0 -4px;
+  .turntable li.is-front .cart { cursor: grab; }
+  /* The front cartridge takes the whole gesture (sideways spins, down carries); elsewhere the page scrolls. */
+  .turntable li.is-front { touch-action: none; }
+  .turntable li.is-held .cart { cursor: grabbing; }
+
+  /* Grabbed: it lifts off the turntable. */
+  .turntable li.is-held .cart {
+    filter: drop-shadow(0 30px 24px #2a2a2e59);
   }
 
   .cart-ridges {
     position: absolute;
     left: 10%;
-    right: 18%;
-    top: 6%;
-    height: 12%;
-    background: repeating-linear-gradient(90deg, #0000 0 6px, #00000029 6px 8px);
+    right: 20%;
+    top: 5%;
+    height: 11%;
+    background: repeating-linear-gradient(90deg, #0000 0 7px, #00000029 7px 10px);
   }
 
   .cart-label {
     position: absolute;
-    left: 10%;
-    right: 10%;
-    top: 24%;
-    bottom: 12%;
+    left: 9%;
+    right: 9%;
+    top: 20%;
+    bottom: 13%;
     display: grid;
     grid-template-rows: 1fr auto;
-    border-radius: 5px;
+    border-radius: 8px;
     overflow: hidden;
     background: var(--paper);
-    box-shadow: 0 0 0 2px #00000014;
+    box-shadow: 0 0 0 2px #00000014, inset 0 0 0 1px #0000000d;
   }
 
   .cart-label img {
@@ -777,26 +1073,148 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     height: 100%;
     min-height: 0;
     object-fit: cover;
+    pointer-events: none;
   }
 
   .cart-name {
-    padding: 4px 5px 5px;
-    font-size: 10px;
+    padding: 7px 9px 8px;
+    border-top: 4px solid var(--c);
+    font-size: 6.8cqw;
     font-weight: 900;
-    font-stretch: 112%;
+    font-stretch: 115%;
     line-height: 1.05;
-    text-transform: uppercase;
     text-align: left;
+    text-transform: uppercase;
     color: var(--ink);
-    border-top: 3px solid var(--c2);
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
 
+  /* Its number in the collection, moulded into the plastic. */
+  .cart-num {
+    position: absolute;
+    left: 10%;
+    bottom: 2.5%;
+    font-size: 6cqw;
+    font-weight: 900;
+    font-stretch: 125%;
+    letter-spacing: 0.06em;
+    color: var(--cink);
+    opacity: 0.75;
+  }
 
-  /* The flying copy used while a cartridge travels from the shelf to the slot. */
+  /* The one in the console leaves its spot empty on the carousel. */
+  .cart-in {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+  }
+
+  .cart-in svg {
+    width: 34%;
+    fill: none;
+    stroke: #2a2a2e66;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: bob 1.2s ease-in-out infinite;
+  }
+
+  /* The one in the console leaves a dashed space on the carousel, pointing to where it went. */
+  .cart.is-in {
+    background: #2a2a2e08;
+    box-shadow: none;
+    outline: 3px dashed #2a2a2e40;
+    outline-offset: -6px;
+  }
+
+  .cart.is-in > :not(.cart-in) { opacity: 0; }
+  .cart.is-in .cart-in { opacity: 1; }
+  .turntable li:has(.is-in) .cart-side { opacity: 0; }
+
+  @media (min-width: 1101px) {
+    .cart-in svg { rotate: -90deg; }
+  }
+
+  .car-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .car-btn {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: var(--ink);
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.25s var(--ease-spring);
+  }
+
+  .car-btn:hover { transform: scale(1.08); }
+  .car-btn:active { transform: scale(0.94); }
+
+  .pager {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .pager li {
+    width: 7px;
+    height: 7px;
+    border-radius: 99px;
+    background: var(--c);
+    opacity: 0.35;
+    transition: width 0.3s var(--ease-out), opacity 0.3s;
+  }
+
+  .pager li.is-on { width: 24px; opacity: 1; }
+
+  /* The ghost hand that shows the move once: grab the front cartridge, drop it in the slot. */
+  .demo-hand {
+    position: absolute;
+    z-index: 30;
+    left: 0;
+    top: 0;
+    width: 56px;
+    opacity: 0;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 6px #2a2a2e40);
+  }
+
+  .demo-hand svg {
+    width: 100%;
+    fill: #fff;
+    stroke: var(--ink);
+    stroke-width: 2.2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  /* The console lights up while a cartridge is carried towards it. */
+  .console { transition: box-shadow 0.3s, scale 0.3s var(--ease-spring); }
+
+  .console.is-target {
+    scale: 1.02;
+    box-shadow:
+      inset 0 3px 0 #ffffffcc,
+      inset 0 -10px 0 #c9c2b4,
+      0 0 0 4px var(--yellow),
+      0 0 60px #ffe14d99,
+      0 40px 60px -30px #2a2a2e80;
+  }
+
+  /* The flying copy used while a cartridge travels from the carousel to the slot. */
   :global(.cart-fly) {
     position: fixed;
     z-index: 80;
@@ -806,17 +1224,33 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 
   /* ---------- Tablet ---------- */
   @media (max-width: 1100px) {
-    .stage { grid-template-columns: minmax(0, 1fr); }
+    .stage { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .carousel { --cw: clamp(150px, 30vw, 230px); }
     .rig { max-width: 760px; width: 100%; margin-inline: auto; }
-    .manuals { margin-top: 12px; max-width: 760px; width: 100%; margin-inline: auto; }
+    .manuals { margin-top: 28px; max-width: 760px; width: 100%; }
     .manual { rotate: 0.5deg; }
+  }
+
+  @media (max-width: 860px) {
+    .manual { grid-template-columns: minmax(0, 1fr); }
+    .manual > :is(.m-summary, .m-stack, .m-models, .m-cta) { grid-column: 1; }
   }
 
   /* ---------- Phone: the console stands up, screen on top and buttons below ---------- */
   @media (max-width: 700px) {
-    .head h2, .head .lead, .head-note { grid-column: 1 / -1; }
+    /* The world chips: one row you can swipe. */
+    .chips {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin-inline: calc(var(--margin) * -1);
+      padding: 4px var(--margin);
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip { flex: none; min-height: 38px; font-size: 13px; }
 
     .rig { max-width: 420px; padding-top: 70px; }
+    .carousel { --cw: min(46vw, 210px); }
 
     .console {
       grid-template-columns: minmax(0, 1fr);
@@ -825,7 +1259,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       border-radius: 30px 30px 70px 30px;
     }
 
-    .slot-cart { left: 39%; width: 34%; }
+    .console { --slot-l: 33%; --slot-w: 34%; }
 
     .bezel { padding: 8% 9% 13%; border-radius: 16px 16px 44px 16px; }
     .power { left: 2.5%; }
@@ -868,7 +1302,6 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     const embed = screen.querySelector<HTMLElement>('.scr-embed')!;
     const boot = screen.querySelector<HTMLElement>('.scr-boot')!;
     const title = screen.querySelector<HTMLElement>('.scr-title')!;
-    const count = screen.querySelector<HTMLElement>('.scr-count')!;
     const slotCart = consoleEl.querySelector<HTMLElement>('.slot-cart')!;
     const aBtn = consoleEl.querySelector<HTMLButtonElement>('[data-a]')!;
     const bBtn = consoleEl.querySelector<HTMLButtonElement>('[data-b]')!;
@@ -877,16 +1310,84 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     const puppet = mountPuppet(peekSvg, 'idle');
     const REACT: Record<string, Anim> = { juegos: 'play', vr: 'vr', '3d': 'sculpt', software: 'code' };
     const n = carts.length;
-    let active = 0;
+    let active = -1; // the console starts empty
     let busy = false;
     let seen = false;
 
     const pad = (i: number) => String(i + 1).padStart(2, '0');
 
-    const setSlot = (c: HTMLButtonElement) => {
-      slotCart.style.setProperty('--sc', c.style.getPropertyValue('--c'));
-      slotCart.style.setProperty('--sc-img', c.dataset.poster ? `url("${c.dataset.poster}")` : 'none');
+    // Copies of a cartridge (the one flying, the one in the slot) need its world colours.
+    const dress = (el: HTMLElement, i: number) => {
+      const li = carts[i].closest('li')!;
+      for (const v of ['--c', '--cink', '--c2']) el.style.setProperty(v, li.style.getPropertyValue(v));
     };
+    const copyOf = (i: number) => {
+      const k = carts[i].cloneNode(true) as HTMLElement;
+      k.classList.remove('is-in');
+      // Drop its data and labels, but keep Astro's scoping attribute so it keeps its styles.
+      for (const a of [...k.attributes]) {
+        if ((a.name.startsWith('data-') && !a.name.startsWith('data-astro-cid')) || a.name.startsWith('aria-')) k.removeAttribute(a.name);
+      }
+      k.tabIndex = -1;
+      k.style.transform = 'none';
+      return k;
+    };
+    const setSlot = (c: HTMLButtonElement) => {
+      const i = carts.indexOf(c);
+      slotCart.replaceChildren(copyOf(i));
+      dress(slotCart, i);
+    };
+
+    // The console's sounds: a plastic click out, a clack in, and a two-note boot. Short and quiet,
+    // and only ever after someone has touched something.
+    let ac: AudioContext | null = null;
+    const sfx = (kind: 'out' | 'in' | 'boot') => {
+      try {
+        ac ??= new AudioContext();
+        const t0 = ac.currentTime;
+        const noise = (dur: number, freq: number, vol: number) => {
+          const b = ac!.createBuffer(1, Math.ceil(ac!.sampleRate * dur), ac!.sampleRate);
+          const d = b.getChannelData(0);
+          for (let k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / d.length) ** 3;
+          const src = ac!.createBufferSource();
+          const f = ac!.createBiquadFilter();
+          const g = ac!.createGain();
+          src.buffer = b;
+          f.type = 'bandpass';
+          f.frequency.value = freq;
+          g.gain.value = vol;
+          src.connect(f).connect(g).connect(ac!.destination);
+          src.start(t0);
+        };
+        const tone = (at: number, freq: number, dur: number, vol: number, type: OscillatorType = 'square') => {
+          const o = ac!.createOscillator();
+          const g = ac!.createGain();
+          o.type = type;
+          o.frequency.setValueAtTime(freq, t0 + at);
+          g.gain.setValueAtTime(vol, t0 + at);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + dur);
+          o.connect(g).connect(ac!.destination);
+          o.start(t0 + at);
+          o.stop(t0 + at + dur + 0.02);
+        };
+        if (kind === 'out') noise(0.05, 3200, 0.5);
+        if (kind === 'in') {
+          noise(0.06, 1600, 0.9);
+          tone(0, 110, 0.1, 0.25, 'sine');
+        }
+        if (kind === 'boot') {
+          tone(0, 1047, 0.08, 0.035);
+          tone(0.09, 2093, 0.4, 0.035);
+        }
+      } catch {}
+    };
+    const buzz = (p: number | number[]) => {
+      try {
+        navigator.vibrate?.(p);
+      } catch {}
+    };
+    const rig3d = consoleEl.parentElement!;
+    const bump = () => gsap.fromTo(rig3d, { y: 0 }, { y: 4, duration: 0.06, yoyo: true, repeat: 1, ease: 'power1.out' });
 
     const stopMedia = () => {
       vid.pause();
@@ -897,6 +1398,8 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     const paint = (i: number) => {
       const c = carts[i];
       stopMedia();
+      consoleEl.classList.remove('is-empty');
+      img.hidden = false;
       if (c.dataset.poster) img.src = c.dataset.poster;
       if (c.dataset.video && !reduced) {
         vid.hidden = false;
@@ -910,7 +1413,6 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
         vid.hidden = true;
       }
       title.textContent = c.dataset.name || '';
-      count.textContent = `${pad(i)}/${pad(n - 1)}`;
       aBtn.setAttribute('aria-label', c.dataset.label || aBtn.getAttribute('aria-label') || 'A');
       manuals.forEach((m, k) => m.classList.toggle('is-on', k === i));
       carts.forEach((b, k) => {
@@ -934,6 +1436,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
           screen.classList.remove('is-static');
           paint(i);
           boot.hidden = false;
+          sfx('boot');
           gsap.fromTo(boot.children, { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, stagger: 0.08, ease: 'back.out(2)' });
           setTimeout(() => {
             gsap.to(boot, {
@@ -949,58 +1452,357 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
         }, 220);
       });
 
+    // Slotting a cartridge in, the way it feels with a real one: the old one clicks out, the new one
+    // arcs over and lines up above the slot, slides in with a little friction and seats with a clack
+    // (the console jolts, phones buzz), the power light comes on and the console boots.
     const insert = async (i: number) => {
       i = ((i % n) + n) % n;
       if (busy || i === active) return;
       busy = true;
       const from = carts[i];
-      // The old cartridge pops out of the slot, the new one flies in from the shelf.
-      slotCart.classList.add('is-out');
-      if (!reduced) {
+      const cr = consoleEl.getBoundingClientRect();
+      if (cr.top < 0 || cr.bottom > innerHeight) {
+        consoleEl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+        // Let the page arrive before the cartridge flies, so it lands in the slot.
+        if (!reduced) await new Promise((r) => setTimeout(r, 480));
+      }
+
+      // Out with the old one.
+      if (active >= 0) {
+        stopMedia();
+        screen.classList.add('is-off');
+        consoleEl.classList.remove('is-on');
+        // Nothing of the old game is left on the screen.
+        img.hidden = true;
+        vid.hidden = true;
+        title.textContent = '';
+        if (!reduced) {
+          sfx('out');
+          buzz(8);
+          await gsap.to(slotCart, { '--seat': -150, duration: 0.3, ease: 'back.in(1.7)' }).then();
+        }
+      }
+      gsap.set(slotCart, { opacity: 0, '--seat': -150 });
+      slotCart.classList.remove('is-out');
+      setSlot(from);
+
+      if (reduced) {
+        from.classList.add('is-in');
+        gsap.set(slotCart, { opacity: 1, '--seat': -46 });
+      } else {
+        // In flight: from where it is to just above the slot, at the size it will have there.
         const r = from.getBoundingClientRect();
         const s = slotCart.getBoundingClientRect();
-        const fly = from.cloneNode(true) as HTMLElement;
+        const fly = copyOf(i);
+        dress(fly, i);
         fly.classList.add('cart-fly');
-        fly.classList.remove('is-in');
-        fly.removeAttribute('id');
         fly.setAttribute('aria-hidden', 'true');
-        fly.tabIndex = -1;
         Object.assign(fly.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
         document.body.appendChild(fly);
         from.classList.add('is-in');
-        const onScreen = r.bottom > 0 && r.top < innerHeight;
+        const top = Math.min(r.top, s.top) - Math.min(120, innerHeight * 0.12);
         await gsap
           .timeline()
-          .fromTo(fly, { opacity: onScreen ? 1 : 0 }, { opacity: 1, duration: 0.1 })
-          .to(fly, {
-            left: s.left,
-            top: s.top - s.height * 0.75,
-            width: s.width,
-            height: s.width / 0.86,
-            rotate: -8,
-            duration: 0.5,
-            ease: 'power3.inOut',
-          })
-          .to(fly, { top: s.top + s.height * 0.1, rotate: 0, duration: 0.18, ease: 'power2.in' })
+          .to(fly, { left: (r.left + s.left) / 2, top, width: (r.width + s.width) / 2, height: (r.height + s.height) / 2, rotate: -9, duration: 0.34, ease: 'power2.out' })
+          .to(fly, { left: s.left, top: s.top, width: s.width, height: s.height, rotate: 0, duration: 0.3, ease: 'power2.inOut' })
           .then();
+        // Hand over to the cartridge standing in the slot, which can go behind the shell.
+        gsap.set(slotCart, { opacity: 1 });
         fly.remove();
+        await gsap
+          .timeline()
+          .to(slotCart, { '--seat': -62, duration: 0.34, ease: 'power1.in' })
+          .call(() => {
+            sfx('in');
+            buzz(18);
+            bump();
+            consoleEl.classList.add('is-on');
+          })
+          .to(slotCart, { '--seat': -40, duration: 0.06, ease: 'power2.out' })
+          .to(slotCart, { '--seat': -46, duration: 0.16, ease: 'power2.out' })
+          .then();
       }
-      slotCart.classList.remove('is-out');
-      gsap.fromTo(consoleEl, { y: 0 }, { y: 5, duration: 0.08, yoyo: true, repeat: 1 });
+
+      consoleEl.classList.add('is-on');
+      screen.classList.remove('is-off');
+      if (wrapD(i - goal) !== 0 && !held) spinTo(Math.round(goal) + wrapD(i - goal));
       active = i;
       await bootUp(i, true);
       busy = false;
     };
 
-    carts.forEach((c, i) => c.addEventListener('click', () => insert(i)));
+    // ---------- The carousel ----------
+    const car = sec.querySelector<HTMLElement>('[data-carousel]')!;
+    const ring = car.querySelector<HTMLElement>('.turntable')!;
+    const items = [...ring.querySelectorAll<HTMLElement>(':scope > li')];
+    const STEP = 32; // degrees between cartridges
+    let pos = n > 1 ? 1 : 0; // the carousel's angle, in cartridges; start with the next one in front
+    let vel = 0;
+    let goal = pos;
+    let spinRaf = 0;
+    let held: { i: number; x: number; y: number; dx: number; dy: number } | null = null;
+
+    const wrapD = (d: number) => ((((d + n / 2) % n) + n) % n) - n / 2;
+    const front = () => ((Math.round(pos) % n) + n) % n;
+
+    const dots = [...sec.querySelectorAll<HTMLElement>('.pager li')];
+    const chips = [...sec.querySelectorAll<HTMLButtonElement>('.chip')];
+    let shown = -1;
+    const layout = () => {
+      const f = front();
+      if (f !== shown) {
+        shown = f;
+        dots.forEach((d, k) => d.classList.toggle('is-on', k === f));
+        chips.forEach((c) => c.classList.toggle('is-on', c.dataset.group === carts[f].dataset.world));
+      }
+      const w = items[0].offsetWidth;
+      const R = w * 1.5;
+      items.forEach((li, i) => {
+        const d = wrapD(i - pos);
+        const a = d * STEP;
+        const hidden = Math.abs(a) > 105;
+        const x = R * Math.sin(a * Math.PI / 180);
+        // The one in front steps forward off the turntable.
+        const z = R * (Math.cos(a * Math.PI / 180) - 1) + Math.max(0, 1 - Math.abs(d)) * w * 0.18;
+        let extra = '';
+        if (held && held.i === i) {
+          const tilt = Math.max(-18, Math.min(18, held.dx * 0.04));
+          extra = ` translate3d(${held.dx}px, ${held.dy}px, 60px) rotate(${tilt}deg) scale(1.04)`;
+        }
+        li.style.transform = `translate(-50%, -50%)${extra} translate3d(${x.toFixed(1)}px, 0, ${z.toFixed(1)}px) rotateY(${a.toFixed(2)}deg)`;
+        li.style.zIndex = String(held?.i === i ? 200 : 100 - Math.round(Math.abs(d) * 10));
+        li.style.opacity = hidden ? '0' : '1';
+        li.style.pointerEvents = hidden ? 'none' : '';
+        li.style.filter = `brightness(${(1 - Math.min(3, Math.abs(d)) * 0.1).toFixed(2)})`;
+        const isFront = Math.abs(d) < 0.5;
+        li.classList.toggle('is-front', isFront);
+        li.querySelector('button')!.tabIndex = isFront ? 0 : -1;
+      });
+    };
+
+    // A spring carries the carousel to the nearest cartridge once it is let go.
+    const spin = () => {
+      spinRaf = 0;
+      if (!spinning) {
+        const f = (goal - pos) * 0.16;
+        vel = vel * 0.72 + f;
+        pos += vel;
+        if (Math.abs(goal - pos) < 0.001 && Math.abs(vel) < 0.001) {
+          pos = goal;
+          vel = 0;
+        }
+      }
+      // Carrying near the top or bottom of the screen scrolls the page (the console may be below).
+      if (held && mode === 'carry') {
+        const edge = 90;
+        const k = lastY > innerHeight - edge ? (lastY - (innerHeight - edge)) / edge : lastY < edge ? (lastY - edge) / edge : 0;
+        if (k) window.scrollBy(0, k * 16);
+        held.dy = lastY - downY + (scrollY - downScroll);
+        consoleEl.classList.toggle('is-target', overConsole(lastX, lastY));
+      }
+      layout();
+      if (spinning || held || pos !== goal) spinRaf = requestAnimationFrame(spin);
+    };
+    const kick = () => {
+      if (!spinRaf) spinRaf = requestAnimationFrame(spin);
+    };
+    const spinTo = (g: number) => {
+      goal = g;
+      if (reduced) pos = g;
+      kick();
+      layout();
+    };
+    const spinBy = (k: number) => spinTo(Math.round(goal) + k);
+
+    // A world's chip turns the carousel to that world's first cartridge, the short way round.
+    chips.forEach((c) =>
+      c.addEventListener('click', () => spinTo(Math.round(goal) + wrapD(Number(c.dataset.first) - goal))),
+    );
+
+    car.querySelectorAll<HTMLButtonElement>('[data-spin]').forEach((b) =>
+      b.addEventListener('click', () => spinBy(Number(b.dataset.spin))),
+    );
+
+    // Drag: sideways on the carousel turns it; the cartridge in front can be picked up and carried.
+    // On touch, the front cartridge is carried when the finger moves more down/up than sideways.
+    let spinning = false;
+    let downX = 0, downY = 0, downScroll = 0, lastY = 0, startPos = 0, lastX = 0, lastT = 0, mode: '' | 'spin' | 'carry' | 'pending' = '';
+    let downItem = -1;
+    let moved = 0;
+    const fine = matchMedia('(pointer: fine)').matches;
+
+    const overConsole = (x: number, y: number) => {
+      const r = consoleEl.getBoundingClientRect();
+      return x > r.left - 30 && x < r.right + 30 && y > r.top - 60 && y < r.bottom + 30;
+    };
+
+    ring.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || busy) return;
+      const li = (e.target as HTMLElement).closest<HTMLElement>('li');
+      downItem = li ? items.indexOf(li) : -1;
+      downX = lastX = e.clientX;
+      downY = lastY = e.clientY;
+      downScroll = scrollY;
+      lastT = performance.now();
+      startPos = pos;
+      moved = 0;
+      mode = 'pending';
+      ring.setPointerCapture(e.pointerId);
+    });
+
+    ring.addEventListener('pointermove', (e) => {
+      if (!mode) return;
+      const dx = e.clientX - downX, dy = e.clientY - downY;
+      moved = Math.max(moved, Math.hypot(dx, dy));
+      if (mode === 'pending' && moved > 6) {
+        const onFront = downItem >= 0 && downItem === front() && !carts[downItem].classList.contains('is-in');
+        if (onFront && (fine || Math.abs(dy) > Math.abs(dx))) {
+          mode = 'carry';
+          held = { i: downItem, x: downX, y: downY, dx: 0, dy: 0 };
+          items[downItem].classList.add('is-held');
+          car.classList.add('is-carrying');
+        } else {
+          mode = 'spin';
+          spinning = true;
+          car.classList.add('is-spinning');
+        }
+        kick();
+      }
+      if (mode === 'spin') {
+        const w = items[0].offsetWidth;
+        const now = performance.now();
+        const p = startPos - dx / (w * 0.75);
+        vel = (p - pos) / Math.max(1, (now - lastT) / 16);
+        pos = p;
+        lastX = e.clientX;
+        lastT = now;
+      } else if (mode === 'carry' && held) {
+        held.dx = dx;
+        lastX = e.clientX;
+        lastY = e.clientY;
+      }
+    });
+
+    const end = (e: PointerEvent) => {
+      if (!mode) return;
+      const was = mode;
+      mode = '';
+      if (was === 'spin') {
+        spinning = false;
+        car.classList.remove('is-spinning');
+        // Let it coast a little, then settle on a cartridge.
+        spinTo(Math.round(pos + vel * 6));
+      } else if (was === 'carry' && held) {
+        const i = held.i;
+        const drop = overConsole(e.clientX, e.clientY);
+        consoleEl.classList.remove('is-target');
+        car.classList.remove('is-carrying');
+        if (drop) {
+          // It flies from where it was let go.
+          insert(i).then(() => {
+            held = null;
+            items[i].classList.remove('is-held');
+            layout();
+          });
+          setTimeout(() => {
+            held = null;
+            items[i].classList.remove('is-held');
+            layout();
+          }, 30);
+        } else {
+          // Not in the slot: it springs back onto the carousel.
+          items[i].classList.remove('is-held');
+          const li = items[i];
+          li.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          held = null;
+          layout();
+          setTimeout(() => (li.style.transition = ''), 360);
+        }
+      } else if (was === 'pending' && downItem >= 0) {
+        // A tap: the one in front goes in, one at the side turns to the front.
+        const d = wrapD(downItem - pos);
+        if (Math.abs(d) < 0.5) {
+          if (!carts[downItem].classList.contains('is-in')) insert(downItem);
+        } else spinTo(Math.round(pos + d));
+      }
+    };
+    ring.addEventListener('pointerup', end);
+    ring.addEventListener('pointercancel', end);
+
+    // Keyboard: the front cartridge is a button; Enter or Space slots it in.
+    carts.forEach((c, i) =>
+      c.addEventListener('click', (e) => {
+        if ((e as PointerEvent).pointerType) return; // pointer taps are handled above
+        insert(i);
+      }),
+    );
+    ring.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        e.stopPropagation();
+        spinBy(e.key === 'ArrowRight' ? 1 : -1);
+        requestAnimationFrame(() => carts[((Math.round(goal) % n) + n) % n].focus({ preventScroll: true }));
+      }
+    });
+
+    new ResizeObserver(layout).observe(ring);
+    layout();
+
+    // The console leans a little towards the pointer.
+    const rig = sec.querySelector<HTMLElement>('.rig')!;
+    if (!reduced) {
+      rig.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = rig.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        consoleEl.style.setProperty('--ry', `${(-10 + x * 10).toFixed(2)}deg`);
+        consoleEl.style.setProperty('--rx', `${(-20 - y * 6).toFixed(2)}deg`);
+      });
+      rig.addEventListener('pointerleave', () => {
+        consoleEl.style.removeProperty('--ry');
+        consoleEl.style.removeProperty('--rx');
+      });
+    }
+
+    // The ghost hand: once the section is in view and nothing has been played yet, it grabs the
+    // front cartridge and carries it to the glowing slot, twice. Any touch of the carousel stops it.
+    const hand = sec.querySelector<HTMLElement>('.demo-hand')!;
+    let touched = false;
+    let demoTl: gsap.core.Timeline | null = null;
+    // Whatever the visitor does first, the hand steps aside.
+    const stopDemo = () => {
+      touched = true;
+      demoTl?.kill();
+      gsap.to(hand, { opacity: 0, duration: 0.2 });
+    };
+    sec.addEventListener('pointerdown', stopDemo, { capture: true });
+    sec.addEventListener('keydown', stopDemo, { capture: true });
+    function demo() {
+      if (reduced || touched || active >= 0) return;
+      const st = sec!.querySelector<HTMLElement>('.stage')!.getBoundingClientRect();
+      const fr = carts[front()].getBoundingClientRect();
+      const sl = consoleEl!.querySelector<HTMLElement>('.slot-hole')!.getBoundingClientRect();
+      const from = { x: fr.left + fr.width * 0.5 - st.left, y: fr.top + fr.height * 0.55 - st.top };
+      const to = { x: sl.left + sl.width / 2 - st.left, y: sl.top - st.top - 10 };
+      demoTl = gsap.timeline({ repeat: 1, repeatDelay: 0.6 })
+        .set(hand, { x: from.x, y: from.y + 30, opacity: 0, scale: 1 })
+        .to(hand, { y: from.y, opacity: 1, duration: 0.35, ease: 'power2.out' })
+        .to(hand, { scale: 0.88, duration: 0.15 })
+        .to(hand, { x: to.x, y: to.y, duration: 1.1, ease: 'power2.inOut' })
+        .to(hand, { scale: 1, duration: 0.15 })
+        .to(hand, { opacity: 0, duration: 0.3, delay: 0.2 });
+    }
 
     const press = (el: HTMLElement) => {
       el.classList.add('is-press');
       setTimeout(() => el.classList.remove('is-press'), 140);
     };
 
+    // The d-pad changes the game; with the console empty it turns the carousel.
+    const step = (k: number) => (active < 0 ? spinBy(k) : insert(active + k));
     sec.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
-      b.addEventListener('click', () => insert(active + Number(b.dataset.step))),
+      b.addEventListener('click', () => step(Number(b.dataset.step))),
     );
 
     // A: play it. 3D models and reels open right on the screen; everything else opens its link.
@@ -1010,6 +1812,8 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
         src="https://sketchfab.com/models/${uid}/embed?autostart=1&ui_theme=dark&ui_hint=2&dnt=1"></iframe>`;
     };
     aBtn.addEventListener('click', () => {
+      // Empty: A slots in the cartridge in front.
+      if (active < 0) return insert(front());
       const c = carts[active];
       if (c.dataset.embed) {
         stopMedia();
@@ -1022,7 +1826,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       } else if (c.dataset.url) window.open(c.dataset.url, '_blank', 'noopener');
     });
     // B: back to the cover.
-    bBtn.addEventListener('click', () => paint(active));
+    bBtn.addEventListener('click', () => active >= 0 && paint(active));
 
     sec.querySelectorAll<HTMLButtonElement>('[data-model]').forEach((m) =>
       m.addEventListener('click', () => {
@@ -1037,9 +1841,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     new IntersectionObserver(
       (e) => {
         inView = e[0].isIntersecting;
-        if (inView && !seen) {
+        if (inView && !seen && active < 0) {
           seen = true;
-          bootUp(active);
+          setTimeout(demo, 900);
         }
         if (!inView) vid.pause();
         else if (!vid.hidden && !reduced) vid.play().catch(() => {});
@@ -1050,8 +1854,8 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     window.addEventListener('keydown', (e) => {
       const t = e.target as HTMLElement;
       if (!inView || e.metaKey || e.ctrlKey || e.altKey || t.closest('input, textarea, select, [contenteditable]')) return;
-      if (e.key === 'ArrowRight') { e.preventDefault(); press(sec.querySelector('.d-right')!); insert(active + 1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); press(sec.querySelector('.d-left')!); insert(active - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); press(sec.querySelector('.d-right')!); step(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); press(sec.querySelector('.d-left')!); step(-1); }
     });
 
     // Swipe the screen sideways on a phone.
@@ -1060,10 +1864,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     screen.addEventListener('touchend', (e) => {
       const dx = e.changedTouches[0].clientX - sx;
       const dy = e.changedTouches[0].clientY - sy;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4 && !embed.innerHTML) insert(active + (dx < 0 ? 1 : -1));
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4 && !embed.innerHTML) step(dx < 0 ? 1 : -1);
     });
 
-    paint(0);
     peek.classList.remove('is-up');
   }
 </script>

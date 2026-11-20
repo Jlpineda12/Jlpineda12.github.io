@@ -68,6 +68,14 @@ function parallax() {
 
 // Travelling between chapters: a curtain of clouds sweeps across, the page lands on the
 // chapter behind it, and the clouds clear. Reduced motion simply jumps.
+let travel: ((hash: string, name?: string) => void) | null = null;
+
+/** Fly to a chapter (`#id`) behind the cloud curtain, as the in-page links do. */
+export function travelTo(hash: string, name?: string) {
+  if (travel) return travel(hash, name);
+  document.querySelector(hash)?.scrollIntoView();
+}
+
 function cloudTravel() {
   const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
   const wipe = document.createElement('div');
@@ -83,13 +91,9 @@ function cloudTravel() {
   const label = wipe.querySelector('strong')!;
   let busy = false;
 
-  document.addEventListener('click', (e) => {
-    const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
-    if (!a || a.classList.contains('skip')) return;
-    const hash = a.getAttribute('href')!;
+  travel = (hash, name) => {
     const target = hash === '#' ? null : document.querySelector<HTMLElement>(hash);
     if (!target) return;
-    e.preventDefault();
     const go = () => {
       window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY, behavior: 'instant' as ScrollBehavior });
       history.replaceState(null, '', hash);
@@ -100,13 +104,22 @@ function cloudTravel() {
     busy = true;
     const heading = target.querySelector('h1, h2');
     wipe.querySelector('.cw-label span')!.textContent = document.body.dataset.travelling || 'Viajando a';
-    label.textContent = (a.querySelector('.j-label')?.textContent || heading?.textContent || a.textContent || '').trim();
+    label.textContent = (name || heading?.textContent || '').trim();
     gsap.timeline({ onComplete: () => { busy = false; } })
       .set(wipe, { display: 'block' })
       .fromTo('.cw-band', { xPercent: 120 }, { xPercent: 0, duration: 0.55, ease: 'power3.in' })
       .call(go)
       .to('.cw-band', { xPercent: -120, duration: 0.65, ease: 'power3.out', delay: 0.25 })
       .set(wipe, { display: 'none' });
+  };
+
+  document.addEventListener('click', (e) => {
+    const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
+    if (!a || a.classList.contains('skip')) return;
+    const hash = a.getAttribute('href')!;
+    if (hash === '#' || !document.querySelector(hash)) return;
+    e.preventDefault();
+    travel!(hash, a.querySelector('.j-label')?.textContent || undefined);
   });
 }
 
