@@ -1,6 +1,9 @@
 ---
-// The first screen: José's Creative ID hangs from a red lanyard (grab it, swing it, let go). Under
-// it, his name and role play as a looping motion graphic made in Blender.
+// The first screen is a gate. At first there is only José's Creative ID, hanging from a red lanyard
+// on a retractable badge reel, and a glass reader below it. Drag the card down onto the reader (or
+// tap either) and it is read and stamped with your lap: access granted. Then the gate opens: the
+// card slides aside, his name and role play as a motion graphic made in Blender, and the menu and
+// the way in appear. "Enter without scanning" opens it too, and nothing is gated without JS.
 import Puppet from './Puppet.astro';
 import { getData, t, type Lang } from '../i18n';
 import LangSwitch from './LangSwitch.astro';
@@ -40,18 +43,19 @@ const stars = [
     </a>
     <nav aria-label={ui.chapters}>
       <ul>
-        <li class="hide-sm"><a class="sketch-pill" href="#quien-soy">{ui.navAbout}</a></li>
-        <li class="hide-sm"><a class="sketch-pill" href="#proyectos">{ui.navWorlds}</a></li>
-        <li class="hide-md"><a class="sketch-pill" href="#como-trabajo">{ui.navProcess}</a></li>
+        <li class="hide-sm gated" style="--i:0"><a class="sketch-pill" href="#quien-soy">{ui.navAbout}</a></li>
+        <li class="hide-sm gated" style="--i:1"><a class="sketch-pill" href="#proyectos">{ui.navWorlds}</a></li>
+        <li class="hide-md gated" style="--i:2"><a class="sketch-pill" href="#como-trabajo">{ui.navProcess}</a></li>
         <li class="li-lang"><LangSwitch lang={lang} /></li>
-        <li><a class="nav-cta" href="#contacto">{ui.writeMe}</a></li>
+        <li class="gated" style="--i:3"><a class="nav-cta" href="#contacto">{ui.writeMe}</a></li>
       </ul>
     </nav>
   </header>
 
   <div class="lanyard" data-lanyard>
+    <div class="strap" aria-hidden="true"><span class="reel"></span></div>
+    <span class="cord" aria-hidden="true"></span>
     <div class="swing">
-      <div class="strap" aria-hidden="true"></div>
       <svg class="clip" viewBox="0 0 60 92" aria-hidden="true">
         <rect x="16" y="0" width="28" height="18" rx="4" fill="#9aa0ad" />
         <circle cx="30" cy="30" r="13" fill="none" stroke="#b9bec8" stroke-width="7" />
@@ -62,29 +66,49 @@ const stars = [
         <div class="badge-card cid">
           <img src={`${base}img/creative-id.webp`} width="889" height="575" fetchpriority="high" alt={ui.cidAlt} draggable="false" />
           <span class="slot" aria-hidden="true"></span>
+          <span class="scan-beam" aria-hidden="true"></span>
+          <span class="pass-stamp" aria-hidden="true"><b>{ui.reader.stamp}</b><small>{ui.reader.lap} 01</small></span>
           <p class="bubble tape" data-lines={JSON.stringify(ui.bubbles)} data-loop-line={ui.loopLine}><span>{ui.bubbles[0]}</span></p>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="hero-body wrap">
-    <h1 class="hero-title" id="hero-title">
-      <span class="sr-only">{site.name.first} {site.name.last}, {site.role}. {ui.heroTag}</span>
+  <div class="hero-copy wrap">
+    <h1 class="hero-title" id="hero-title" style="--i:0">
+      <span class="sr-only">{site.name.first} {site.name.last}, {site.role}.</span>
       <video class="title-mg" autoplay muted loop playsinline preload="auto" aria-hidden="true"
         poster={`${base}video/title-${lang}.jpg`} width="1440" height="720">
         <source src={`${base}video/title-${lang}.mp4`} type="video/mp4" />
       </video>
     </h1>
-  </div>
-
-  <div class="hero-bottom wrap">
-    <a class="hand selected" href="#proyectos">{ui.selected}</a>
-    <p class="note">
-      <svg viewBox="0 0 70 40"><path d="M66 8 C46 6 26 14 10 32 M10 32 L11 18 M10 32 L24 30" /></svg>
-      <span>{ui.selectedNote}</span>
+    <p class="hero-tag" style="--i:1">{ui.heroTag}</p>
+    <p class="hero-actions" style="--i:2">
+      <a class="btn" href="#quien-soy">{ui.start} <span class="arrow" aria-hidden="true">↓</span></a>
+      <a class="btn-glass glass" href="#proyectos">{ui.navWorlds}</a>
     </p>
   </div>
+
+  <div class="reader" data-reader data-state="idle" data-msg={JSON.stringify(ui.reader)}>
+    <div class="reader-body glass" data-liquid>
+      <button class="reader-pad" type="button" aria-label={ui.reader.btn} aria-describedby="reader-status">
+        <span class="reader-window" aria-hidden="true">
+          <span class="ring r1"></span><span class="ring r2"></span>
+          <svg class="nfc" viewBox="0 0 48 48">
+            <path d="M14 14 Q22 24 14 34" /><path d="M21 9 Q33 24 21 39" /><path d="M28 4 Q44 24 28 44" />
+          </svg>
+          <svg class="tick" viewBox="0 0 48 48"><path d="M12 25 L21 34 L37 15" /></svg>
+        </span>
+      </button>
+      <p class="reader-status" id="reader-status" aria-live="polite">
+        <span class="reader-name" aria-hidden="true">JLP · {ui.reader.label}</span>
+        <span class="reader-line"><span class="led" aria-hidden="true"></span><span class="reader-text">{ui.reader.idle}</span></span>
+        <span class="reader-sub">{ui.reader.sub}</span>
+      </p>
+    </div>
+  </div>
+
+  <button class="gate-skip hand" type="button">{ui.gateSkip}</button>
 </section>
 
 <style>
@@ -264,10 +288,11 @@ const stars = [
   .lanyard {
     position: absolute;
     z-index: 2;
-    left: 50%;
+    left: var(--anchor, 50%);
     top: 0;
     width: 0;
     height: 0;
+    transition: left 1s var(--ease-out);
   }
 
   .swing {
@@ -284,11 +309,39 @@ const stars = [
     left: -15px;
     top: -20px;
     width: 30px;
-    height: calc(var(--len) + 24px);
+    height: calc(var(--strap-len, var(--strap)) + 24px);
+    transform-origin: 15px 20px;
+    rotate: var(--sa, 0deg);
     background:
       linear-gradient(90deg, #00000026 0 3px, #0000 3px calc(100% - 3px), #00000026 0),
       repeating-linear-gradient(0deg, #ffffff12 0 2px, #0000 2px 5px),
       var(--red);
+  }
+
+  /* The badge reel at the end of the strap; past it, a thin cord pulls out. */
+  .reel {
+    position: absolute;
+    left: -2px;
+    top: calc(100% - 18px);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #2a2a2e 0 4px, #0000 4.5px),
+      radial-gradient(circle at 35% 30%, #fff 0, #e6e8ee 30%, #a9aeb9 75%, #8b919d);
+    box-shadow: 0 0 0 3px var(--red), 0 4px 6px #0000004d;
+  }
+
+  /* Drawn from the reel to the clip, wherever the card has been pulled. */
+  .cord {
+    position: absolute;
+    left: -1px;
+    top: 0;
+    width: 2px;
+    height: 0;
+    border-radius: 2px;
+    background: #2a2a2e;
+    transform-origin: 1px 0;
   }
 
   .clip {
@@ -310,7 +363,8 @@ const stars = [
     height: var(--badge-h);
     transform-origin: 50% -30px;
     perspective: 900px;
-    touch-action: pan-y;
+    /* The card can be dragged on phones too (onto the reader); the page scrolls from anywhere else. */
+    touch-action: none;
     cursor: grab;
     user-select: none;
     -webkit-user-select: none;
@@ -371,16 +425,247 @@ const stars = [
   :global(.js) .bubble { opacity: 0; transform: scale(0.5); }
   :global(.js) .bubble.is-on { opacity: 1; transform: none; }
 
-  /* ---------- Name and tagline ---------- */
-  .hero-body {
-    position: relative;
-    margin-top: calc(var(--strap) + 50px + var(--badge-h) - 72px);
-    text-align: center;
+  /* The reader's laser sweeping over the card, twice. */
+  .scan-beam {
+    position: absolute;
+    z-index: 4;
+    left: -2cqw;
+    right: -2cqw;
+    top: 0;
+    height: 1.1cqw;
+    border-radius: 99px;
+    background: #ff5a4f;
+    box-shadow: 0 0 1.2cqw 0.4cqw #ff5a4fb3, 0 0 6cqw 1.6cqw #ff5a4f40;
+    opacity: 0;
     pointer-events: none;
   }
 
-  .hero-body > * {
-    pointer-events: auto;
+  .cid.beam-on .scan-beam {
+    animation: beam 0.55s ease-in-out 2 alternate;
+  }
+
+  @keyframes beam {
+    0% { top: 4%; opacity: 1; }
+    100% { top: 94%; opacity: 1; }
+  }
+
+  .cid.is-scanning {
+    box-shadow:
+      0 0 0 0.6cqw #ff5a4f40,
+      0 30px 50px -18px #2a2a2e66,
+      0 70px 90px -40px #2a2a2e40;
+  }
+
+  /* The access stamp, in green ink, slammed over the photo once the card is read. */
+  .pass-stamp {
+    position: absolute;
+    z-index: 3;
+    left: 8cqw;
+    top: 52cqw;
+    display: grid;
+    justify-items: center;
+    padding: 1cqw 3cqw 1.2cqw;
+    border: 0.7cqw double #23864f;
+    border-radius: 1.6cqw;
+    color: #23864f;
+    font-weight: 900;
+    font-stretch: 125%;
+    line-height: 1;
+    rotate: -11deg;
+    mix-blend-mode: multiply;
+    opacity: 0;
+    scale: 2.4;
+    pointer-events: none;
+  }
+
+  .pass-stamp b { font-size: 5.4cqw; letter-spacing: 0.06em; }
+  .pass-stamp small { font-size: 2.4cqw; font-weight: 800; letter-spacing: 0.18em; }
+
+  .cid.is-stamped .pass-stamp {
+    opacity: 0.88;
+    scale: 1;
+    transition: scale 0.28s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.12s;
+  }
+
+  /* ---------- The access reader (liquid glass) ---------- */
+  /* A glass pill at the bottom of the gate; the card is pulled straight down onto its top edge. */
+  .reader {
+    --ok: #23864f;
+    --beam: #ff5a4f;
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    bottom: clamp(56px, 10svh, 110px);
+    translate: -50% 0;
+    width: max-content;
+    max-width: calc(100% - 2 * var(--margin));
+    transition: opacity 0.4s, translate 0.6s var(--ease-out), visibility 0s 0.6s;
+  }
+
+  .reader-body {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 30px 10px 10px;
+    border-radius: 999px;
+  }
+
+  .reader-pad {
+    flex: none;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .reader-window {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: clamp(60px, 7svh, 76px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #ffffffb3, #ffffff26 70%);
+    box-shadow: inset 0 2px 6px #2a2a2e33, inset 0 -2px 0 #ffffffcc, 0 0 0 1px #2a2a2e14;
+    transition: box-shadow 0.3s, background-color 0.3s, scale 0.35s var(--ease-spring);
+  }
+
+  .ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--sky);
+    opacity: 0;
+    animation: ping 2.4s var(--ease-out) infinite;
+  }
+
+  .ring.r2 { animation-delay: 1.2s; }
+
+  @keyframes ping {
+    0% { scale: 0.7; opacity: 0.9; }
+    100% { scale: 1.6; opacity: 0; }
+  }
+
+  .nfc, .tick {
+    width: 46%;
+    height: auto;
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    grid-area: 1 / 1;
+    transition: opacity 0.25s, scale 0.35s var(--ease-spring);
+  }
+
+  .nfc { rotate: -90deg; }
+  .nfc path { animation: wave 1.8s ease-in-out infinite; }
+  .nfc path:nth-child(2) { animation-delay: 0.15s; }
+  .nfc path:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes wave {
+    0%, 60%, 100% { opacity: 1; }
+    30% { opacity: 0.25; }
+  }
+
+  .tick { stroke: var(--ok); stroke-width: 5; opacity: 0; scale: 0.4; }
+
+  .reader-status {
+    display: grid;
+    gap: 2px;
+    line-height: 1.15;
+    min-width: 0;
+  }
+
+  .reader-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: clamp(15px, 1.2vw, 17px);
+  }
+
+  .led {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--sky);
+    box-shadow: 0 0 0 3px #7c90da33;
+    transition: background-color 0.2s, box-shadow 0.2s;
+  }
+
+  .reader-sub {
+    min-height: 1.2em;
+    font-family: var(--hand);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .reader-name {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #2a2a2e80;
+    margin-bottom: 2px;
+  }
+
+  .reader-pad:hover .reader-window { scale: 1.06; }
+
+  .reader[data-state='near'] .reader-window {
+    scale: 1.12;
+    background-color: #ffe14d66;
+    box-shadow: inset 0 2px 6px #2a2a2e33, 0 0 0 4px #ffe14d, 0 0 40px #ffe14d;
+  }
+  .reader[data-state='near'] .led { background: #e2b84a; box-shadow: 0 0 0 3px #e2b84a55; }
+
+  .reader[data-state='scan'] .reader-window { box-shadow: inset 0 2px 6px #2a2a2e33, 0 0 0 3px var(--beam), 0 0 36px #ff5a4f99; }
+  .reader[data-state='scan'] .led { background: var(--beam); animation: blink 0.2s steps(2) infinite; }
+  .reader[data-state='scan'] .ring { border-color: var(--beam); animation-duration: 0.8s; }
+
+  .reader[data-state='ok'] .reader-window { box-shadow: inset 0 2px 6px #2a2a2e33, 0 0 0 3px var(--ok), 0 0 36px #23864f66; }
+  .reader[data-state='ok'] .led { background: var(--ok); box-shadow: 0 0 0 3px #23864f40; }
+  .reader[data-state='ok'] .ring { border-color: var(--ok); animation-iteration-count: 2; }
+  .reader[data-state='ok'] .nfc { opacity: 0; scale: 0.5; }
+  .reader[data-state='ok'] .tick { opacity: 1; scale: 1; }
+  .reader[data-state='ok'] .reader-line { color: var(--ok); }
+
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  .gate-skip {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    bottom: clamp(14px, 3svh, 32px);
+    translate: -50% 0;
+    padding: 6px 12px;
+    border: 0;
+    background: none;
+    font-size: 20px;
+    color: var(--muted);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    cursor: pointer;
+    transition: opacity 0.3s, visibility 0s 0.3s;
+  }
+
+  .gate-skip:hover { color: var(--ink); }
+
+  /* ---------- After the gate: name, tagline and the way in ---------- */
+  /* No z-index or transform here: the title video has to multiply onto the hero's paper. */
+  .hero-copy {
+    position: relative;
+    margin-top: calc(var(--strap) + 50px + var(--badge-h) + 4px);
+    padding-bottom: clamp(28px, 6svh, 64px);
+    display: grid;
+    justify-items: center;
+    gap: clamp(12px, 2svh, 20px);
+    text-align: center;
   }
 
   /* The name and role: a motion graphic made in Blender (3D, 2D, stop motion, looping). It is
@@ -388,46 +673,95 @@ const stars = [
   .hero-title {
     margin: 0;
     line-height: 0;
+    width: min(100%, 620px);
   }
 
   .title-mg {
-    width: auto;
-    height: clamp(170px, 31svh, 330px);
-    max-width: 100%;
+    width: 100%;
+    height: auto;
     aspect-ratio: 2 / 1;
-    margin-inline: auto;
     object-fit: contain;
     mix-blend-mode: multiply;
   }
 
+  .hero-tag {
+    max-width: 30ch;
+    font-size: var(--step-lead);
+    line-height: 1.3;
+    font-weight: 500;
+    text-wrap: balance;
+  }
 
-
-  /* ---------- Bottom row ---------- */
-  .hero-bottom {
-    position: relative;
-    z-index: 2;
+  .hero-actions {
     display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: auto;
-    padding-top: 24px;
-    padding-bottom: clamp(18px, 3svh, 32px);
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
   }
 
-  .selected {
-    font-size: clamp(20px, 1.7vw, 26px);
+  .btn-glass {
+    display: inline-flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 26px;
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: var(--step-body);
     text-decoration: none;
+    transition: transform 0.25s var(--ease-spring);
   }
 
-  .selected:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
+  .btn-glass:hover { transform: translateY(-3px); }
+
+  /* ---------- The gate (only with JS; html.gate is set in the head before paint) ---------- */
+  :global(html.gate) { overflow: hidden; }
+  :global(.gate) .hero { height: 100svh; }
+
+  .gated,
+  .hero-copy > * {
+    transition: opacity 0.6s var(--ease-out) calc(0.25s + var(--i, 0) * 0.12s), translate 0.8s var(--ease-out) calc(0.25s + var(--i, 0) * 0.12s), visibility 0s;
   }
 
-  .hero-bottom .note svg {
-    width: 56px;
-    order: -1;
+  :global(.gate) .gated,
+  :global(.gate) .hero-copy > * {
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 18px;
+    transition: none;
+  }
+
+  :global(.gate) .reader,
+  :global(.gate) .gate-skip {
+    transition: opacity 0.4s;
+  }
+
+  :global(html:not(.gate)) .reader,
+  :global(html:not(.gate)) .gate-skip {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  :global(html:not(.gate)) .reader { translate: -50% 40px; }
+
+  /* Wide screens: once inside, the card slides right and the name takes the left. */
+  @media (min-width: 1000px) and (min-aspect-ratio: 1/1) {
+    :global(html:not(.gate)) .hero {
+      --anchor: 71%;
+    }
+
+    .hero-copy {
+      margin: auto 0;
+      padding-block: 80px 40px;
+      width: min(56%, 760px);
+      justify-items: start;
+      text-align: left;
+    }
+
+    .hero-title { width: 100%; }
+    .title-mg { object-position: left center; }
+    .hero-actions { justify-content: start; }
   }
 
   @media (max-width: 1100px) {
@@ -440,32 +774,22 @@ const stars = [
       --strap: clamp(90px, 12svh, 160px);
       --badge-w: min(62vw, 560px, 44svh);
     }
-
-    .title-mg { height: auto; width: min(92%, 760px); }
   }
 
   @media (max-width: 760px) {
     .hide-sm { display: none; }
 
     .hero {
-      --strap: clamp(70px, 17svh, 170px);
+      --strap: clamp(64px, 13svh, 150px);
       --badge-w: min(92vw, 420px);
     }
 
-
     .nav { padding-top: 12px; }
-    .hero-body { margin-top: calc(var(--strap) + 50px + var(--badge-h) - 56px); }
     .id-status { font-size: 16px; }
     .nav-cta { padding: 0 14px; font-size: 14px; }
-
     .stars svg { scale: 1.7; }
-
-    .title-mg { height: auto; width: 100%; }
-
-
-    .hero-bottom { align-items: center; }
-    .hero-bottom .note span { max-width: 9ch; }
-    .hero-bottom .note svg { width: 40px; }
+    .hero-copy { margin-top: calc(var(--strap) + 50px + var(--badge-h) - 8px); }
+    .hero-title { width: 100%; }
   }
 
   @media (max-width: 520px) {
@@ -476,7 +800,10 @@ const stars = [
 
 <script>
   import { initLanyard } from '../scripts/lanyard';
-  initLanyard();
+  import { initScanner } from '../scripts/scanner';
+  import { initLiquid } from '../scripts/liquid';
+  initScanner(initLanyard());
+  initLiquid();
   // The stars lean toward the pointer.
   const hero = document.querySelector<HTMLElement>('.hero');
   if (hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -496,12 +823,11 @@ const stars = [
       new IntersectionObserver((e) => (e[0].isIntersecting ? mg.play().catch(() => {}) : mg.pause())).observe(mg);
     }
   }
-  // The greeting on the tape; a new lap gets a welcome back.
+  // The greeting on the tape; a new lap gets a welcome back. (The reader writes on it too.)
   const tape = document.querySelector<HTMLElement>('.badge .bubble');
   if (tape) {
     const lines: string[] = JSON.parse(tape.dataset.lines || '[]');
     const loopLine = tape.dataset.loopLine || '';
-    let i = 0;
     const say = (t: string) => {
       tape.classList.remove('is-on');
       setTimeout(() => {
@@ -511,10 +837,6 @@ const stars = [
     };
     const lap = Number(document.querySelector('[data-loop]')?.textContent || 1);
     setTimeout(() => say(lap > 1 && loopLine ? loopLine.replace('{name}', String(lap)) : lines[0]), 1100);
-    document.querySelector('.badge')?.addEventListener('click', () => {
-      i = (i + 1) % lines.length;
-      say(lines[i]);
-    });
     window.addEventListener('jlp-loop', (e) => setTimeout(() => say(loopLine.replace('{name}', String((e as CustomEvent<number>).detail))), 900));
   }
 </script>

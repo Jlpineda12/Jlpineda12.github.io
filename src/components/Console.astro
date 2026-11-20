@@ -9,7 +9,7 @@ const { lang } = Astro.props;
 const { projects, worlds } = getData(lang);
 const ui = t(lang);
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const order = ['digital-human', 'arcade-station', 'misterios-trigonometricos', 'ojos-del-planeta', 'lingopulse', 'melodia-ai', 'neurotext', 'personajes-3d', 'threejs-lab', 'gamevault', 'rigging', 'stop-motion'];
+const order = ['kart-wars', 'digital-human', 'arcade-station', 'misterios-trigonometricos', 'ojos-del-planeta', 'lingopulse', 'melodia-ai', 'neurotext', 'personajes-3d', 'threejs-lab', 'gamevault', 'rigging', 'stop-motion'];
 const list = order.map((s) => projects.find((p) => p.slug === s)!).filter(Boolean);
 const world = Object.fromEntries(worlds.map((w) => [w.id, w]));
 const total = list.length;

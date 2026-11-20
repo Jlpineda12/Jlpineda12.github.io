@@ -33,7 +33,16 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600..700&family=TikTok+Sans:wdth,wght@100..150,400..900&display=swap" rel="stylesheet" />
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline>
+      // The hero is a gate you scan your way through, once per visit. A link to a chapter skips it.
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          if (!sessionStorage.getItem('jlp-in') && !location.hash) d.classList.add('gate');
+        } catch (e) {}
+      })();
+    </script>
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Person',
