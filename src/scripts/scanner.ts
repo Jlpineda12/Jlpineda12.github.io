@@ -1,9 +1,9 @@
-// The gate: a glass card reader under the hanging Creative ID. Pull the card down onto it (or tap
+// The gate: a glass card reader and José's Creative ID. Carry the card onto it (or tap
 // the card or the reader) and it docks, a laser reads it, the reader beeps, the card is stamped
 // with your lap, and the gate opens: the name, the menu and the way in appear and the page scrolls.
 // On every load of the home page (Base.astro); a new lap ("another lap" at the end) closes the gate again.
 // "Enter without scanning" and the skip link open it straight away.
-import type { Lanyard, Point } from './lanyard';
+import type { Lanyard, Point } from './pass';
 import { getLoop } from './loop';
 
 type State = 'idle' | 'near' | 'scan' | 'ok';

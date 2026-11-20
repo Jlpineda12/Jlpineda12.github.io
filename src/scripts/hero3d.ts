@@ -40,7 +40,7 @@ export function initHero3d() {
   letters.forEach((l) => l.addEventListener('pointerenter', () => wobble(l)));
 
   const ghost = initGhost(stage, items);
-  initStickers(hero, items, () => ghost.stop(), puppet);
+  initStickers(hero, items, () => ghost.stopTour(), puppet);
   if (fine && !reduced) initLens(stage, name, letters);
 
   // The name lands: each letter drops, squashes on the line and springs back; José's face pops
@@ -76,105 +76,111 @@ export function initHero3d() {
   };
 
   const water = initWater(hero);
+  const pass = hero.querySelector<HTMLElement>('[data-pass]');
+  const reader = hero.querySelector<HTMLElement>('[data-reader]');
+  const readerBody = reader?.querySelector<HTMLElement>('.reader-body');
 
-  // After the title: the name and the stickers float up and away like bubbles, and the screen is
-  // left empty, underwater, but for the card.
-  const away = (tl: gsap.core.Timeline, at: number) => {
-    tl.to([...letters, ...items], {
-      y: () => -gsap.utils.random(0.5, 0.9) * innerHeight,
-      x: () => gsap.utils.random(-40, 40),
-      rotation: () => gsap.utils.random(-25, 25),
-      scale: 0.5,
-      opacity: 0,
-      duration: 1.1,
-      ease: 'power2.in',
-      stagger: { each: 0.035, from: 'random' },
-    }, at);
-    tl.call(() => stage.classList.add('is-away'));
-    tl.set([...letters, ...items], { clearProps: 'transform,opacity' });
-    return tl;
-  };
-
-  // The way in: the card drops into the water, then the reader appears.
+  // The way in appears: the card pops onto the hero, the reader slides up, and José's cursor
+  // shows the move (card → reader) until someone grabs it.
   const toGate = () => {
     root.classList.remove('intro');
     window.dispatchEvent(new Event('jlp-drop'));
+    if (pass && readerBody) setTimeout(showWay, 1200);
   };
+  // Only while nobody has touched the card yet and the reader is waiting.
+  let touched = false;
+  const showWay = () => {
+    if (pass && readerBody && !touched && reader?.dataset.state === 'idle') ghost.demo(pass, readerBody);
+  };
+  pass?.addEventListener('pointerdown', () => {
+    touched = true;
+    ghost.stop();
+  });
 
-  // Reading the card sends ripples through the water from the reader.
-  const reader = hero.querySelector<HTMLElement>('[data-reader]');
-  const readerBody = reader?.querySelector<HTMLElement>('.reader-body');
+  // Reading the card: the hero turns to water and a ring of light runs out from the reader; when
+  // access is granted the letters wobble as the wave reaches them, one by one.
   if (reader && readerBody && water) {
     new MutationObserver(() => {
       const st = reader.dataset.state;
       const r = readerBody.getBoundingClientRect();
-      if (st === 'scan' || st === 'ok') water.ripple(r.left + r.width / 2, r.top);
-      if (st === 'ok') water.glow();
+      const cx = r.left + r.width / 2, cy = r.top;
+      if (st === 'scan') {
+        water.rise();
+        setTimeout(() => water.ripple(cx, cy), 250);
+        puppet?.play('think');
+      }
+      if (st === 'ok') {
+        water.ripple(cx, cy);
+        water.glow();
+        puppet?.play('celebrate');
+        letters.forEach((l) => {
+          const b = l.getBoundingClientRect();
+          const d = Math.hypot(b.left + b.width / 2 - cx, b.top + b.height / 2 - cy);
+          setTimeout(() => wobble(l), d * 0.9);
+        });
+        items.forEach((li) => {
+          const b = li.getBoundingClientRect();
+          const d = Math.hypot(b.left + b.width / 2 - cx, b.top + b.height / 2 - cy);
+          setTimeout(() => wobble(li.querySelector('img')!), d * 0.9);
+        });
+      }
     }).observe(reader, { attributes: true, attributeFilter: ['data-state'] });
   }
 
-  // Access granted: the water drains away like a wave, and the home page lands, dry.
+  // Access granted: the water drains away, the card is collected, and José's cursor goes back to
+  // showing off the stickers.
   addEventListener('jlp-enter', () => {
     water?.drain();
-    stage.classList.remove('is-away');
-    if (reduced) return;
-    land(gsap.timeline({ onComplete: () => ghost.start() }), 0.55, true);
+    ghost.stop();
+    setTimeout(() => {
+      puppet?.play('idle');
+      ghost.start();
+    }, 2200);
   });
 
-  // Another lap (from the end of the page): the water fills again and the card waits.
+  // Another lap (from the end of the page): a fresh card waits on the hero again.
   addEventListener('jlp-loop', () => {
     water?.fill();
     ghost.stop();
-    stage.classList.add('is-away');
+    touched = false;
+    setTimeout(showWay, 1500);
   });
 
   stage.classList.add('is-ready');
 
   if (!gated()) {
-    // Came in by a link to a chapter: no gate, no water, just the home page.
+    // Came in by a link to a chapter: no gate, just the home page.
     root.classList.remove('intro');
     if (!reduced) land(gsap.timeline({ onComplete: () => ghost.start() }), 0.15, true);
     return;
   }
 
   if (reduced || !root.classList.contains('intro')) {
-    stage.classList.add('is-away');
+    if (!reduced) land(gsap.timeline(), 0.15, true);
     toGate();
     return;
   }
 
-  playIntro({
-    hero, stage, letters, items, ghost, puppet,
-    away: (tl, at) => away(tl, at),
-    done: toGate,
-    skipped: () => stage.classList.add('is-away'),
-  });
+  playIntro({ hero, letters, items, puppet, done: toGate });
 }
 
 // ---------- Intro (after Candid's title card) ----------
 // 1. Paper, and a tiny wobbling mark at the bottom.
 // 2. The letters fly out of the mark along arcs, growing, and set into the big name, inked black.
 // 3. The cut: a flash, the paper turns to cobalt water, the letters to cream, the stickers pop in.
-// 4. A moment to look at it; then the title floats away and the card drops in for the gate.
+// 4. The hero, as it stays: and the way in pops on (the card and the reader).
 function playIntro(o: {
   hero: HTMLElement;
-  stage: HTMLElement;
   letters: HTMLElement[];
   items: HTMLElement[];
-  ghost: { start(): void; stop(): void };
   puppet: ReturnType<typeof mountPuppet> | null;
-  away: (tl: gsap.core.Timeline, at: number) => gsap.core.Timeline;
   done: () => void;
-  skipped: () => void;
 }) {
   const { hero, letters, items } = o;
   const intro = hero.querySelector<HTMLElement>('.intro');
   const mark = intro?.querySelector<HTMLElement>('.intro-mark');
   const face = hero.querySelector<HTMLElement>('.name .face-in');
-  if (!intro || !mark) {
-    o.skipped();
-    return o.done();
-  }
+  if (!intro || !mark) return o.done();
 
   const imgs = letters.filter((l): l is HTMLImageElement => l instanceof HTMLImageElement);
   const loaded = Promise.race([Promise.all(imgs.map((i) => i.decode().catch(() => {}))), wait(2600)]);
@@ -192,10 +198,7 @@ function playIntro(o: {
   // A click skips to the end.
   const skip = () => {
     if (tl) tl.progress(1);
-    else {
-      o.skipped();
-      finish();
-    }
+    else finish();
   };
   intro.addEventListener('click', skip);
   hero.addEventListener('click', () => {
@@ -250,9 +253,6 @@ function playIntro(o: {
     tl.to(items, { opacity: 1, scale: 1, duration: 0.9, ease: 'elastic.out(1, 0.55)', stagger: 0.07 }, cut + 0.05);
     tl.set([...letters, ...items], { clearProps: 'transform,opacity' }, cut + 1.1);
     tl.call(() => o.puppet?.play('idle'), [], cut + 1.6);
-
-    // Look at it a moment, then the title floats off and the gate opens up.
-    o.away(tl, cut + 2.1);
   });
 }
 
@@ -458,40 +458,71 @@ function initLens(stage: HTMLElement, name: HTMLElement, letters: HTMLElement[])
   });
 }
 
-// ---------- José's cursor: it visits the stickers until you grab one ----------
+// ---------- José's cursor ----------
+// At the gate it shows the way in: it grabs the card and carries it to the reader. Inside, it
+// visits the stickers until you grab one yourself.
 function initGhost(stage: HTMLElement, items: HTMLElement[]) {
   const ghost = stage.querySelector<HTMLElement>('.ghost');
   const tag = ghost?.querySelector<HTMLElement>('.ghost-tag');
   const nameText = tag?.textContent || 'José';
   const drag = tag?.dataset.drag || nameText;
+  const passHint = tag?.dataset.passHint || drag;
   let tl: gsap.core.Timeline | null = null;
-  let stopped = false;
+  let tourOff = false;
 
-  const spot = (li: HTMLElement) => {
+  const at = (el: Element, fx = 0.55, fy = 0.5) => {
     const s = stage.getBoundingClientRect();
-    const b = li.getBoundingClientRect();
-    return { x: b.left - s.left + b.width * 0.55, y: b.top - s.top + b.height * 0.5 };
+    const b = el.getBoundingClientRect();
+    return { x: b.left - s.left + b.width * fx, y: b.top - s.top + b.height * fy };
+  };
+  const kill = () => {
+    tl?.kill();
+    tl = null;
+    ghost?.classList.remove('is-on');
   };
 
   return {
     start() {
-      if (!ghost || !tag || stopped || reduced || !items.length) return;
+      if (!ghost || !tag || tourOff || reduced || !items.length) return;
+      kill();
       const order = [0, 3, 1, 4, 2].filter((i) => items[i]);
-      const first = spot(items[order[0]]);
-      gsap.set(ghost, { x: first.x - 120, y: first.y + 160 });
+      const first = at(items[order[0]]);
+      tag.textContent = nameText;
+      gsap.set(ghost, { x: first.x - 120, y: first.y + 160, scale: 1 });
       ghost.classList.add('is-on');
-      tl = gsap.timeline({ repeat: 2, onComplete: () => ghost.classList.remove('is-on') });
+      tl = gsap.timeline({ repeat: 1, onComplete: () => ghost.classList.remove('is-on') });
       order.forEach((i, k) => {
-        tl!.to(ghost, { x: () => spot(items[i]).x, y: () => spot(items[i]).y, duration: 1.1, ease: 'power2.inOut' }, k ? '+=0.5' : 0)
+        tl!.to(ghost, { x: () => at(items[i]).x, y: () => at(items[i]).y, duration: 1.1, ease: 'power2.inOut' }, k ? '+=0.5' : 0)
           .call(() => { tag.textContent = k % 2 ? nameText : drag; })
           .to(ghost, { scale: 0.86, duration: 0.12, yoyo: true, repeat: 1 })
           .call(() => wobble(items[i].querySelector('img')!));
       });
     },
-    stop() {
-      stopped = true;
-      tl?.kill();
-      ghost?.classList.remove('is-on');
+    /** Show the way in: from the card to the reader, a few times, until someone grabs the card. */
+    demo(pass: HTMLElement, reader: HTMLElement) {
+      if (!ghost || !tag || reduced || !gated()) return;
+      kill();
+      const from = at(pass, 0.5, 0.45);
+      gsap.set(ghost, { x: from.x + 140, y: from.y - 90, scale: 1 });
+      ghost.classList.add('is-on');
+      tag.textContent = passHint;
+      tl = gsap.timeline({ repeat: 3, repeatDelay: 1.6, onComplete: () => ghost.classList.remove('is-on') });
+      tl.to(ghost, { x: () => at(pass, 0.5, 0.45).x, y: () => at(pass, 0.5, 0.45).y, duration: 0.9, ease: 'power2.inOut' })
+        .to(ghost, { scale: 0.84, duration: 0.12 })
+        .call(() => {
+          pass.classList.remove('is-hint');
+          void pass.offsetWidth;
+          pass.classList.add('is-hint');
+        })
+        .to(ghost, { x: () => at(reader, 0.5, 0.2).x, y: () => at(reader, 0.5, 0.2).y, duration: 0.9, ease: 'power2.inOut' })
+        .to(ghost, { scale: 1, duration: 0.15 })
+        .to(ghost, { x: () => at(pass, 0.5, 0.45).x + 140, y: () => at(pass, 0.5, 0.45).y - 90, duration: 0.8, ease: 'power2.inOut', delay: 0.3 });
+    },
+    stop: kill,
+    /** Someone grabbed a sticker: no more tours. */
+    stopTour() {
+      tourOff = true;
+      kill();
     },
   };
 }

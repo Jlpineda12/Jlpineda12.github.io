@@ -48,6 +48,8 @@ void main() {
 }`;
 
 export type Water = {
+  /** The water rises into the hero. */
+  rise(): void;
   /** A ripple from a point on screen. */
   ripple(x: number, y: number): void;
   /** A brief glow through the water (access granted). */
@@ -108,7 +110,7 @@ export function initWater(hero: HTMLElement): Water | null {
   size();
   addEventListener('resize', size);
 
-  let raf = 0, t0 = performance.now(), on = true, visible = true;
+  let raf = 0, t0 = performance.now(), on = false, visible = true;
   let rip = { x: 0.5, y: 0.5, at: -1 };
   let glowAt = -1;
   const frame = (now: number) => {
@@ -151,6 +153,12 @@ export function initWater(hero: HTMLElement): Water | null {
   };
 
   const api: Water = {
+    rise() {
+      water.classList.remove('is-gone', 'is-draining');
+      water.classList.add('is-live');
+      on = true;
+      run();
+    },
     ripple(x, y) {
       const r = water.getBoundingClientRect();
       rip = { x: (x - r.left) / r.width, y: 1 - (y - r.top) / r.height, at: performance.now() };
@@ -177,7 +185,7 @@ export function initWater(hero: HTMLElement): Water | null {
         water.classList.add('is-draining');
         const end = () => {
           water.classList.add('is-gone');
-          water.classList.remove('is-draining', 'is-glow');
+          water.classList.remove('is-draining', 'is-glow', 'is-live');
           on = false;
           res();
         };
@@ -186,7 +194,7 @@ export function initWater(hero: HTMLElement): Water | null {
       });
     },
     fill() {
-      water.classList.remove('is-gone', 'is-draining', 'is-glow');
+      water.classList.remove('is-gone', 'is-draining', 'is-glow', 'is-live');
       on = true;
       t0 = performance.now();
       run();
