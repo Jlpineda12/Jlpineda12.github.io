@@ -1,0 +1,55 @@
+---
+// The seam between two chapters, a different one each time, moving with the scroll
+// (scripts/edges.ts draws it):
+//   melt   — the chapter above drips down into this one (hangs from the top, in `color`)
+//   wave   — this chapter rises like a wave that sways with the scroll
+//   blobs  — this chapter rises as bubbles that merge like liquid
+//   dome   — this chapter rises as a dome that flattens out
+//   zipper — this chapter closes over the one above like a zip
+//   pixels — this chapter steps in block by block, like an arcade screen
+// Every kind but melt is drawn in the chapter's own colour, just above its top edge.
+interface Props {
+  kind: 'melt' | 'wave' | 'blobs' | 'dome' | 'zipper' | 'pixels';
+  color?: string;
+}
+const { kind, color } = Astro.props;
+const id = `goo-edge-${kind}`;
+---
+<div class:list={['edge', `edge-${kind}`]} data-edge={kind} aria-hidden="true" style={color ? `--edge:${color}` : undefined}>
+  <svg viewBox="0 0 1440 200" preserveAspectRatio="none">
+    {kind === 'blobs' && (
+      <defs>
+        <filter id={id} x="0" y="-20%" width="100%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b" />
+          <feColorMatrix in="b" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10" />
+        </filter>
+      </defs>
+    )}
+    {kind === 'blobs' ? <g filter={`url(#${id})`}><rect x="-40" y="170" width="1520" height="60" /></g> : <path />}
+  </svg>
+</div>
+
+<style>
+  .edge {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: clamp(90px, 12vw, 200px);
+    translate: 0 -99%;
+    pointer-events: none;
+    fill: var(--edge, var(--bg));
+  }
+
+  /* The melt hangs from the top of its chapter instead, in the colour of the one above. */
+  .edge-melt { translate: 0 -1px; }
+
+  .edge svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    overflow: visible;
+  }
+</style>

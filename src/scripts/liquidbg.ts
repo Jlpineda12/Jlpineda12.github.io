@@ -39,6 +39,8 @@ void main() {
   col *= mix(0.78, 1.0, smoothstep(1.3, 0.2, length((uv - 0.5) * vec2(asp, 1.0))));
   float grain = hash(gl_FragCoord.xy + floor(t * 24.0) * 13.1) - 0.5;
   col += grain * 0.045;
+  // The bottom edge settles on one exact colour: the cobalt that drips into the next chapter.
+  col = mix(col, vec3(0.094, 0.122, 0.471), smoothstep(0.14, 0.0, uv.y));
   gl_FragColor = vec4(col, 1.0);
 }`;
 

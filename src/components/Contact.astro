@@ -1,6 +1,7 @@
 ---
 // Contact: a yellow spiral notebook. "Let's make something" gets circled with a pen as it comes into
 // view, and José naps on top of the page until someone goes for the email.
+import Edge from './Edge.astro';
 import Puppet from './Puppet.astro';
 import SocialLinks from './SocialLinks.astro';
 import { getData, t, type Lang } from '../i18n';
@@ -12,6 +13,7 @@ const [user, domain] = site.email.split('@');
 const subject = encodeURIComponent(ui.subject);
 ---
 <section data-scene="contact" class="contact col-wide" id="contacto" aria-labelledby="contact-title">
+  <Edge kind="zipper" />
   <div class="book">
     <div class="rings" aria-hidden="true">{Array.from({ length: 9 }, () => <i></i>)}</div>
 

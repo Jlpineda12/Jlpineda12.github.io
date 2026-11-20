@@ -4,6 +4,7 @@
 // the quiet column (after Candid's "Studio"), his email in a pill, a card with the facts and a
 // controller he modelled in Blender that turns under the pointer. Then his achievements, two by
 // two, and his skills.
+import Edge from './Edge.astro';
 import Puppet from './Puppet.astro';
 import { getData, t, achievements, type Lang } from '../i18n';
 import h3d from '../data/hero3d.json';
@@ -20,6 +21,7 @@ const talk = ui.talk;
 const withEmail = (line: string) => line.replace('{email}', site.email);
 ---
 <section data-scene="about" class="studio" id="quien-soy" aria-labelledby="about-title">
+  <Edge kind="melt" color="#181f78" />
   <div class="hang" data-lanyard-scope>
     <div class="lanyard" data-lanyard>
       <div class="strap" aria-hidden="true"><span class="reel"></span></div>
@@ -215,97 +217,6 @@ const withEmail = (line: string) => line.replace('{email}', site.email);
   .facts dt { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #2a2a2e8c; }
   .facts dd { margin: 0; font-weight: 700; line-height: 1.3; }
 
-  /* ---------- The lanyard (scripts/lanyard.ts) ---------- */
-  .lanyard {
-    position: absolute;
-    z-index: 2;
-    left: var(--anchor, 50%);
-    top: 0;
-    width: 0;
-    height: 0;
-    transition: left 1s var(--ease-out);
-  }
-
-  .swing {
-    --len: var(--strap);
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform-origin: 0 0;
-    will-change: transform;
-  }
-
-  .strap {
-    position: absolute;
-    left: -15px;
-    top: -20px;
-    width: 30px;
-    height: calc(var(--strap-len, var(--strap)) + 24px);
-    transform-origin: 15px 20px;
-    rotate: var(--sa, 0deg);
-    background:
-      linear-gradient(90deg, #00000026 0 3px, #0000 3px calc(100% - 3px), #00000026 0),
-      repeating-linear-gradient(0deg, #ffffff12 0 2px, #0000 2px 5px),
-      var(--red);
-  }
-
-  /* The badge reel at the end of the strap; past it, a thin cord pulls out. */
-  .reel {
-    position: absolute;
-    left: -2px;
-    top: calc(100% - 18px);
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 50% 50%, #2a2a2e 0 4px, #0000 4.5px),
-      radial-gradient(circle at 35% 30%, #fff 0, #e6e8ee 30%, #a9aeb9 75%, #8b919d);
-    box-shadow: 0 0 0 3px var(--red), 0 4px 6px #0000004d;
-  }
-
-  /* Drawn from the reel to the clip, wherever the card has been pulled. */
-  .cord {
-    position: absolute;
-    left: -1px;
-    top: 0;
-    width: 2px;
-    height: 0;
-    border-radius: 2px;
-    background: #2a2a2e;
-    transform-origin: 1px 0;
-  }
-
-  .clip {
-    position: absolute;
-    left: -21px;
-    top: calc(var(--len) - 6px);
-    width: 42px;
-    max-width: none;
-    height: auto;
-    overflow: visible;
-    filter: drop-shadow(0 3px 2px #0000002e);
-  }
-
-  .badge {
-    position: absolute;
-    left: calc(var(--badge-w) / -2);
-    top: calc(var(--len) + 50px);
-    width: var(--badge-w);
-    height: var(--badge-h);
-    transform-origin: 50% -30px;
-    perspective: 900px;
-    touch-action: none;
-    cursor: grab;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  .badge.is-grabbed {
-    cursor: grabbing;
-  }
-
-
-  .lanyard.is-waiting .swing { visibility: hidden; }
 
   .id-card {
     position: absolute;

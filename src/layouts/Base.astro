@@ -34,14 +34,12 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600..700&family=TikTok+Sans:wdth,wght@100..150,400..900&display=swap" rel="stylesheet" />
     <script is:inline>
-      // Every time the home page loads, the intro plays (his name animates in) and ends at the gate:
-      // scan the Creative ID to get in. A link straight to a chapter (#…) skips both; reduced motion
-      // skips the intro but keeps the card.
+      // Every time the home page loads, the intro plays (his name animates in). A link straight to a
+      // chapter (#…) or reduced motion skips it.
       (function () {
         var d = document.documentElement;
         d.classList.add('js');
         if (location.hash) return;
-        d.classList.add('gate');
         try {
           if (!matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('intro');
         } catch (e) {}

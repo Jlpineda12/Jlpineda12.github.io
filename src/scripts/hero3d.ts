@@ -2,12 +2,10 @@
 // lens over the name and José's own cursor showing what can be grabbed.
 import { gsap } from 'gsap';
 import { mountPuppet } from './puppet';
-import { travelTo } from './motion';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-const gated = () => document.documentElement.classList.contains('gate');
 
 const hooked = new WeakSet<Element>();
 function wobble(el: Element) {
@@ -38,8 +36,6 @@ export function initHero3d() {
 
   letters.forEach((l) => l.addEventListener('pointerenter', () => wobble(l)));
 
-  const ghost = initGhost(stage, items);
-  initStickers(hero, items, () => ghost.stopTour(), puppet);
   if (fine && !reduced) initLens(stage, name, letters);
 
   // The name lands: each letter drops, squashes on the line and springs back; José's face pops
@@ -74,78 +70,18 @@ export function initHero3d() {
     return tl;
   };
 
-  const pass = hero.querySelector<HTMLElement>('[data-pass]');
-  const reader = hero.querySelector<HTMLElement>('[data-reader]');
-  const readerBody = reader?.querySelector<HTMLElement>('.reader-body');
-
-  // The way in appears: the card pops onto the hero, the reader slides up, and José's cursor
-  // shows the move (card → reader) until someone grabs it.
+  // When the intro is over the page is free: no gate any more.
   const toGate = () => {
     root.classList.remove('intro');
     window.dispatchEvent(new Event('jlp-drop'));
-    if (pass && readerBody) setTimeout(showWay, 1200);
   };
-  // Only while nobody has touched the card yet and the reader is waiting.
-  let touched = false;
-  const showWay = () => {
-    if (pass && readerBody && !touched && reader?.dataset.state === 'idle') ghost.demo(pass, readerBody);
-  };
-  pass?.addEventListener('pointerdown', () => {
-    touched = true;
-    ghost.stop();
-  });
 
-  // Reading the card: José thinks while the laser passes; on access the letters and stickers wobble
-  // like jelly as the wave from the reader reaches them, one by one.
-  if (reader && readerBody) {
-    new MutationObserver(() => {
-      const st = reader.dataset.state;
-      if (st === 'scan') puppet?.play('think');
-      if (st !== 'ok') return;
-      const r = readerBody.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top;
-      puppet?.play('celebrate');
-      const wave = (el: Element | null, box: Element) => {
-        if (!el) return;
-        const b = box.getBoundingClientRect();
-        setTimeout(() => wobble(el), Math.hypot(b.left + b.width / 2 - cx, b.top + b.height / 2 - cy) * 0.8);
-      };
-      letters.forEach((l) => wave(l, l));
-      items.forEach((li) => wave(li.querySelector('img'), li));
-    }).observe(reader, { attributes: true, attributeFilter: ['data-state'] });
-  }
-
-  // Access granted: the card is collected and the page glides straight on to the next chapter.
-  addEventListener('jlp-enter', () => {
-    ghost.stop();
-    const next = document.getElementById('quien-soy');
-    if (next && scrollY < innerHeight * 0.5) {
-      setTimeout(() => {
-        next.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
-        history.replaceState(null, '', '#quien-soy');
-      }, reduced ? 0 : 650);
-    }
-    setTimeout(() => {
-      puppet?.play('idle');
-      ghost.start();
-    }, 2200);
-  });
-
-  // Another lap (from the end of the page): a fresh card waits on the hero again.
+  // Another lap (from the end of the page): back at the top, the name lands again.
   addEventListener('jlp-loop', () => {
-    ghost.stop();
-    touched = false;
-    setTimeout(showWay, 1500);
+    if (!reduced) land(gsap.timeline(), 0.1, true);
   });
 
   stage.classList.add('is-ready');
-
-  if (!gated()) {
-    // Came in by a link to a chapter: no gate, just the home page.
-    root.classList.remove('intro');
-    if (!reduced) land(gsap.timeline({ onComplete: () => ghost.start() }), 0.15, true);
-    return;
-  }
 
   if (reduced || !root.classList.contains('intro')) {
     if (!reduced) land(gsap.timeline(), 0.15, true);
@@ -160,7 +96,7 @@ export function initHero3d() {
 // 1. Paper, and a tiny wobbling mark at the bottom.
 // 2. The letters fly out of the mark along arcs, growing, and set into the big name, inked black.
 // 3. The cut: a flash, the paper turns to cobalt, the letters to cream, the stickers pop in.
-// 4. The hero, as it stays: and the way in pops on (the card and the reader).
+// 4. The hero, as it stays, and the way in drops in: his ID, hanging under the name.
 function playIntro(o: {
   hero: HTMLElement;
   letters: HTMLElement[];
@@ -248,107 +184,6 @@ function playIntro(o: {
   });
 }
 
-// ---------- Stickers: grab, throw, bounce; a tap opens that world ----------
-function initStickers(hero: HTMLElement, items: HTMLElement[], onGrab: () => void, puppet: ReturnType<typeof mountPuppet> | null) {
-  items.forEach((li) => {
-    const btn = li.querySelector<HTMLButtonElement>('.sticker')!;
-    const group = btn.dataset.group!;
-    let x = 0, y = 0, vx = 0, vy = 0, r = 0;
-    let held = false, moved = 0, raf = 0, px = 0, py = 0, last = 0;
-
-    const apply = () => {
-      btn.style.setProperty('--dx', `${x.toFixed(1)}px`);
-      btn.style.setProperty('--dy', `${y.toFixed(1)}px`);
-      btn.style.setProperty('--dr', `${r.toFixed(2)}deg`);
-    };
-    // How far the sticker may travel from its resting place and stay on the hero.
-    const limits = () => {
-      const h = hero.getBoundingClientRect();
-      const b = li.getBoundingClientRect();
-      const m = b.width * 0.25;
-      return { x0: h.left - b.left - m, x1: h.right - b.right + m, y0: h.top - b.top + 70, y1: h.bottom - b.bottom + m };
-    };
-    const step = () => {
-      if (held) {
-        r += (Math.max(-28, Math.min(28, vx * 1.6)) - r) * 0.2;
-      } else {
-        vx *= 0.93;
-        vy *= 0.93;
-        x += vx;
-        y += vy;
-        const l = limits();
-        if (x < l.x0) { x = l.x0; vx = Math.abs(vx) * 0.6; }
-        if (x > l.x1) { x = l.x1; vx = -Math.abs(vx) * 0.6; }
-        if (y < l.y0) { y = l.y0; vy = Math.abs(vy) * 0.6; }
-        if (y > l.y1) { y = l.y1; vy = -Math.abs(vy) * 0.6; }
-        r += (vx * 0.8 - r) * 0.12;
-      }
-      apply();
-      if (held || Math.abs(vx) + Math.abs(vy) > 0.08 || Math.abs(r) > 0.08) raf = requestAnimationFrame(step);
-      else raf = 0;
-    };
-    const go = () => {
-      if (!raf) raf = requestAnimationFrame(step);
-    };
-
-    const open = () => {
-      if (gated()) {
-        // Still at the gate: the sticker hops, and José points at the card.
-        wobble(btn.querySelector('img')!);
-        gsap.fromTo(btn, { y: 0 }, { y: -26, duration: 0.22, ease: 'power2.out', yoyo: true, repeat: 1 });
-        puppet?.play('think');
-        return;
-      }
-      travelTo('#consola');
-      setTimeout(() => document.querySelector<HTMLButtonElement>(`#consola .chip[data-group="${group}"]`)?.click(), 1300);
-    };
-
-    btn.addEventListener('pointerdown', (e) => {
-      if (e.button) return;
-      held = true;
-      moved = 0;
-      px = e.clientX;
-      py = e.clientY;
-      last = performance.now();
-      vx = vy = 0;
-      btn.setPointerCapture(e.pointerId);
-      btn.classList.add('is-held');
-      onGrab();
-      go();
-    });
-    btn.addEventListener('pointermove', (e) => {
-      if (!held) return;
-      const dx = e.clientX - px, dy = e.clientY - py;
-      px = e.clientX;
-      py = e.clientY;
-      x += dx;
-      y += dy;
-      moved += Math.abs(dx) + Math.abs(dy);
-      const now = performance.now();
-      const k = 16 / Math.max(8, now - last);
-      last = now;
-      const cap = (v: number) => Math.max(-42, Math.min(42, v));
-      vx = cap(vx * 0.4 + dx * k * 0.6);
-      vy = cap(vy * 0.4 + dy * k * 0.6);
-    });
-    const up = () => {
-      if (!held) return;
-      held = false;
-      btn.classList.remove('is-held');
-      if (performance.now() - last > 80) vx = vy = 0; // held still before letting go: no throw
-      if (reduced) vx = vy = 0;
-      if (moved < 6) open();
-      go();
-    };
-    btn.addEventListener('pointerup', up);
-    btn.addEventListener('pointercancel', up);
-    // Keyboard: Enter or Space opens the world.
-    btn.addEventListener('click', (e) => {
-      if (e.detail === 0) open();
-    });
-  });
-}
-
 // ---------- The lens: a drop of glass that magnifies the name and bursts on a click ----------
 function initLens(stage: HTMLElement, name: HTMLElement, letters: HTMLElement[]) {
   const lens = stage.querySelector<HTMLElement>('.lens');
@@ -396,11 +231,6 @@ function initLens(stage: HTMLElement, name: HTMLElement, letters: HTMLElement[])
 
   stage.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse' || bursting) return;
-    if (gated()) {
-      on = false;
-      lens.classList.remove('is-on');
-      return;
-    }
     const n = name.getBoundingClientRect();
     const s = stage.getBoundingClientRect();
     const over = !(e.target as Element).closest('.sticker, a, button');
@@ -448,73 +278,4 @@ function initLens(stage: HTMLElement, name: HTMLElement, letters: HTMLElement[])
       bursting = false;
     }, 700);
   });
-}
-
-// ---------- José's cursor ----------
-// At the gate it shows the way in: it grabs the card and carries it to the reader. Inside, it
-// visits the stickers until you grab one yourself.
-function initGhost(stage: HTMLElement, items: HTMLElement[]) {
-  const ghost = stage.querySelector<HTMLElement>('.ghost');
-  const tag = ghost?.querySelector<HTMLElement>('.ghost-tag');
-  const nameText = tag?.textContent || 'José';
-  const drag = tag?.dataset.drag || nameText;
-  const passHint = tag?.dataset.passHint || drag;
-  let tl: gsap.core.Timeline | null = null;
-  let tourOff = false;
-
-  const at = (el: Element, fx = 0.55, fy = 0.5) => {
-    const s = stage.getBoundingClientRect();
-    const b = el.getBoundingClientRect();
-    return { x: b.left - s.left + b.width * fx, y: b.top - s.top + b.height * fy };
-  };
-  const kill = () => {
-    tl?.kill();
-    tl = null;
-    ghost?.classList.remove('is-on');
-  };
-
-  return {
-    start() {
-      if (!ghost || !tag || tourOff || reduced || !items.length) return;
-      kill();
-      const order = [0, 3, 1, 4, 2].filter((i) => items[i]);
-      const first = at(items[order[0]]);
-      tag.textContent = nameText;
-      gsap.set(ghost, { x: first.x - 120, y: first.y + 160, scale: 1 });
-      ghost.classList.add('is-on');
-      tl = gsap.timeline({ repeat: 1, onComplete: () => ghost.classList.remove('is-on') });
-      order.forEach((i, k) => {
-        tl!.to(ghost, { x: () => at(items[i]).x, y: () => at(items[i]).y, duration: 1.1, ease: 'power2.inOut' }, k ? '+=0.5' : 0)
-          .call(() => { tag.textContent = k % 2 ? nameText : drag; })
-          .to(ghost, { scale: 0.86, duration: 0.12, yoyo: true, repeat: 1 })
-          .call(() => wobble(items[i].querySelector('img')!));
-      });
-    },
-    /** Show the way in: from the card to the reader, a few times, until someone grabs the card. */
-    demo(pass: HTMLElement, reader: HTMLElement) {
-      if (!ghost || !tag || reduced || !gated()) return;
-      kill();
-      const from = at(pass, 0.5, 0.45);
-      gsap.set(ghost, { x: from.x + 140, y: from.y - 90, scale: 1 });
-      ghost.classList.add('is-on');
-      tag.textContent = passHint;
-      tl = gsap.timeline({ repeat: 3, repeatDelay: 1.6, onComplete: () => ghost.classList.remove('is-on') });
-      tl.to(ghost, { x: () => at(pass, 0.5, 0.45).x, y: () => at(pass, 0.5, 0.45).y, duration: 0.9, ease: 'power2.inOut' })
-        .to(ghost, { scale: 0.84, duration: 0.12 })
-        .call(() => {
-          pass.classList.remove('is-hint');
-          void pass.offsetWidth;
-          pass.classList.add('is-hint');
-        })
-        .to(ghost, { x: () => at(reader, 0.5, 0.2).x, y: () => at(reader, 0.5, 0.2).y, duration: 0.9, ease: 'power2.inOut' })
-        .to(ghost, { scale: 1, duration: 0.15 })
-        .to(ghost, { x: () => at(pass, 0.5, 0.45).x + 140, y: () => at(pass, 0.5, 0.45).y - 90, duration: 0.8, ease: 'power2.inOut', delay: 0.3 });
-    },
-    stop: kill,
-    /** Someone grabbed a sticker: no more tours. */
-    stopTour() {
-      tourOff = true;
-      kill();
-    },
-  };
 }

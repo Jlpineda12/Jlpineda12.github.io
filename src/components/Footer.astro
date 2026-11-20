@@ -1,4 +1,5 @@
 ---
+import Edge from './Edge.astro';
 import Puppet from './Puppet.astro';
 import { getData, t, type Lang } from '../i18n';
 import LangSwitch from './LangSwitch.astro';
@@ -11,6 +12,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const year = new Date().getFullYear();
 ---
 <footer data-scene="footer" class="footer on-dark wrap">
+  <Edge kind="pixels" />
   <!-- The arcade ending: a countdown while José waits for an answer. -->
   <div class="continue">
     <div class="cont-art">
