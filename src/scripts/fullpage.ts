@@ -1,7 +1,7 @@
 // The site as a deck of screens. Every chapter fills the screen exactly; one scroll (the wheel, a
 // swipe, the arrow keys, PageUp/PageDown, Space) or a link moves to the next one through its own
-// transition (scripts/transitions.ts: a dive into José's face, an old TV switching channel, a
-// notebook page turning, a keyboard being pressed, a postcard being sent). Going back up slides.
+// transition (scripts/transitions.ts: a dive into José's face, a cartridge, a page turning, a
+// laptop covered in stickers, a postcard flying in). Going back up slides.
 // A chapter that is taller than the screen (a small phone) scrolls inside first. A chapter can ask
 // for steps (data-steps="n"): the notebook turns its pages with the same gestures before moving on.
 // Without scripts the chapters simply stack and scroll; with reduced motion they cross-fade.
@@ -57,6 +57,9 @@ export function initFullpage() {
     // Its entrance plays every time it is shown.
     s.el.querySelectorAll('.reveal').forEach((r) => r.classList.remove('is-in'));
     requestAnimationFrame(() => requestAnimationFrame(() => s.el.querySelectorAll('.reveal').forEach((r) => r.classList.add('is-in'))));
+    // The pictures the next transition shows are fetched ahead, so they are there when it plays.
+    const ahead = slides[i + 1]?.el.dataset.txArt;
+    if (ahead) ahead.split(',').forEach((src) => { new Image().src = src; });
     window.dispatchEvent(new CustomEvent('fp-change', { detail: { index: i, id: s.id } }));
     window.dispatchEvent(new Event(`fp-enter-${s.id}`));
   };
@@ -165,7 +168,7 @@ export function initFullpage() {
     tEdge = true;
   }, { passive: true });
   addEventListener('touchend', (e) => {
-    if (!tEdge || (e.target as Element).closest('[data-fp-free]')) return;
+    if (!tEdge || (e.target as Element).closest('[data-fp-free], [data-fp-drag]')) return;
     const dy = ty - e.changedTouches[0].clientY;
     const dx = tx - e.changedTouches[0].clientX;
     if (Math.abs(dy) < 60 || Math.abs(dx) > Math.abs(dy)) return;
@@ -194,7 +197,7 @@ export function initFullpage() {
   const byId = (id: string) => slides.findIndex((s) => s.id === id || s.el.querySelector(`#${CSS.escape(id)}`));
   document.addEventListener('click', (e) => {
     const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
-    if (!a) return;
+    if (!a || a.hasAttribute("data-rewind")) return;
     const id = a.getAttribute('href')!.slice(1);
     const k = byId(id);
     if (k < 0 && id !== 'inicio') return;

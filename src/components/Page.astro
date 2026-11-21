@@ -4,14 +4,19 @@ import Hero from './Hero.astro';
 import Studio from './Studio.astro';
 import Console from './Console.astro';
 import Process from './Process.astro';
-import Playground from './Playground.astro';
+import Tools from './Tools.astro';
 import Contact from './Contact.astro';
 import Journey from './Journey.astro';
 import PuppetSprite from './PuppetSprite.astro';
-import { t, type Lang } from '../i18n';
+import { getData, t, type Lang } from '../i18n';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const ui = t(lang);
+const { projects } = getData(lang);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+// The cartridge the projects arrive in shows a few of them on its label.
+const txArt = projects.slice(0, 5).map((p) => base + p.poster).join(',');
+const txSub = `${projects.length} ${ui.candid.txSub}`;
 ---
 <Base lang={lang}>
   <PuppetSprite />
@@ -20,9 +25,9 @@ const ui = t(lang);
   <main id="contenido" class="deck" data-deck>
     <div class="slide" data-slide="inicio" data-title={ui.home}><Hero lang={lang} /></div>
     <div class="slide" data-slide="quien-soy" data-title={ui.navAbout} data-tx="dive"><Studio lang={lang} /></div>
-    <div class="slide" data-slide="proyectos" data-title={ui.navWorlds} data-tx="boot"><Console lang={lang} /></div>
+    <div class="slide" data-slide="proyectos" data-title={ui.navWorlds} data-tx="boot" data-tx-art={txArt} data-tx-sub={txSub}><Console lang={lang} /></div>
     <div class="slide" data-slide="como-trabajo" data-title={ui.navProcess} data-tx="page" data-steps="4"><Process lang={lang} /></div>
-    <div class="slide" data-slide="inventario" data-title={ui.candid.tools} data-tx="keys"><Playground lang={lang} /></div>
+    <div class="slide" data-slide="inventario" data-title={ui.candid.tools} data-tx="stick"><Tools lang={lang} /></div>
     <div class="slide" data-slide="contacto" data-title={ui.navContact} data-tx="postcard"><Contact lang={lang} /></div>
   </main>
   <Journey lang={lang} />

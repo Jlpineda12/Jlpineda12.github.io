@@ -32,7 +32,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600..700&family=TikTok+Sans:wdth,wght@100..150,400..900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Caveat:wght@600..700&family=TikTok+Sans:wdth,wght@100..150,400..900&display=swap" rel="stylesheet" />
     <script is:inline>
       // Every time the home page loads, the intro plays (his name animates in). A link straight to a
       // chapter (#…) or reduced motion skips it.
@@ -56,7 +56,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
       sameAs: site.socials.map((s) => s.url),
     })} />
   </head>
-  <body data-travelling={ui.travelling} data-rewind-label={ui.rewinding}>
+  <body data-rewind-label={ui.rewinding}>
     <a class="skip" href="#contenido">{ui.skip}</a>
     <slot />
   </body>

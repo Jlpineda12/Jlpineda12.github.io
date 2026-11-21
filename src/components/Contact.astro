@@ -1,6 +1,8 @@
 ---
-// Contact: a yellow spiral notebook. "Let's make something" gets circled with a pen as it comes into
-// view, and José naps on top of the page until someone goes for the email.
+// Contact: a postcard to José. Write your idea on the left, sign it, and send it: the card gets
+// postmarked and flies off, and your email app opens with the message ready. The right half is the
+// address side (his email, role and city) with a stamp of José. Under it: his socials, the © and
+// "another lap" back to the start.
 import Puppet from './Puppet.astro';
 import SocialLinks from './SocialLinks.astro';
 import { getData, t, type Lang } from '../i18n';
@@ -8,282 +10,316 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const { site } = getData(lang);
 const ui = t(lang);
+const pc = ui.candid.pc;
 const [user, domain] = site.email.split('@');
-const subject = encodeURIComponent(ui.subject);
+const year = new Date().getFullYear();
 ---
-<section data-scene="contact" class="contact col-wide" id="contacto" aria-labelledby="contact-title">
-  <div class="book">
-    <div class="rings" aria-hidden="true">{Array.from({ length: 9 }, () => <i></i>)}</div>
+<section data-scene="contact" class="contact" id="contacto" aria-labelledby="contact-title">
+  <div class="pc-wrap">
+    <h2 class="pc-title" id="contact-title">
+      <span>{ui.letsMake}</span>
+      <svg class="pc-circle" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
+        <path pathLength="1" d="M310 18 C 470 12 590 50 586 104 C 582 160 440 190 290 186 C 130 182 14 156 14 100 C 14 46 140 16 300 22 C 360 24 420 30 470 40" />
+      </svg>
+    </h2>
+    <p class="pc-lead">{ui.contactTitle}</p>
 
-    <div class="sleeper" aria-hidden="true">
-      <div class="nap"><Puppet pose="sleep" /></div>
-      <span class="zzz"><span>z</span><span>z</span><span>Z</span></span>
-    </div>
+    <form class="pc" data-pc data-mail={site.email} data-subject={ui.subject}>
+      <div class="pc-card">
+        <div class="pc-msg">
+          <label class="sr-only" for="pc-text">{pc.write}</label>
+          <textarea id="pc-text" name="msg" data-fp-free placeholder={pc.write} maxlength="900"></textarea>
+          <label class="pc-from"><span>{pc.from}:</span> <input name="name" placeholder={pc.name} autocomplete="name" maxlength="60" /></label>
+        </div>
 
-    <div class="page">
-      <h2 class="title" id="contact-title">
-        <span class="title-in">{ui.letsMake}</span>
-        <svg class="circle" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M310 18 C 470 12 590 50 586 104 C 582 160 440 190 290 186 C 130 182 14 156 14 100 C 14 46 140 16 300 22 C 360 24 420 30 470 40" />
-        </svg>
-      </h2>
-      <p class="lead sub">{ui.contactTitle}</p>
+        <div class="pc-addr">
+          <div class="pc-stamp" aria-hidden="true">
+            <span class="pc-stamp-in"><Puppet pose="happy" live={false} view="430 640 820 900" /></span>
+            <small>COL · 2026</small>
+          </div>
+          <svg class="pc-mark" viewBox="0 0 220 110" aria-hidden="true">
+            <defs><path id="pc-ring" d="M55 55 m-40 0 a40 40 0 1 1 80 0 a40 40 0 1 1 -80 0" /></defs>
+            <circle cx="55" cy="55" r="46" /><circle cx="55" cy="55" r="30" />
+            <text><textPath href="#pc-ring">{pc.post.toUpperCase()} · {year} ·</textPath></text>
+            <text x="55" y="60" text-anchor="middle" class="pc-mark-d">✉</text>
+            <path d="M104 34q14 -8 28 0t28 0t28 0t28 0M104 55q14 -8 28 0t28 0t28 0t28 0M104 76q14 -8 28 0t28 0t28 0t28 0" />
+          </svg>
 
-      <a class="email" href={`mailto:${site.email}?subject=${subject}`}>
-        <span class="email-in">{user}<span class="at">@</span><wbr />{domain}</span>
-      </a>
-      <p class="wake hand" aria-live="polite" data-asleep={ui.asleep} data-awake={ui.awake}>{ui.asleep}</p>
-
-      <div class="page-foot">
-        <p class="hand reply">{ui.reply}</p>
-        <SocialLinks lang={lang} />
+          <p class="pc-line"><span>{pc.to}:</span> <b>{site.name.first} {site.name.last}</b></p>
+          <p class="pc-line"><a class="pc-mail" href={`mailto:${site.email}?subject=${encodeURIComponent(ui.subject)}`}>{user}@<wbr />{domain}</a></p>
+          <p class="pc-line">{site.role}</p>
+          <p class="pc-line">{pc.where}</p>
+          <button class="pc-send" type="submit">{pc.send} <span aria-hidden="true">✉</span></button>
+        </div>
       </div>
+    </form>
+    <p class="pc-sent" aria-live="polite" data-sent={pc.sent}></p>
+
+    <div class="pc-foot">
+      <SocialLinks lang={lang} />
+      <p class="pc-reply">{ui.reply}</p>
+      <p class="pc-copy">© {year} {site.name.first} {site.name.last} · <a href="#inicio" data-rewind>{ui.again}</a></p>
     </div>
   </div>
 </section>
 
 <style>
-  .contact {
-    position: relative;
-    padding-block: var(--section);
+  .contact { position: relative; }
+
+  .pc-wrap {
     display: grid;
-    place-items: center;
-  }
-
-  .book {
-    position: relative;
-    width: min(100%, 980px);
-    rotate: -1.2deg;
-  }
-
-  .page {
-    position: relative;
-    padding: clamp(48px, 6vw, 88px) clamp(28px, 5vw, 80px) clamp(32px, 4vw, 56px) clamp(64px, 8vw, 120px);
-    background:
-      radial-gradient(70% 60% at 85% 10%, #ffffff40, #fff0 60%),
-      var(--yellow);
-    border-radius: 4px 14px 14px 4px;
-    box-shadow:
-      0 2px 0 #0000000f,
-      8px 10px 0 -2px #f0cf33,
-      14px 18px 0 -4px #e2bf22,
-      0 40px 60px -30px #2a2a2e80;
+    justify-items: center;
+    gap: clamp(8px, 1.6svh, 18px);
+    width: min(100% - 2 * var(--margin), 980px);
+    margin-inline: auto;
     text-align: center;
   }
 
-  /* The spiral binding down the left side. */
-  .rings {
-    position: absolute;
-    z-index: 2;
-    left: clamp(14px, 2.4vw, 30px);
-    top: 6%;
-    bottom: 6%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .rings i {
+  .pc-title {
     position: relative;
-    width: clamp(30px, 3.4vw, 44px);
-    height: 12px;
-    border-radius: 99px;
-    border: 3.5px solid #2a2a2e;
-    border-left-color: transparent;
-  }
-
-  .rings i::before {
-    content: '';
-    position: absolute;
-    right: 2px;
-    top: 50%;
-    width: 9px;
-    height: 9px;
-    translate: 0 -50%;
-    border-radius: 50%;
-    background: #c9a91a;
-  }
-
-  .title {
-    position: relative;
-    display: inline-block;
-    padding: 0.18em 0.6em 0.26em;
-    font-family: var(--hand);
-    font-weight: 700;
-    font-size: clamp(54px, 8vw, 128px);
-    line-height: 0.9;
-  }
-
-  .circle {
-    position: absolute;
-    inset: -6% -4%;
-    width: 108%;
-    height: 112%;
-    overflow: visible;
-    pointer-events: none;
-  }
-
-  .circle path {
-    fill: none;
-    stroke: var(--ink);
-    stroke-width: 4;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-    stroke-dasharray: 1600;
-    stroke-dashoffset: 0;
-  }
-
-  :global(.js) .circle path { stroke-dashoffset: 1600; }
-  :global(.js) .contact.is-in .circle path { stroke-dashoffset: 0; transition: stroke-dashoffset 1.2s 0.2s var(--ease-out); }
-
-  .sub {
-    max-width: 30ch;
-    margin: 18px auto 0;
-    font-weight: 600;
-  }
-
-  .email {
-    display: inline-block;
-    margin-top: clamp(28px, 4vw, 48px);
-    font-size: clamp(22px, 3.6vw, 52px);
+    padding: 0.1em 0.5em;
+    font-size: clamp(2rem, 1.2rem + 3.4vw, 4rem);
     font-weight: 900;
     font-stretch: 125%;
-    letter-spacing: -0.01em;
-    line-height: 1.05;
-    text-decoration: none;
-    overflow-wrap: anywhere;
-    background: linear-gradient(var(--ink), var(--ink)) 0 100% / 100% 4px no-repeat;
-    padding-bottom: 6px;
-    transition: background-size 0.3s var(--ease-out), color 0.2s;
+    letter-spacing: -0.03em;
+    line-height: 1;
   }
 
-  .email:hover {
-    color: var(--red);
-    background-image: linear-gradient(var(--red), var(--red));
-    background-size: 100% 8px;
-  }
-
-  .at { color: var(--red); }
-
-  .wake {
-    margin-top: 12px;
-    font-size: 24px;
-  }
-
-  .page-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: clamp(36px, 5vw, 64px);
-    text-align: left;
-  }
-
-  .reply { font-size: 24px; }
-
-  /* José naps on the top edge of the notebook. */
-  .sleeper {
+  .pc-circle {
     position: absolute;
-    z-index: 3;
-    right: 8%;
-    top: 0;
-    width: clamp(110px, 14vw, 170px);
-    aspect-ratio: 920 / 1140;
-    translate: 0 -62%;
-    rotate: 4deg;
-    cursor: pointer;
-  }
-
-  .nap {
-    position: absolute;
-    inset: 0;
-    clip-path: inset(-40% -40% 34% -40%);
-  }
-
-  .nap :global(.pp) {
-    width: 100%;
-    height: 100%;
+    inset: -10% -6%;
+    width: 112%;
+    height: 120%;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
     overflow: visible;
   }
 
-  .zzz {
-    position: absolute;
-    right: -14%;
-    top: 0;
+  :global([data-slide].is-current) .pc-circle { stroke-dashoffset: 0; transition: stroke-dashoffset 1.1s cubic-bezier(0.6, 0, 0.3, 1) 0.5s; }
+
+  .pc-lead { max-width: 46ch; color: color-mix(in oklab, var(--fg) 75%, transparent); }
+
+  /* ---------- The postcard ---------- */
+  .pc { width: 100%; perspective: 1600px; }
+
+  .pc-card {
+    --pad: clamp(14px, 2.6vw, 30px);
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    height: min(50svh, 440px);
+    min-height: 300px;
+    padding: var(--pad);
+    gap: var(--pad);
+    border-radius: 10px;
+    background:
+      radial-gradient(120% 90% at 0% 0%, #ffffff, #fff0 60%),
+      #fdf6ea;
+    box-shadow: 0 2px 0 #0000000c, 0 40px 60px -30px #8a3a1080, 0 0 0 1px #00000010;
+    text-align: left;
+    rotate: -1.5deg;
+    transform-origin: 50% 60%;
+  }
+
+  /* The message side, divided from the address side by a line, like a real card. */
+  .pc-msg {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 10px;
+    padding-right: var(--pad);
+    border-right: 2px solid #e8702a40;
+  }
+
+  textarea,
+  input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #2b3a8f;
     font-family: var(--hand);
     font-weight: 700;
-    color: var(--ink);
-    transition: opacity 0.3s;
+    outline: none;
   }
 
-  .zzz span {
-    display: inline-block;
-    font-size: 24px;
-    animation: zzz 2.4s ease-in-out infinite;
+  textarea {
+    resize: none;
+    font-size: clamp(20px, 1.8vw, 26px);
+    line-height: 34px;
+    background: repeating-linear-gradient(#0000 0 33px, #e8702a33 33px 34px);
+    background-attachment: local;
   }
 
-  .zzz span:nth-child(2) { font-size: 30px; animation-delay: 0.4s; }
-  .zzz span:nth-child(3) { font-size: 40px; animation-delay: 0.8s; }
+  textarea::placeholder,
+  input::placeholder { color: #2b3a8f80; }
 
-  @keyframes zzz {
-    0% { transform: translateY(8px); opacity: 0; }
-    40% { opacity: 1; }
-    100% { transform: translateY(-22px); opacity: 0; }
+  .pc-from { display: flex; align-items: baseline; gap: 8px; font-family: var(--hand); font-size: 22px; font-weight: 700; color: #2b3a8f; }
+  .pc-from input { font-size: 22px; border-bottom: 2px dashed #e8702a66; }
+
+  textarea:focus-visible,
+  input:focus-visible { box-shadow: 0 2px 0 var(--accent); }
+
+  .pc-addr {
+    position: relative;
+    display: grid;
+    align-content: end;
+    gap: 6px;
   }
 
-  .contact.is-awake .zzz { opacity: 0; }
+  .pc-stamp {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: grid;
+    justify-items: center;
+    width: clamp(70px, 8vw, 96px);
+    padding: 8px 8px 5px;
+    background: #fff;
+    /* A perforated edge: the middle stays whole, the border is punched with holes. */
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      radial-gradient(circle 3px at 50% 50%, #0000 96%, #000) -5px -5px / 10px 10px;
+    filter: drop-shadow(0 3px 4px #0003);
+    rotate: 4deg;
+  }
 
+  .pc-stamp-in {
+    display: block;
+    width: 100%;
+    aspect-ratio: 0.9;
+    overflow: hidden;
+    background: linear-gradient(#ffd23f, #e8702a);
+  }
+
+  .pc-stamp-in :global(.pp) { width: 120%; height: auto; margin: 6% 0 0 -10%; }
+  .pc-stamp small { font-size: 9px; font-weight: 900; letter-spacing: 0.08em; color: #2a2a2e; }
+
+  /* The postmark: only there once the card is sent. */
+  .pc-mark {
+    position: absolute;
+    right: 18%;
+    top: 6%;
+    width: clamp(130px, 16vw, 190px);
+    fill: none;
+    stroke: #2b3a8fb0;
+    stroke-width: 2.4;
+    rotate: -14deg;
+    opacity: 0;
+    scale: 1.6;
+  }
+
+  .pc-mark text { fill: #2b3a8fb0; stroke: none; font-size: 10px; font-weight: 900; letter-spacing: 0.1em; }
+  .pc-mark .pc-mark-d { font-size: 18px; }
+
+  .pc-line {
+    padding-bottom: 4px;
+    border-bottom: 2px solid #2a2a2e1c;
+    font-family: var(--hand);
+    font-size: clamp(19px, 1.7vw, 24px);
+    font-weight: 700;
+    color: #2a2a2e;
+    overflow-wrap: anywhere;
+  }
+
+  .pc-line span { color: #e8702a; }
+  .pc-mail { color: #2b3a8f; text-decoration: none; }
+  .pc-mail:hover { text-decoration: underline; }
+
+  .pc-send {
+    justify-self: start;
+    margin-top: 6px;
+    padding: 10px 20px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 0 color-mix(in oklab, var(--accent) 70%, #000);
+    transition: translate 0.15s, box-shadow 0.15s;
+  }
+
+  .pc-send:hover { translate: 0 -2px; box-shadow: 0 6px 0 color-mix(in oklab, var(--accent) 70%, #000); }
+  .pc-send:active { translate: 0 3px; box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 70%, #000); }
+  .pc-send:focus-visible { outline: 3px solid #2b3a8f; outline-offset: 3px; }
+
+  /* Sent: postmarked, then off it goes, and back with a fresh card. */
+  .pc.is-sent .pc-mark { animation: stampit 0.35s cubic-bezier(0.5, 0, 0.6, 1.6) forwards; }
+  .pc.is-sent .pc-card { animation: mailit 1.6s cubic-bezier(0.6, 0, 0.3, 1) 0.55s; }
+  @keyframes stampit { to { opacity: 1; scale: 1; } }
+  @keyframes mailit {
+    0% { translate: 0 0; rotate: -1.5deg; }
+    12% { translate: 0 8px; rotate: -3deg; }
+    45% { translate: 70vw -60vh; rotate: 22deg; opacity: 1; }
+    46% { opacity: 0; translate: -40vw 40vh; }
+    60% { opacity: 0; }
+    100% { opacity: 1; translate: 0 0; rotate: -1.5deg; }
+  }
+
+  .pc-sent { min-height: 1.4em; font-family: var(--hand); font-size: 22px; font-weight: 700; color: var(--accent); }
+
+  .pc-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 22px;
+    font-size: var(--step-small);
+  }
+
+  .pc-reply { font-family: var(--hand); font-size: 20px; font-weight: 700; }
+  .pc-copy { color: color-mix(in oklab, var(--fg) 65%, transparent); }
+  .pc-copy a { color: var(--fg); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+
+  /* Narrow screens: the address side goes under the message. */
   @media (max-width: 700px) {
-    .book { rotate: 0deg; }
-    .page { padding: 64px 20px 32px 58px; }
-    .rings { left: 10px; }
-    .rings i { width: 30px; }
-    .title { font-size: 15vw; }
-    .email { font-size: 6.2vw; }
-    .page-foot { flex-direction: column; align-items: flex-start; }
-    .sleeper { width: 110px; right: 6%; }
+    .pc-card { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: auto; min-height: 0; rotate: 0deg; }
+    .pc-msg { padding: 0 0 var(--pad); border-right: 0; border-bottom: 2px solid #e8702a40; }
+    textarea { height: 15svh; font-size: 19px; line-height: 30px; background-size: 100% 30px; background-image: repeating-linear-gradient(#0000 0 29px, #e8702a33 29px 30px); }
+    .pc-wrap { gap: 8px; }
+    .pc-title { font-size: 2rem; }
+    .pc-lead { font-size: 15px; }
+    .pc-card { --pad: 14px; }
+    .pc-from, .pc-from input { font-size: 19px; }
+    .pc-send { padding: 8px 16px; }
+    .pc-sent { min-height: 0; font-size: 18px; }
+    .pc-addr { gap: 2px; }
+    .pc-line { font-size: 18px; }
+    .pc-stamp { width: 62px; top: -4px; }
+    .pc-mark { right: 22%; top: -10px; width: 120px; }
+    .pc-foot { gap: 6px 14px; }
+    .pc-reply { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pc.is-sent .pc-card { animation: none; }
   }
 </style>
 
 <script>
-  import { mountPuppet } from '../scripts/puppet';
-
-  // José sleeps until someone goes for the email, then wakes up.
-  const section = document.querySelector<HTMLElement>('.contact');
-  const canvas = section?.querySelector<SVGSVGElement>('.sleeper svg.pp');
-  const email = section?.querySelector<HTMLElement>('.email');
-  const note = section?.querySelector<HTMLElement>('.wake');
-  if (section && canvas && email && note) {
-    const p = mountPuppet(canvas, 'sleep');
-    let t = 0;
-    const wake = () => {
-      clearTimeout(t);
-      section.classList.add('is-awake');
-      p.play('wake');
-      note.textContent = note.dataset.awake || '';
-    };
-    const sleep = () => {
-      t = window.setTimeout(() => {
-        section.classList.remove('is-awake');
-        p.play('sleep');
-        note.textContent = note.dataset.asleep || '';
-      }, 2200);
-    };
-    email.addEventListener('pointerenter', wake);
-    email.addEventListener('focus', wake);
-    email.addEventListener('pointerleave', sleep);
-    email.addEventListener('blur', sleep);
-    section.querySelector('.sleeper')?.addEventListener('click', () => (section.classList.contains('is-awake') ? sleep() : wake()));
-    // The pen circles the title when the notebook comes into view.
-    new IntersectionObserver(
-      (e, o) => {
-        if (e[0].isIntersecting) {
-          section.classList.add('is-in');
-          o.disconnect();
-        }
-      },
-      { threshold: 0.35 },
-    ).observe(section);
+  // Sending: stamp, fly, and open the visitor's email app with the message written on the card.
+  const form = document.querySelector<HTMLFormElement>('[data-pc]');
+  const sent = document.querySelector<HTMLElement>('.pc-sent');
+  if (form && sent) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const msg = String(data.get('msg') || '').trim();
+      const name = String(data.get('name') || '').trim();
+      const body = [msg, name && `— ${name}`].filter(Boolean).join('\n\n');
+      const href = `mailto:${form.dataset.mail}?subject=${encodeURIComponent(form.dataset.subject || '')}${body ? `&body=${encodeURIComponent(body)}` : ''}`;
+      form.classList.remove('is-sent');
+      void form.offsetWidth;
+      form.classList.add('is-sent');
+      sent.textContent = '';
+      setTimeout(() => {
+        sent.textContent = sent.dataset.sent || '';
+        location.href = href;
+      }, 1100);
+      setTimeout(() => form.classList.remove('is-sent'), 3200);
+    });
   }
 </script>

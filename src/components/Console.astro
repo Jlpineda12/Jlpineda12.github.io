@@ -1317,9 +1317,21 @@ const first = Object.fromEntries(groups.map((g) => [g, list.findIndex((p) => p.w
     :global(html.fp) .rig { max-width: min(100%, 92svh); padding-top: clamp(30px, 6svh, 90px); }
   }
 
+  /* Grid children may shrink below their content (the turntable is wide): stay inside the screen. */
+  :global(html.fp) .console-sec > *,
+  :global(html.fp) .stage > * { min-width: 0; }
+
   @media (max-aspect-ratio: 1/1) {
-    :global(html.fp) .carousel { --cw: min(32vw, 18svh); }
-    :global(html.fp) .rig { max-width: min(92vw, 52svh); margin-inline: auto; padding-top: 40px; }
+    :global(html.fp) .carousel { --cw: min(32vw, 15svh); }
+    :global(html.fp) .rig { max-width: min(92vw, 46svh); margin-inline: auto; padding-top: 30px; }
+  }
+
+  /* Phones: the console stands up; sized so the turntable and the whole console share the screen. */
+  @media (max-width: 700px) and (max-aspect-ratio: 1/1) {
+    :global(html.fp) .console-sec { padding-block: 24px 64px; }
+    :global(html.fp) .carousel { --cw: min(25vw, 12svh); gap: 6px; }
+    :global(html.fp) .rig { max-width: min(62vw, calc((100svh - 550px) * 0.7)); min-width: 180px; padding-top: 12px; }
+    :global(html.fp) .peek { width: 26%; }
   }
 
   /* The manual opens as a sheet over the console, and closes with ×. */

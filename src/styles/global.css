@@ -16,6 +16,7 @@
 
   --font: 'TikTok Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --comic: 'Bangers', 'Impact', 'Arial Black', sans-serif;
   --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
   --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
   --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
@@ -352,68 +353,6 @@ button {
     opacity: 1;
     transform: none;
   }
-}
-
-/* The cloud curtain used when travelling between chapters. */
-.cloud-wipe {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.cw-band {
-  position: absolute;
-  inset: 0 -10vw;
-  background: var(--paper);
-}
-
-.cw-edge {
-  position: absolute;
-  top: 50%;
-  width: 60vh;
-  height: auto;
-  translate: 0 -50%;
-}
-
-.cw-l {
-  left: 0;
-  translate: -78% -50%;
-  rotate: 90deg;
-}
-
-.cw-r {
-  right: 0;
-  translate: 78% -50%;
-  rotate: -90deg;
-}
-
-.cw-label {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: clamp(22px, 2.6vw, 40px);
-  font-weight: 800;
-  white-space: nowrap;
-  color: var(--ink);
-}
-
-.cw-label img {
-  width: 1.8em;
-  height: 1.8em;
-  animation: float 1s ease-in-out infinite;
-}
-
-.cw-label strong {
-  color: var(--red);
-  font-stretch: 125%;
-  text-transform: uppercase;
 }
 
 /* ---------- Sketchbook details shared by every section ---------- */
@@ -848,7 +787,11 @@ html.fp [data-deck] > [data-slide] > *::-webkit-scrollbar { display: none; }
 html.fp [data-deck] > [data-slide] > section:not(.hero) {
   display: grid;
   align-content: safe center;
-  padding-block: clamp(64px, 9svh, 110px) clamp(72px, 10svh, 120px);
+  padding-block: clamp(32px, 7svh, 110px) clamp(72px, 10svh, 120px);
+}
+
+@media (max-width: 700px) {
+  html.fp [data-deck] > [data-slide] > section:not(.hero) { padding-block: 36px 66px; }
 }
 
 /* While a transition runs, the next chapter can sit under the current one. */
@@ -862,20 +805,6 @@ html.fp [data-deck] > [data-slide].is-under { visibility: visible; z-index: 1; }
   z-index: 250;
   pointer-events: none;
   overflow: hidden;
-}
-
-.tx-title {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  font-size: clamp(2.6rem, 1.4rem + 6vw, 7rem);
-  font-weight: 900;
-  font-stretch: 125%;
-  letter-spacing: -0.03em;
-  white-space: nowrap;
-  color: #fff;
-  mix-blend-mode: difference;
 }
 
 /* dive */
@@ -909,93 +838,42 @@ html.fp [data-deck] > [data-slide].is-under { visibility: visible; z-index: 1; }
   position: absolute;
   left: 9%;
   right: 9%;
-  top: 22%;
-  bottom: 14%;
+  top: 20%;
+  bottom: 12%;
   display: grid;
-  place-items: end start;
-  padding: 10%;
+  grid-template-rows: 1fr auto;
+  gap: 6%;
+  padding: 7%;
   border-radius: 10px;
   background: var(--paper);
   box-shadow: inset 0 0 0 1px #0000000f;
 }
 
-.tx-label b {
-  font-size: clamp(1.4rem, 1rem + 1.6vw, 2.2rem);
+/* The projects on the label: one picture at a time, flicking like a boot screen. */
+.tx-shot {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #2a2a2e;
+}
+
+.tx-shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.tx-cap { display: grid; gap: 2px; }
+
+.tx-cap b {
+  font-size: clamp(1.1rem, 0.8rem + 1.2vw, 1.7rem);
   font-weight: 900;
   font-stretch: 125%;
   line-height: 1;
   color: #2a2a2e;
 }
 
-/* page: the back of a notebook page */
-.tx-page {
+.tx-cap small { font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: #2a2a2e99; }
+
+/* page: the shadow the turning page throws on the chapter under it */
+.tx-shade {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  background:
-    linear-gradient(90deg, #0000 64px, #d6455a55 64px 66px, #0000 66px),
-    repeating-linear-gradient(#0000 0 35px, #7c90da40 35px 36px),
-    #fffdf6;
-  box-shadow: -30px 0 60px -20px #0006 inset;
+  background: linear-gradient(90deg, #00000055, #0000 60%);
 }
-
-.tx-hand {
-  font-family: var(--hand);
-  font-size: clamp(3.2rem, 2rem + 6vw, 8rem);
-  font-weight: 700;
-  color: #2b3a8f;
-  rotate: -4deg;
-}
-
-/* keys: a keyboard */
-.tx-keys {
-  position: absolute;
-  inset: -6px;
-  display: grid;
-  gap: 8px;
-  padding: 8px;
-}
-
-.tx-key {
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff, color-mix(in oklab, var(--key) 60%, #fff));
-  box-shadow: inset 0 -6px 0 color-mix(in oklab, var(--key) 70%, #000 10%), inset 0 1px 0 #fff, 0 6px 10px -6px #0005;
-}
-
-.tx-key.is-word { background: linear-gradient(180deg, #3d3d48, #2a2a2e); box-shadow: inset 0 -6px 0 #111, inset 0 1px 0 #ffffff30, 0 6px 10px -6px #0008; }
-.tx-key b { font-size: clamp(1.4rem, 1rem + 2vw, 3rem); font-weight: 900; color: #fff; }
-
-/* postcard: a stamp and a postmark on the card's corner */
-.tx-stamp {
-  position: absolute;
-  right: 31%;
-  top: 31%;
-  display: grid;
-  place-items: center;
-  width: 88px;
-  height: 104px;
-  padding: 8px;
-  background: #fff;
-  color: #e8702a;
-  border: 3px dashed #e8702a;
-  outline: 6px solid #fff;
-  box-shadow: 0 8px 16px -6px #0006;
-  font-size: 34px;
-}
-
-.tx-stamp small { font-size: 10px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: #2a2a2e; }
-
-.tx-mark {
-  position: absolute;
-  right: 26%;
-  top: 33%;
-  display: grid;
-  gap: 8px;
-  width: 140px;
-  rotate: -10deg;
-}
-
-.tx-mark i { height: 3px; border-radius: 3px; background: #2a2a2e99; }
