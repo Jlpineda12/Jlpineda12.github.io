@@ -26,6 +26,10 @@ export function initLanyard(root = document.querySelector<HTMLElement>('[data-la
   const card = root?.querySelector<HTMLElement>('.badge-card');
   if (!root || !swing || !badge || !card) return null;
 
+  // Is the chapter it hangs in the one on show? (Outside the deck: always.)
+  const slideOf = root?.closest<HTMLElement>('[data-slide]');
+  const shown = () => !slideOf || !document.documentElement.classList.contains('fp') || slideOf.classList.contains('is-current') || slideOf.classList.contains('is-next');
+
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // --strap is usually a formula (clamp, calc with svh…): measure it with a hidden probe.
   const probe = document.createElement('div');
@@ -145,12 +149,12 @@ export function initLanyard(root = document.querySelector<HTMLElement>('[data-la
     b += vb * dt;
     render();
 
-    // The breeze never stops, so it keeps running while the hero is on screen.
-    if (onScreen) raf = requestAnimationFrame(step);
+    // The breeze never stops, so it keeps running while its chapter is on screen.
+    if (onScreen && shown()) raf = requestAnimationFrame(step);
   }
 
   function wake() {
-    if (!raf && onScreen) {
+    if (!raf && onScreen && shown()) {
       last = performance.now();
       raf = requestAnimationFrame(step);
     }
@@ -289,6 +293,11 @@ export function initLanyard(root = document.querySelector<HTMLElement>('[data-la
     onScreen = entries[0].isIntersecting;
     if (onScreen) wake();
   }).observe(scope);
+  // In the deck every chapter sits on screen; it only swings while its own chapter is the one shown.
+  addEventListener('fp-change', () => {
+    L0 = restLen() || L0;
+    wake();
+  });
 
   window.addEventListener('resize', () => {
     L0 = restLen();

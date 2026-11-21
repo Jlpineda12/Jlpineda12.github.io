@@ -34,10 +34,13 @@ const first = list[0];
     <div class="pj-main">
       <!-- The console: the cartridge in its slot, the screen between the D-pad and A/B. -->
       <div class="device" data-device style={`--c:${CART[first.world].c}`}>
+        <span class="glow" aria-hidden="true"></span>
+        <span class="shoulder sh-l" aria-hidden="true"></span>
+        <span class="shoulder sh-r" aria-hidden="true"></span>
         <div class="slot" aria-hidden="true">
           <span class="slot-cart" style={`--c:${CART[first.world].c}`}>
             <span class="c-ridges"></span>
-            <span class="c-label"><img src={`${base}${first.poster}`} width="1400" height="900" alt="" /></span>
+            <span class="c-label"><img src={`${base}${first.poster}`} width="1400" height="900" alt="" loading="lazy" /></span>
           </span>
         </div>
         <div class="body">
@@ -48,13 +51,13 @@ const first = list[0];
               <button class="dp-btn dp-l" type="button" data-step="-1" aria-label={ui.prev}><i aria-hidden="true"></i></button>
               <button class="dp-btn dp-r" type="button" data-step="1" aria-label={ui.next}><i aria-hidden="true"></i></button>
             </div>
-            <span class="grille" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="speaker" aria-hidden="true">{Array.from({ length: 12 }, () => <i></i>)}</span>
           </div>
 
           <div class="bezel">
             <p class="bz-top" aria-hidden="true"><span class="led"></span>JLP <b>STATION</b></p>
             <div class="screen" aria-live="polite">
-              <img class="scr-img" src={`${base}${first.poster}`} width="1400" height="900" alt="" decoding="async" />
+              <img class="scr-img" src={`${base}${first.poster}`} width="1400" height="900" alt="" loading="lazy" decoding="async" />
               <video class="scr-vid" muted loop playsinline preload="none" hidden></video>
               <div class="scr-embed"></div>
               <div class="scr-boot" aria-hidden="true"><span>JLP</span></div>
@@ -63,6 +66,8 @@ const first = list[0];
                 <span class="scr-t">{first.name}</span>
                 <span class="scr-a"><b>A</b> <span class="scr-a-l">{first.embed ? ui.projPlay : first.youtube ? ui.projVideo : ui.projOpen}</span></span>
               </p>
+              <ol class="scr-dots" aria-hidden="true">{list.map((_, i) => <li class:list={{ 'is-on': i === 0 }}></li>)}</ol>
+              <span class="scr-lines" aria-hidden="true"></span>
               <span class="scr-glass" aria-hidden="true"></span>
             </div>
           </div>
@@ -115,7 +120,7 @@ const first = list[0];
     <div class="shelf">
       <ul class="carts" aria-label={ui.pickCart}>
         {list.map((p, i) => (
-          <li data-world={p.world}>
+          <li data-world={p.world} data-name={p.name}>
             <button
               class:list={['cart', { 'is-in': i === 0 }]}
               type="button"
@@ -129,6 +134,7 @@ const first = list[0];
               data-youtube={p.youtube}
               data-embed={p.embed}
               data-url={p.url}
+              data-label={p.name}
               style={`--c:${CART[p.world].c};--cink:${CART[p.world].ink}`}
             >
               <span class="c-ridges" aria-hidden="true"></span>
@@ -139,6 +145,7 @@ const first = list[0];
           </li>
         ))}
       </ul>
+      <span class="ledge" aria-hidden="true"></span>
     </div>
   </div>
 </section>
@@ -171,14 +178,46 @@ const first = list[0];
     gap: clamp(16px, 3vw, 44px);
   }
 
-  /* The console: a matte handheld, the cartridge standing in its slot on top. */
+  /* The console: a matte handheld, the cartridge standing in its slot on top. It leans a little
+     towards the pointer. */
   .device {
     --c: #6b4fd8;
+    --rx: 0deg;
+    --ry: 0deg;
     position: relative;
+    transform: perspective(1400px) rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
     width: min(100%, calc((100svh - 362px) * 2.05));
     justify-self: center;
     padding-top: 8.2%;
   }
+
+  /* The screen's light, spilling onto the wall behind in the colour of the cartridge. */
+  .glow {
+    position: absolute;
+    z-index: -1;
+    inset: -12% -10% -22%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in oklab, var(--c) 40%, transparent), transparent);
+    opacity: 0.75;
+    transition: background 0.6s;
+    pointer-events: none;
+  }
+
+  /* Shoulder buttons on the top edge. */
+  .shoulder {
+    position: absolute;
+    top: 6.4%;
+    width: 17%;
+    height: 4.5%;
+    border-radius: 14px 14px 4px 4px;
+    background: linear-gradient(#d9d1f2, #bfb3e3);
+    box-shadow: inset 0 2px 0 #ffffffb3;
+  }
+
+  .sh-l { left: 9%; rotate: -4deg; }
+  .sh-r { right: 9%; rotate: 4deg; }
 
   .slot {
     position: absolute;
@@ -260,8 +299,9 @@ const first = list[0];
   .dp-btn:active, .dp-btn.is-down { background: #ffffff1a; translate: 0 2px; }
   .dp-btn:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
 
-  .grille { display: flex; gap: 6%; width: 46%; justify-content: center; rotate: -20deg; }
-  .grille i { width: 4px; height: 22px; border-radius: 4px; background: #c9bfe6; box-shadow: inset 0 1px 1px #8f82b8; }
+  /* A speaker: a little grid of holes. */
+  .speaker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 34%; rotate: -12deg; }
+  .speaker i { aspect-ratio: 1; border-radius: 50%; background: #b7abd9; box-shadow: inset 0 1px 1px #7d70a8; }
 
   /* A and B. */
   .ab { display: flex; align-items: center; gap: 10%; width: 84%; justify-content: center; rotate: -18deg; }
@@ -360,6 +400,39 @@ const first = list[0];
   .scr-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .scr-a { display: inline-flex; align-items: center; gap: 5px; opacity: 0.85; }
   .scr-a b { display: grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--c); font-size: 0.85em; }
+
+  /* Progress: one dot per project, the current one lit. */
+  .scr-dots {
+    position: absolute;
+    z-index: 3;
+    right: 8px;
+    top: 8px;
+    display: flex;
+    gap: 3px;
+    margin: 0;
+    padding: 4px 6px;
+    list-style: none;
+    border-radius: 99px;
+    background: #00000059;
+    transition: opacity 0.3s;
+  }
+
+  .scr-dots li { width: 4px; height: 4px; border-radius: 50%; background: #ffffff59; transition: background-color 0.3s, scale 0.3s; }
+  .scr-dots li.is-on { background: #fff; scale: 1.5; }
+  .scr-embed:not(:empty) ~ .scr-dots { opacity: 0; }
+
+  /* Faint scanlines and a vignette, like a real little screen. */
+  .scr-lines {
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    background:
+      repeating-linear-gradient(#0000 0 2px, #00000014 2px 3px),
+      radial-gradient(120% 100% at 50% 50%, #0000 60%, #00000059);
+    pointer-events: none;
+  }
+
+  .scr-embed:not(:empty) ~ .scr-lines { opacity: 0; }
 
   .scr-glass {
     position: absolute;
@@ -477,7 +550,17 @@ const first = list[0];
   .i-play:active, .i-cta:active { translate: 0 3px; box-shadow: none; }
 
   /* ---------- The shelf ---------- */
-  .shelf { display: grid; justify-items: center; gap: 6px; min-width: 0; container-type: inline-size; }
+  .shelf { position: relative; display: grid; justify-items: center; min-width: 0; container-type: inline-size; }
+
+  /* The shelf: an acrylic ledge the cartridges stand on. */
+  .ledge {
+    width: min(100%, 1100px);
+    height: 12px;
+    margin-top: -6px;
+    border-radius: 3px 3px 10px 10px;
+    background: linear-gradient(#ffffffd9, #ffffff73 45%, #d9cff5);
+    box-shadow: inset 0 1px 0 #fff, 0 14px 24px -12px #4b2f9a73;
+  }
 
   .carts {
     display: flex;
@@ -489,9 +572,7 @@ const first = list[0];
     list-style: none;
     overflow-x: auto;
     scrollbar-width: none;
-    /* The shelf itself: a soft ledge under the cartridges. */
-    background: linear-gradient(#0000 70%, #ffffff8c 70%, #ffffff40);
-    border-radius: 0 0 18px 18px;
+
   }
 
   .carts::-webkit-scrollbar { display: none; }
@@ -513,10 +594,30 @@ const first = list[0];
   }
 
   .cart:hover { translate: 0 -8px; }
+
+  /* Its name, on a little tag, when pointed at. */
+  .carts li { position: relative; }
+  .carts li:has(.cart:hover)::after {
+    content: attr(data-name);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 2px);
+    translate: -50% 0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 3;
+  }
   .cart:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 
   /* The one in the console leaves an empty place on the shelf. */
-  .cart.is-in { opacity: 0.25; filter: grayscale(0.6); translate: 0 6px; }
+  .cart.is-in { opacity: 0.18; filter: grayscale(1); }
+  .carts li:has(.cart.is-in) { outline: 2px dashed color-mix(in oklab, var(--ink) 30%, transparent); outline-offset: 2px; border-radius: 10px; }
 
   .c-ridges {
     position: absolute;
@@ -567,7 +668,8 @@ const first = list[0];
     .i-actions { margin-top: 10px; }
     .i-play, .i-cta { min-height: 38px; padding: 0 13px; font-size: 13px; }
     .carts { justify-content: flex-start; padding-top: 10px; }
-    .grille { display: none; }
+    .speaker { display: none; }
+    .scr-dots { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -646,7 +748,9 @@ const first = list[0];
       hudA.textContent = play ? (play.textContent || '').replace('▶', '').trim() : sec.dataset.open || hudA.textContent;
     };
 
+    const dots = [...screen.querySelectorAll<HTMLElement>('.scr-dots li')];
     const setSlot = (i: number) => {
+      dots.forEach((d, k) => d.classList.toggle('is-on', k === i));
       const c = carts[i];
       const col = c.style.getPropertyValue('--c');
       slotCart.style.setProperty('--c', col);
@@ -673,7 +777,7 @@ const first = list[0];
       sfx('boot');
     };
 
-    const bump = () => gsap.fromTo(device, { y: 0 }, { y: 3, duration: 0.07, yoyo: true, repeat: 1, ease: 'power1.out' });
+    const bump = () => gsap.fromTo(device.querySelector('.body'), { y: 0 }, { y: 3, duration: 0.07, yoyo: true, repeat: 1, ease: 'power1.out' });
 
     const mark = (i: number) =>
       carts.forEach((c, k) => {
@@ -822,6 +926,22 @@ const first = list[0];
       const dy = e.changedTouches[0].clientY - sy;
       if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4 && !embed.innerHTML) step(dx < 0 ? 1 : -1);
     }, { passive: true });
+
+    // The console leans a little towards the pointer.
+    if (!reduced && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      const area = sec.querySelector<HTMLElement>('.pj-main')!;
+      area.addEventListener('pointermove', (e) => {
+        const r = device.getBoundingClientRect();
+        const x = (e.clientX - (r.left + r.width / 2)) / r.width;
+        const y = (e.clientY - (r.top + r.height / 2)) / r.height;
+        device.style.setProperty('--ry', `${Math.max(-1, Math.min(1, x)) * 7}deg`);
+        device.style.setProperty('--rx', `${Math.max(-1, Math.min(1, y)) * -6}deg`);
+      });
+      area.addEventListener('pointerleave', () => {
+        device.style.setProperty('--ry', '0deg');
+        device.style.setProperty('--rx', '0deg');
+      });
+    }
 
     // Arriving: the console boots (the cartridge transition says when its cartridge has gone in);
     // leaving: the screen goes quiet.

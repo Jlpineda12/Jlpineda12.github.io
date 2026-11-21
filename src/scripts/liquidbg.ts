@@ -116,7 +116,7 @@ export function initLiquidBg(canvas: HTMLCanvasElement | null) {
 
   const grid = () => {
     const asp = Math.max(0.3, canvas.clientWidth / Math.max(1, canvas.clientHeight));
-    W = canvas.clientWidth < 700 ? 110 : 200;
+    W = canvas.clientWidth < 700 ? 96 : 168;
     H = Math.max(40, Math.round(W / asp));
     cur = new Float32Array(W * H);
     prev = new Float32Array(W * H);
@@ -169,7 +169,7 @@ export function initLiquidBg(canvas: HTMLCanvasElement | null) {
   // Dots need crisp pixels: render at the screen's density (capped, so big screens stay light).
   let k = 1;
   const size = () => {
-    k = Math.min(devicePixelRatio || 1, 2, 2400 / Math.max(1, canvas.clientWidth));
+    k = Math.min(devicePixelRatio || 1, 1.5, 1800 / Math.max(1, canvas.clientWidth));
     canvas.width = Math.max(2, Math.round(canvas.clientWidth * k));
     canvas.height = Math.max(2, Math.round(canvas.clientHeight * k));
     gl!.viewport(0, 0, canvas.width, canvas.height);
@@ -178,10 +178,15 @@ export function initLiquidBg(canvas: HTMLCanvasElement | null) {
   };
   size();
   canvas.classList.add('is-on');
-  addEventListener('resize', () => {
+  // Its size can change without a window resize too (the hero laid out again after a jump).
+  let lastW = canvas.clientWidth, lastH = canvas.clientHeight;
+  new ResizeObserver(() => {
+    if (canvas.clientWidth === lastW && canvas.clientHeight === lastH) return;
+    lastW = canvas.clientWidth;
+    lastH = canvas.clientHeight;
     size();
     if (reduced) draw(performance.now());
-  });
+  }).observe(canvas);
 
   const onHero = () => {
     const slide = document.documentElement.dataset.slide;
