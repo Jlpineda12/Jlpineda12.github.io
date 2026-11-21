@@ -3,7 +3,7 @@
 // transition (scripts/transitions.ts: a dive into José's face, a cartridge, a page turning, a
 // laptop covered in stickers, a postcard flying in). Going back up slides.
 // A chapter that is taller than the screen (a small phone) scrolls inside first. A chapter can ask
-// for steps (data-steps="n"): the notebook turns its pages with the same gestures before moving on.
+// for steps (data-steps="n") that the same gestures go through before moving on.
 // Without scripts the chapters simply stack and scroll; with reduced motion they cross-fade.
 import { gsap } from 'gsap';
 import { TRANSITIONS } from './transitions';
