@@ -3,7 +3,7 @@
 // transition (scripts/transitions.ts: a dive into José's face, a cartridge, a page turning, a
 // laptop covered in stickers, a postcard flying in). Going back up slides.
 // A chapter that is taller than the screen (a small phone) scrolls inside first. A chapter can ask
-// for steps (data-steps="n"): the notebook turns its pages with the same gestures before moving on.
+// for steps (data-steps="n") that the same gestures go through before moving on.
 // Without scripts the chapters simply stack and scroll; with reduced motion they cross-fade.
 import { gsap } from 'gsap';
 import { TRANSITIONS } from './transitions';
@@ -46,6 +46,9 @@ export function initFullpage() {
 
   const show = (i: number) => {
     slides.forEach((s, k) => {
+      // Only the chapter on show and its neighbours are laid out (and load their pictures);
+      // the rest wait with display: none.
+      s.el.classList.toggle('is-far', Math.abs(k - i) > 1);
       s.el.classList.toggle('is-current', k === i);
       s.el.toggleAttribute('inert', k !== i);
       s.el.setAttribute('aria-hidden', String(k !== i));
@@ -90,6 +93,7 @@ export function initFullpage() {
     if (next.steps) setStep(next, dir > 0 ? 0 : next.steps - 1);
     next.scroller.scrollTop = dir > 0 ? 0 : next.scroller.scrollHeight;
 
+    next.el.classList.remove('is-far');
     if (instant || reduced) {
       if (!instant) {
         busy = true;
@@ -100,9 +104,14 @@ export function initFullpage() {
     }
 
     busy = true;
+    // A jump to a far chapter: lay it out before the transition measures it.
+    next.el.classList.remove('is-far');
+    void next.el.offsetHeight;
     const kind = dir > 0 ? next.tx : 'back';
     const play = TRANSITIONS[kind] ?? TRANSITIONS.back;
     next.el.classList.add('is-next');
+    // While it plays, both chapters get their own layers.
+    from.el.style.willChange = next.el.style.willChange = 'transform, opacity';
     const tl = play({
       from: from.el,
       to: next.el,
@@ -118,6 +127,7 @@ export function initFullpage() {
       gsap.set(layer, { clearProps: 'all' });
       next.el.classList.remove('is-next', 'is-under');
       from.el.classList.remove('is-under');
+      from.el.style.willChange = next.el.style.willChange = '';
       gsap.set([from.el, next.el], { clearProps: 'transform,opacity,filter,visibility,borderRadius,boxShadow,transformOrigin,x,y,rotate,rotateY,scale,scaleX,scaleY,yPercent' });
       busy = false;
     });
@@ -225,6 +235,8 @@ export function initFullpage() {
   // Start where the link says.
   const start = location.hash ? byId(location.hash.slice(1)) : 0;
   show(start > 0 ? start : 0);
+  // The deck is in charge now: the early "only the first chapter" rule (Base.astro) can go.
+  document.getElementById('fp-boot')?.remove();
   addEventListener('hashchange', () => {
     const k = byId(location.hash.slice(1));
     if (k >= 0) go(k);

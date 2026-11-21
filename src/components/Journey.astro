@@ -15,7 +15,7 @@ const stops = [
   { id: 'contacto', label: ui.navContact },
 ];
 ---
-<nav class="journey glass glass-dark" data-liquid='{"bezel":18,"scale":34}' aria-label={ui.hud}>
+<nav class="journey glass glass-dark" aria-label={ui.hud}>
   <ol>
     {stops.map((s) => (
       <li><a href={`#${s.id}`} data-stop={s.id}><span class="j-label">{s.label}</span></a></li>

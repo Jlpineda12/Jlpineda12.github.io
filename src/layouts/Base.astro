@@ -40,6 +40,15 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
       (function () {
         var d = document.documentElement;
         d.classList.add('js');
+        // Until the deck (scripts/fullpage.ts) takes over, only the chapter you arrive at is laid
+        // out, so the others don't fetch their pictures before they are needed.
+        try {
+          var start = (location.hash.slice(1) || 'inicio').replace(/[^a-z0-9-]/gi, '');
+          var st = document.createElement('style');
+          st.id = 'fp-boot';
+          st.textContent = '[data-deck]>[data-slide]:not([data-slide="' + start + '"]){display:none}';
+          document.head.appendChild(st);
+        } catch (e) {}
         if (location.hash) return;
         try {
           if (!matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('intro');

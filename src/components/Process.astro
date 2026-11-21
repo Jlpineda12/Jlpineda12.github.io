@@ -129,8 +129,17 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
         </div>
       </div>
     ))}
+
+    <!-- Turning the pages: one button on each side of the book. -->
+    <button class="turn-btn turn-prev" type="button" data-turn="-1" aria-label={lab.pagePrev} disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </button>
+    <button class="turn-btn turn-next is-hint" type="button" data-turn="1" aria-label={lab.pageNext}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+    </button>
   </div>
 
+  <ol class="pager" aria-hidden="true">{[0, 1, 2, 3].map((k) => <li class:list={{ 'is-on': k === 0 }}></li>)}</ol>
 </section>
 
 <style>
@@ -527,8 +536,61 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     .cv-pp { width: 22%; }
   }
 
+
+  /* ---------- Turning the pages ---------- */
+  .turn-btn {
+    position: absolute;
+    z-index: 40;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: clamp(44px, 4.6vw, 56px);
+    aspect-ratio: 1;
+    padding: 0;
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    background: #fffaf0;
+    color: var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    cursor: pointer;
+    translate: 0 -50%;
+    transition: translate 0.15s, box-shadow 0.15s, background-color 0.2s, opacity 0.3s, scale 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+
+  .turn-prev { left: calc(clamp(44px, 4.6vw, 56px) / -2); }
+  .turn-next { right: calc(clamp(44px, 4.6vw, 56px) / -2); }
+
+  .turn-btn svg { width: 46%; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+  .turn-btn:hover { background: #ffd23f; translate: -2px calc(-50% - 2px); box-shadow: 6px 6px 0 var(--ink); }
+  .turn-btn:active { translate: 2px calc(-50% + 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .turn-btn:focus-visible { outline: 3px dashed #e5483b; outline-offset: 4px; }
+  .turn-btn:disabled { opacity: 0; scale: 0.5; pointer-events: none; }
+
+  /* On the closed cover, the way in nudges a little. */
+  .turn-next.is-hint { animation: nudge 1.8s ease-in-out infinite; }
+  .turn-next.is-hint:hover { animation: none; }
+  @keyframes nudge { 0%, 60%, 100% { scale: 1; } 75% { scale: 1.12; } 85% { scale: 0.96; } }
+
+  /* Where you are: one dot per spread. */
+  .pager { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .pager li { width: 9px; height: 9px; border: 2px solid var(--ink); border-radius: 50%; background: transparent; transition: background-color 0.3s, scale 0.3s; }
+  .pager li.is-on { background: var(--ink); scale: 1.15; }
+
+  @media (max-aspect-ratio: 1/1) {
+    /* The notepad: the buttons sit under it, either side of the dots, off the text. */
+    .turn-btn { top: calc(100% + 30px); width: 44px; }
+    .turn-prev { left: calc(50% - 110px); }
+    .turn-next { right: calc(50% - 110px); }
+    .pager { margin-block: 12px 6px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .turn-next.is-hint { animation: none; }
+  }
+
   /* Without scripts: the pages, one after another. */
   :global(html:not(.js)) .book { width: auto; height: auto; translate: none; display: grid; gap: 12px; }
+  :global(html:not(.js)) :is(.turn-btn, .pager) { display: none; }
   :global(html:not(.js)) :is(.pg, .face) { position: relative; left: 0; width: 100%; height: auto; transform: none; }
   :global(html:not(.js)) .leaf { position: relative; }
   :global(html:not(.js)) .cpage > *,
@@ -543,7 +605,8 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 </style>
 
 <script>
-  // Steps (from the deck): 0 closed, 1 open at Empathise/Define, 2 Ideate/Prototype, 3 Test/Launch.
+  // Spreads: 0 closed, 1 open at Empathise/Define, 2 Ideate/Prototype, 3 Test/Launch. The buttons on
+  // either side (or ← →, or a click on a page) turn them; the scroll moves on to the next chapter.
   const sec = document.querySelector<HTMLElement>('.book-sec');
   const book = sec?.querySelector<HTMLElement>('[data-book]');
   const slide = sec?.closest<HTMLElement>('[data-slide]');
@@ -556,7 +619,18 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       return [left, right].filter((x): x is HTMLElement => !!x);
     };
     let timer = 0;
+    let at = 0;
+    const last = leaves.length;
+    const prevBtn = book.querySelector<HTMLButtonElement>('.turn-prev')!;
+    const nextBtn = book.querySelector<HTMLButtonElement>('.turn-next')!;
+    const dots = [...sec.querySelectorAll<HTMLElement>('.pager li')];
     const set = (k: number) => {
+      k = Math.max(0, Math.min(last, k));
+      at = k;
+      prevBtn.disabled = k === 0;
+      nextBtn.disabled = k === last;
+      nextBtn.classList.toggle('is-hint', k === 0);
+      dots.forEach((d, i) => d.classList.toggle('is-on', i === k));
       book.classList.toggle('is-open', k > 0);
       leaves.forEach((l, i) => l.classList.toggle('is-flipped', i < k));
       book.querySelectorAll('.cpage.is-written').forEach((n) => n.classList.remove('is-written'));
@@ -568,7 +642,19 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       book.querySelectorAll<HTMLElement>('.panel').forEach((p) => (p.tabIndex = open.some((n) => n.contains(p)) ? 0 : -1));
       book.querySelectorAll<HTMLElement>('.go').forEach((a) => (a.tabIndex = open.some((n) => n.contains(a)) ? 0 : -1));
     };
-    slide.addEventListener('fp-step', (e) => set((e as CustomEvent<number>).detail));
+    book.querySelectorAll<HTMLButtonElement>('[data-turn]').forEach((b) =>
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        set(at + Number(b.dataset.turn));
+      }),
+    );
+    // ← → turn the pages while this chapter is on screen.
+    addEventListener('keydown', (e) => {
+      if (document.documentElement.dataset.slide !== 'como-trabajo' || e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.target as Element).closest('input, textarea, select')) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); set(at + 1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); set(at - 1); }
+    });
 
     // Poking a drawing plays its reaction (and its sound effect) instead of turning the page.
     const poke = (p: HTMLElement) => {
@@ -585,14 +671,14 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     // A click on the right-hand (lower) page turns forward; on the left (upper) one, back.
     book.addEventListener('click', (e) => {
       const target = e.target as Element;
-      if (target.closest('a')) return;
+      if (target.closest('a, .turn-btn')) return;
       const panel = target.closest<HTMLElement>('.panel');
       if (panel) return poke(panel);
       const r = book.getBoundingClientRect();
       const portrait = matchMedia('(max-aspect-ratio: 1/1)').matches;
       const ev = e as MouseEvent;
       const forward = portrait ? ev.clientY > r.top + r.height / 2 : ev.clientX > r.left + r.width / 2;
-      window.dispatchEvent(new Event(forward ? 'fp-next' : 'fp-prev'));
+      set(at + (forward ? 1 : -1));
     });
     set(0);
   }

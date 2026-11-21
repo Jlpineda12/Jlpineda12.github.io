@@ -7,7 +7,7 @@
 //              then drops into the console's slot, and the console boots
 //   page     → How I work: the screen itself turns over like a page, and the notebook slides in
 //              under it
-//   stick    → Tools: the notebook drops away, the laptop comes up and its stickers get slapped on
+//   stick    → Tools: the notebook drops away, the laptop comes up and its stickers rain into it
 //   postcard → Contact: the keyboard steps back and the postcard comes flying in, then gets its stamp
 // Going back up plays a soft slide instead. Each function builds a GSAP timeline; `swap` must be
 // called at the moment the old chapter is gone and the new one is in place.
@@ -45,7 +45,7 @@ function dive(c: Ctx) {
   const size = Math.hypot(vw(), vh()) * 2.2;
   gsap.set(circle, { left: c.origin.x, top: c.origin.y, width: size, height: size, x: '-50%', y: '-50%', scale: 0.012, background: c.toBg });
   const tl = gsap.timeline();
-  tl.to(c.from, { scale: 3.2, transformOrigin: `${c.origin.x}px ${c.origin.y}px`, filter: 'blur(4px)', duration: 0.85, ease: 'power3.in' }, 0)
+  tl.to(c.from, { scale: 3.2, transformOrigin: `${c.origin.x}px ${c.origin.y}px`, duration: 0.85, ease: 'power3.in' }, 0)
     .to(circle, { scale: 1, duration: 0.8, ease: 'power3.in' }, 0.05)
     .call(c.swap, [], 0.84)
     // The chapter opens out of the same colour: no cut, the circle simply becomes its background.
@@ -86,7 +86,7 @@ function boot(c: Ctx) {
   const rest = all(c.to, '.carts li, .infos, .pj-head > *');
 
   const tl = gsap.timeline();
-  tl.to(c.from, { scale: 0.94, filter: 'brightness(0.8) blur(3px)', duration: 0.6, ease: 'power2.out' }, 0)
+  tl.to(c.from, { scale: 0.94, opacity: 0.55, duration: 0.6, ease: 'power2.out' }, 0)
     .fromTo(box, { x: dx, y: dy + vh() * 0.7, scale: big, rotate: 12 }, { y: dy, rotate: -3, duration: 0.6, ease: 'power3.out' }, 0)
     .to(box, { rotate: 0, duration: 0.3, ease: 'back.out(3)' }, 0.6);
   // The label shuffles like a reel, slowing down, and stops on the first project.
@@ -102,8 +102,8 @@ function boot(c: Ctx) {
   tl.set(slot, { opacity: 0 }, 0)
     .call(c.swap, [], 0.8)
     .fromTo(c.to, { opacity: 0 }, { opacity: 1, duration: 0.45, ease: 'power2.out' }, 0.8);
-  if (device) tl.fromTo(device, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', clearProps: 'transform,opacity' }, 0.8);
-  if (rest.length) tl.fromTo(rest, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.025, ease: 'power2.out', clearProps: 'transform,opacity' }, 0.95);
+  if (device) tl.fromTo(device, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', clearProps: 'all' }, 0.8);
+  if (rest.length) tl.fromTo(rest, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.025, ease: 'power2.out', clearProps: 'all' }, 0.95);
   // Up above the slot, then down into it.
   tl.to(box, { x: 0, y: -R.height * 0.75, scale: 1, duration: 0.6, ease: 'power3.inOut' }, 0.9)
     .to(box, { y: 0, duration: 0.18, ease: 'power2.in' }, 1.5)
@@ -133,7 +133,7 @@ function bootDive(c: Ctx) {
   const shot = cart.querySelector<HTMLElement>('.tx-shot')!;
   cart.style.setProperty('--paper', c.toBg);
   const tl = gsap.timeline();
-  tl.to(c.from, { scale: 0.95, filter: 'blur(2px)', duration: 0.55 }, 0)
+  tl.to(c.from, { scale: 0.95, opacity: 0.6, duration: 0.55 }, 0)
     .fromTo(cart, { yPercent: 120 }, { yPercent: -50, duration: 0.55, ease: 'power3.out' }, 0)
     .call(() => {
       const r = shot.getBoundingClientRect();
@@ -154,27 +154,25 @@ function page(c: Ctx) {
   const book = c.to.querySelector<HTMLElement>('[data-book]');
   const tl = gsap.timeline();
   tl.set(c.from, { transformOrigin: '0% 50%', transformPerspective: 2200 }, 0)
-    .to(c.from, { rotateY: -100, filter: 'brightness(0.7)', duration: 0.9, ease: 'power2.inOut' }, 0)
+    .to(c.from, { rotateY: -100, duration: 0.9, ease: 'power2.inOut' }, 0)
     .fromTo(shade, { opacity: 1 }, { opacity: 0, duration: 0.9, ease: 'power2.in' }, 0)
     .fromTo(c.to, { scale: 0.97 }, { scale: 1, duration: 0.9, ease: 'power2.out' }, 0)
     .call(c.swap, [], 0.9);
-  if (book) tl.fromTo(book, { x: vw() * 0.12, rotate: 4 }, { x: 0, rotate: 0, duration: 1, ease: 'power3.out', clearProps: 'transform' }, 0.15);
+  if (book) tl.fromTo(book, { x: vw() * 0.12, rotate: 4 }, { x: 0, rotate: 0, duration: 1, ease: 'power3.out', clearProps: 'all' }, 0.15);
   return tl;
 }
 
 // ---------- stick: the laptop comes up and the stickers get stuck on ----------
 function stick(c: Ctx) {
   const laptop = c.to.querySelector<HTMLElement>('.laptop');
-  const stickers = all(c.to, '.lid .st, .lid .logo');
-  const rest = all(c.to, '.c-head, .chips, .st-hint, .lid-tag');
+  const rest = all(c.to, '.c-head');
   const tl = gsap.timeline();
   tl.to(c.from, { y: vh() * 0.25, scale: 0.9, opacity: 0, duration: 0.5, ease: 'power2.in' }, 0)
     .call(c.swap, [], 0.4)
     .fromTo(c.to, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.4);
-  if (laptop) tl.fromTo(laptop, { y: vh() * 0.3, rotateX: 35, transformPerspective: 1400, transformOrigin: '50% 100%' }, { y: 0, rotateX: 0, duration: 0.75, ease: 'power3.out', clearProps: 'transform' }, 0.4);
-  // Slapped on one by one: each lands a little too big and settles.
-  if (stickers.length) tl.fromTo(stickers, { scale: 1.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.32, ease: 'back.out(1.6)', stagger: { each: 0.035, from: 'random' }, clearProps: 'transform,opacity,scale' }, 0.75);
-  if (rest.length) tl.fromTo(rest, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out', stagger: 0.08, clearProps: 'transform,opacity' }, 0.55);
+  // The laptop comes up; its stickers rain in as the chapter opens (Tools.astro).
+  if (laptop) tl.fromTo(laptop, { y: vh() * 0.3, rotateX: 35, transformPerspective: 1400, transformOrigin: '50% 100%' }, { y: 0, rotateX: 0, duration: 0.75, ease: 'power3.out', clearProps: 'all' }, 0.4);
+  if (rest.length) tl.fromTo(rest, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out', clearProps: 'all' }, 0.55);
   return tl;
 }
 
@@ -184,12 +182,12 @@ function postcard(c: Ctx) {
   const stamp = c.to.querySelector<HTMLElement>('.pc-stamp');
   const rest = all(c.to, '.pc-title, .pc-lead, .pc-foot');
   const tl = gsap.timeline();
-  tl.to(c.from, { scale: 0.88, opacity: 0, filter: 'blur(3px)', duration: 0.5, ease: 'power2.in' }, 0)
+  tl.to(c.from, { scale: 0.88, opacity: 0, duration: 0.5, ease: 'power2.in' }, 0)
     .call(c.swap, [], 0.35)
     .fromTo(c.to, { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.35);
-  if (rest.length) tl.fromTo(rest, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.out', clearProps: 'transform,opacity' }, 0.45);
-  if (card) tl.fromTo(card, { x: vw() * 0.7, y: vh() * 0.45, rotation: 28 }, { x: 0, y: 0, rotation: 0, duration: 0.85, ease: 'power3.out', clearProps: 'transform' }, 0.35);
-  if (stamp) tl.fromTo(stamp, { scale: 2.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power3.in', clearProps: 'transform,opacity' }, 1.05);
+  if (rest.length) tl.fromTo(rest, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.out', clearProps: 'all' }, 0.45);
+  if (card) tl.fromTo(card, { x: vw() * 0.7, y: vh() * 0.45, rotation: 28 }, { x: 0, y: 0, rotation: 0, duration: 0.85, ease: 'power3.out', clearProps: 'all' }, 0.35);
+  if (stamp) tl.fromTo(stamp, { scale: 2.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power3.in', clearProps: 'all' }, 1.05);
   if (card) tl.to(card, { y: 4, duration: 0.08, yoyo: true, repeat: 1 }, 1.35);
   return tl;
 }
