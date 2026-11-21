@@ -871,6 +871,23 @@ html.fp [data-deck] > [data-slide].is-under { visibility: visible; z-index: 1; }
 
 .tx-cap small { font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: #2a2a2e99; }
 
+/* boot: the copy of the first cartridge, and the ring as it clicks into place */
+.tx-cart2 {
+  position: absolute;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 30px 30px #2a1a6a66);
+}
+
+.tx-cart2 > * { pointer-events: none; }
+
+.tx-ring {
+  position: absolute;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 3px solid #ffffffcc;
+  box-shadow: 0 0 24px #ffffff80;
+}
+
 /* page: the shadow the turning page throws on the chapter under it */
 .tx-shade {
   position: absolute;

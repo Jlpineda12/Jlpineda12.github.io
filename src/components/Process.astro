@@ -131,7 +131,6 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     ))}
   </div>
 
-  <p class="turn" aria-hidden="true">{lab.poke} · {lab.turn} ↓</p>
 </section>
 
 <style>
@@ -148,7 +147,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 
   /* ---------- The book ---------- */
   .book {
-    --w: min(92vw, 1040px, 126svh);
+    --w: min(92vw, 1040px, calc((100svh - 190px) * 1.55));
     --h: calc(var(--w) / 1.55);
     --open: 0;
     --u: calc(var(--h) / 30); /* a unit for type and spacing */

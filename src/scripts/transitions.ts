@@ -3,8 +3,8 @@
 // (scripts/fullpage.ts plays them):
 //   dive     → About me: the camera dives into José's face; the colour of the next chapter grows out
 //              of it and the cards come up as it opens
-//   boot     → Projects: a cartridge with his projects on its label rises; the camera dives into the
-//              label and lands in the console
+//   boot     → Projects: the first cartridge rises with its label shuffling through his projects,
+//              then drops into the console's slot, and the console boots
 //   page     → How I work: the screen itself turns over like a page, and the notebook slides in
 //              under it
 //   stick    → Tools: the notebook drops away, the laptop comes up and its stickers get slapped on
@@ -55,38 +55,94 @@ function dive(c: Ctx) {
 }
 
 // ---------- boot: a cartridge ----------
-// The label shows his projects (flicking through a few as it rises) with the count under them. The
-// camera dives into the picture, and when it fills the screen the console is there.
+// The first cartridge on the shelf comes up to meet you: it rises into the middle, its label
+// shuffling through his projects like a slot reel until it settles on the first one. The projects
+// open behind it, and it flies down into its place on the turntable (the very cartridge that is
+// there), with a little ring as it clicks in, while the console slides in beside it.
 function boot(c: Ctx) {
+  const shelfCart = c.to.querySelector<HTMLElement>('.carts .cart.is-in') ?? c.to.querySelector<HTMLElement>('.carts .cart');
+  const slot = c.to.querySelector<HTMLElement>('.slot-cart');
+  if (!shelfCart || !slot) return bootDive(c);
+  const R = slot.getBoundingClientRect();
+  if (!R.width) return bootDive(c);
+
+  // A copy of the first cartridge, big, in the layer above everything.
+  const box = el('div', 'tx-cart2', c.layer);
+  Object.assign(box.style, { left: `${R.left}px`, top: `${R.top}px`, width: `${R.width}px`, height: `${R.height}px` });
+  const copy = shelfCart.cloneNode(true) as HTMLElement;
+  copy.classList.remove('is-in');
+  copy.setAttribute('tabindex', '-1');
+  Object.assign(copy.style, { width: '100%', height: '100%', translate: 'none', opacity: '1', filter: 'none' });
+  box.appendChild(copy);
+  const img = copy.querySelector<HTMLImageElement>('.c-label img');
+  if (img) img.loading = 'eager';
+
+  const big = Math.min(vw() * 0.3, vh() * 0.42, 300) / R.width;
+  const dx = vw() / 2 - (R.left + R.width / 2);
+  const dy = vh() / 2 - (R.top + R.height / 2);
   const art = (c.to.dataset.txArt || '').split(',').filter(Boolean);
-  const sub = c.to.dataset.txSub || '';
+  const final = img?.src || '';
+  const device = c.to.querySelector<HTMLElement>('.device .body');
+  const rest = all(c.to, '.carts li, .infos, .pj-head > *');
+
+  const tl = gsap.timeline();
+  tl.to(c.from, { scale: 0.94, filter: 'brightness(0.8) blur(3px)', duration: 0.6, ease: 'power2.out' }, 0)
+    .fromTo(box, { x: dx, y: dy + vh() * 0.7, scale: big, rotate: 12 }, { y: dy, rotate: -3, duration: 0.6, ease: 'power3.out' }, 0)
+    .to(box, { rotate: 0, duration: 0.3, ease: 'back.out(3)' }, 0.6);
+  // The label shuffles like a reel, slowing down, and stops on the first project.
+  if (img && art.length) {
+    const shots = [...art, ...art].slice(0, 8);
+    let t = 0.08;
+    shots.forEach((src, i) => {
+      tl.call(() => { img.src = src; }, [], t);
+      t += 0.04 + i * 0.012;
+    });
+    tl.call(() => { img.src = final; }, [], t);
+  }
+  tl.set(slot, { opacity: 0 }, 0)
+    .call(c.swap, [], 0.8)
+    .fromTo(c.to, { opacity: 0 }, { opacity: 1, duration: 0.45, ease: 'power2.out' }, 0.8);
+  if (device) tl.fromTo(device, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', clearProps: 'transform,opacity' }, 0.8);
+  if (rest.length) tl.fromTo(rest, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.025, ease: 'power2.out', clearProps: 'transform,opacity' }, 0.95);
+  // Up above the slot, then down into it.
+  tl.to(box, { x: 0, y: -R.height * 0.75, scale: 1, duration: 0.6, ease: 'power3.inOut' }, 0.9)
+    .to(box, { y: 0, duration: 0.18, ease: 'power2.in' }, 1.5)
+    .call(() => {
+      gsap.set(slot, { opacity: 1 });
+      box.style.opacity = '0';
+      const ring = el('span', 'tx-ring', c.layer);
+      gsap.set(ring, { left: R.left + R.width / 2, top: R.top + R.height, width: R.width * 2.2, height: R.width * 2.2 });
+      gsap.fromTo(ring, { scale: 0.4, opacity: 0.9 }, { scale: 1.6, opacity: 0, duration: 0.55, ease: 'power2.out' });
+      window.dispatchEvent(new Event('proj-inserted'));
+    }, [], 1.68)
+    .set({}, {}, 2.2);
+  return tl;
+}
+
+// Without the turntable (no scripts ran for it yet): the camera dives into a cartridge's label.
+function bootDive(c: Ctx) {
+  const art = (c.to.dataset.txArt || '').split(',').filter(Boolean);
   const cart = el(
     'div',
     'tx-cart',
     c.layer,
     `<span class="tx-ridges"></span><span class="tx-label">` +
-      `<span class="tx-shot">${art.map((src, i) => `<img src="${esc(src)}" alt="" style="opacity:${i ? 0 : 1}">`).join('')}</span>` +
-      `<span class="tx-cap"><b>${esc(c.title)}</b><small>${esc(sub)}</small></span></span>`,
+      `<span class="tx-shot">${art.slice(0, 1).map((src) => `<img src="${esc(src)}" alt="">`).join('')}</span>` +
+      `<span class="tx-cap"><b>${esc(c.title)}</b></span></span>`,
   );
   const shot = cart.querySelector<HTMLElement>('.tx-shot')!;
-  const imgs = all(shot, 'img');
   cart.style.setProperty('--paper', c.toBg);
   const tl = gsap.timeline();
-  tl.to(c.from, { scale: 0.95, filter: 'brightness(0.85) blur(2px)', duration: 0.55, ease: 'power2.out' }, 0)
-    .fromTo(cart, { yPercent: 120, rotate: 8 }, { yPercent: -50, rotate: 0, duration: 0.55, ease: 'power3.out' }, 0);
-  // Flicking through the projects on the label, like a cartridge booting.
-  imgs.slice(1).forEach((img, i) => {
-    tl.set(imgs[i], { opacity: 0 }, 0.12 + i * 0.09).set(img, { opacity: 1 }, 0.12 + i * 0.09);
-  });
-  tl.call(() => {
-    const r = shot.getBoundingClientRect();
-    const cr = cart.getBoundingClientRect();
-    gsap.set(cart, { transformOrigin: `${r.left - cr.left + r.width / 2}px ${r.top - cr.top + r.height / 2}px` });
-  }, [], 0.6)
-    .to(cart.querySelector('.tx-cap'), { opacity: 0, duration: 0.15 }, 0.62)
-    .to(cart, { scale: Math.max(vw(), vh()) / Math.max(1, shot.offsetWidth || 120) * 1.6, duration: 0.55, ease: 'power3.in' }, 0.62)
+  tl.to(c.from, { scale: 0.95, filter: 'blur(2px)', duration: 0.55 }, 0)
+    .fromTo(cart, { yPercent: 120 }, { yPercent: -50, duration: 0.55, ease: 'power3.out' }, 0)
+    .call(() => {
+      const r = shot.getBoundingClientRect();
+      const cr = cart.getBoundingClientRect();
+      gsap.set(cart, { transformOrigin: `${r.left - cr.left + r.width / 2}px ${r.top - cr.top + r.height / 2}px` });
+    }, [], 0.6)
+    .to(cart, { scale: 16, duration: 0.55, ease: 'power3.in' }, 0.62)
     .call(c.swap, [], 1.12)
-    .fromTo(c.to, { scale: 1.05, filter: 'blur(6px)' }, { scale: 1, filter: 'blur(0px)', duration: 0.6, ease: 'power3.out' }, 1.12)
+    .fromTo(c.to, { scale: 1.05 }, { scale: 1, duration: 0.6, ease: 'power3.out' }, 1.12)
     .to(cart, { opacity: 0, duration: 0.35 }, 1.12);
   return tl;
 }

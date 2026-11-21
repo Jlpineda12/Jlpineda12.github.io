@@ -9,15 +9,31 @@ const { tools } = getData(lang);
 const ui = t(lang);
 const c = ui.candid;
 const COLORS = ['#e5483b', '#22a06b', '#e3a21a', '#4656d6', '#a8459c', '#e0567a'];
-// A tiny pictogram per field (24px grid).
-const ICONS = [
-  'M6 12h4M8 10v4M15 11h.01M18 13h.01M7 7h10a4 4 0 0 1 4 4v3a3 3 0 0 1-5.2 2l-1.3-1.5h-5L8.2 16A3 3 0 0 1 3 14v-3a4 4 0 0 1 4-4z',
-  'M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9',
-  'M4 20l4-1L19 8a2.1 2.1 0 0 0-3-3L5 16zM14 7l3 3',
-  'M8 6l-5 6 5 6M16 6l5 6-5 6M13.5 4l-3 16',
-  'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18',
-  'M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a3 3 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1',
-];
+// Each tool's mark, drawn simply in its brand colours (24px grid): a stroked shape or its letters.
+type Mark = { bg: string; fg: string; d?: string; t?: string; fill?: string };
+const MARKS: Record<string, Mark> = {
+  unity: { bg: '#1f1f24', fg: '#fff', d: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5' },
+  'c#': { bg: '#68217a', fg: '#fff', t: 'C#' },
+  blender: { bg: '#e87d0d', fg: '#fff', d: 'M14 16.5a5 5 0 1 0 0-.01M3 9.5h8M6 6.5l6.5 5', fill: 'M14 18a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z' },
+  maya: { bg: '#0f8f9e', fg: '#fff', d: 'M5 18V7l7 7 7-7v11' },
+  'three.js': { bg: '#111', fg: '#fff', d: 'M4 20L8 4l12 12zM6 12l8 2M10 18l2-8M8 4l4 6' },
+  photoshop: { bg: '#001e36', fg: '#31a8ff', t: 'Ps' },
+  procreate: { bg: '#121212', fg: '#fff', d: 'M5 19c2 0 3-1 3-3s1.5-3 3-3l6-8 2 2-8 6c0 1.5-1 3-3 3s-3 1-3 3z' },
+  'ui/ux': { bg: '#f24e1e', fg: '#fff', d: 'M7 4l11 7-5 1.5L10.5 18z' },
+  java: { bg: '#f89820', fg: '#fff', d: 'M5 11h11v4a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 12h1.5a2.5 2.5 0 0 1 0 5H16M9 3c-1 1.5 1 2.5 0 4M12.5 3c-1 1.5 1 2.5 0 4' },
+  'c++': { bg: '#00599c', fg: '#fff', t: 'C++' },
+  python: { bg: '#3776ab', fg: '#ffd43b', t: 'Py' },
+  javascript: { bg: '#f7df1e', fg: '#1a1a1a', t: 'JS' },
+  typescript: { bg: '#3178c6', fg: '#fff', t: 'TS' },
+  'node.js': { bg: '#5fa04e', fg: '#fff', d: 'M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4zM14.5 9.5c-.5-1-1.5-1.3-2.5-1.3-1.5 0-2.5.7-2.5 1.8 0 2.6 5.2 1.4 5.2 4 0 1.1-1.1 1.9-2.7 1.9-1.3 0-2.3-.5-2.8-1.5' },
+  express: { bg: '#111', fg: '#fff', t: 'ex' },
+  prisma: { bg: '#2d3748', fg: '#fff', d: 'M12 2.5L4 17.5l9 4 7-3.5zM12 2.5l1 19' },
+  'react native': { bg: '#20232a', fg: '#61dafb', d: 'M12 8.2c5 0 9 1.7 9 3.8s-4 3.8-9 3.8-9-1.7-9-3.8 4-3.8 9-3.8zM8.7 10.1c2.5-4.3 6-7 7.8-5.9s1.2 5.5-1.3 9.8-6 7-7.8 5.9-1.2-5.5 1.3-9.8zM8.7 13.9c-2.5-4.3-3-8.7-1.3-9.8s5.3 1.6 7.8 5.9 3 8.7 1.3 9.8-5.3-1.6-7.8-5.9z', fill: 'M12 13.6a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z' },
+  tensorflow: { bg: '#ff6f00', fg: '#fff', t: 'TF' },
+  keras: { bg: '#d00000', fg: '#fff', t: 'K' },
+  flask: { bg: '#111', fg: '#fff', d: 'M9.5 3h5M10.5 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2l-5.5-10V3M7.5 15h9' },
+};
+const markOf = (name: string): Mark => MARKS[name.toLowerCase()] ?? { bg: '#2a2a2e', fg: '#fff', t: name.slice(0, 2) };
 const SHAPES = ['round', 'pill', 'badge', 'tag', 'pill', 'round', 'tag'];
 // Every tool once (C# shows up under games and code), short names only.
 const seen = new Set<string>();
@@ -42,7 +58,7 @@ const mid = Math.floor(lid.length / 2);
     <div class="laptop">
       <div class="lid" data-lid>
         <span class="cam" aria-hidden="true"></span>
-        <p class="lid-tag" aria-live="polite" data-idle={c.keysIdle}>{c.keysIdle}</p>
+        <p class="lid-tag" aria-live="polite" data-idle=""></p>
         <ul class="stickers" role="list">
           {lid.map((s, i) => (
             <>
@@ -57,7 +73,18 @@ const mid = Math.floor(lid.length / 2);
                   data-fp-drag
                   style={`--c:${COLORS[s.gi % COLORS.length]};--r:${(s.h % 17) - 8}deg;--dy:${(s.h % 11) - 5}px;--k:${s.big ? 1.3 : 0.9 + (s.h % 4) * 0.06}`}
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d={ICONS[s.gi % ICONS.length]} /></svg>
+                  {(() => {
+                    const m = markOf(s.name);
+                    return (
+                      <span class="mk" style={`--mb:${m.bg};--mf:${m.fg}`} aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                          {m.d && <path d={m.d} />}
+                          {m.fill && <path class="mk-fill" d={m.fill} />}
+                          {m.t && <text x="12" y="12.5" dominant-baseline="middle" text-anchor="middle" font-size={m.t.length > 2 ? 9 : 11.5}>{m.t}</text>}
+                        </svg>
+                      </span>
+                    );
+                  })()}
                   <span>{s.name}</span>
                 </button>
               </li>
@@ -74,7 +101,6 @@ const mid = Math.floor(lid.length / 2);
         <button class="chip" type="button" data-chip={gi} aria-pressed="false" style={`--c:${COLORS[gi % COLORS.length]}`}>{g.group}</button>
       ))}
     </div>
-    <p class="st-hint">{c.keysHint}</p>
   </div>
 </section>
 
@@ -90,7 +116,7 @@ const mid = Math.floor(lid.length / 2);
   }
 
   /* ---------- The laptop ---------- */
-  .laptop { width: min(100%, 860px, 92svh); }
+  .laptop { width: min(100%, 860px, calc((100svh - 368px) * 1.6)); min-width: min(100%, 420px); }
 
   .lid {
     position: relative;
@@ -135,6 +161,8 @@ const mid = Math.floor(lid.length / 2);
     box-shadow: 0 6px 10px -6px #0008;
     pointer-events: none;
   }
+
+  .lid-tag:empty { visibility: hidden; }
 
   /* A strip of tape holding it. */
   .lid-tag::before {
@@ -196,7 +224,7 @@ const mid = Math.floor(lid.length / 2);
     background: var(--c);
     color: #fff;
     font: inherit;
-    font-size: clamp(11px, calc(2cqi * var(--k, 1)), 24px);
+    font-size: clamp(11px, calc(1.8cqi * var(--k, 1)), 22px);
     font-weight: 900;
     font-stretch: 112%;
     line-height: 1;
@@ -212,13 +240,30 @@ const mid = Math.floor(lid.length / 2);
     z-index: 1;
   }
 
-  .st svg { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  /* The tool's mark: a little app-style tile in its brand colours. */
+  .mk {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.7em;
+    height: 1.7em;
+    border-radius: 0.42em;
+    background: var(--mb);
+    box-shadow: 0 0 0 1.5px #ffffffcc, inset 0 1px 0 #ffffff30;
+  }
+
+  .mk svg { width: 78%; height: 78%; overflow: visible; }
+  .mk path { fill: none; stroke: var(--mf); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .mk .mk-fill { fill: var(--mf); stroke: none; }
+  .mk text { fill: var(--mf); font-family: var(--font); font-weight: 900; letter-spacing: -0.04em; }
+
+  .st-round .mk { width: 2.2em; height: 2.2em; }
 
   .st-round {
     flex-direction: column;
     justify-content: center;
     gap: 0.3em;
-    width: calc(5.6em + 1cqi);
+    width: calc(6.3em + 1cqi);
     aspect-ratio: 1;
     padding: 0.6em;
     border-radius: 50%;
@@ -273,13 +318,6 @@ const mid = Math.floor(lid.length / 2);
   .chip.is-on { background: var(--c); border-color: var(--c); color: #fff; }
   .chip:focus-visible { outline: 3px solid var(--c); outline-offset: 2px; }
 
-  .st-hint {
-    font-family: var(--hand);
-    font-size: 20px;
-    font-weight: 700;
-    color: color-mix(in oklab, var(--fg) 55%, transparent);
-    rotate: -2deg;
-  }
 
   /* The tablet's camera, only on narrow screens. */
   .cam { display: none; }
@@ -317,12 +355,12 @@ const mid = Math.floor(lid.length / 2);
       box-shadow: 0 0 0 1px #00000080;
     }
     .lid-tag { max-width: 68%; }
-    .stickers { gap: 3.4cqi 2.6cqi; }
-    .st { --edge: 1cqi; font-size: clamp(11px, calc(3.5cqi * var(--k, 1)), 19px); padding: 2cqi 3cqi; }
-    .st-round { padding: 0.6em; font-size: clamp(10px, 3cqi, 15px); }
+    .stickers { gap: 2.8cqi 2.2cqi; }
+    .st { --edge: 1cqi; font-size: clamp(10px, calc(3cqi * var(--k, 1)), 17px); padding: 1.8cqi 2.6cqi; }
+    .st-round { padding: 0.5em; font-size: clamp(9px, 2.6cqi, 14px); width: calc(5.6em + 1cqi); }
+    .mk { width: 1.5em; height: 1.5em; }
     .logo { width: 18cqi; font-size: 4.6cqi; }
     .chip { padding: 4px 10px; font-size: 12px; }
-    .st-hint { font-size: 18px; }
   }
 
   @media (prefers-reduced-motion: reduce) {

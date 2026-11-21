@@ -141,12 +141,21 @@ export function initFullpage() {
     return dir > 0 ? sc.scrollTop + sc.clientHeight < sc.scrollHeight - 2 : sc.scrollTop > 2;
   };
 
+  // A panel of its own (data-fp-free: a project's text, the postcard) keeps the gesture while it
+  // can still scroll that way; at its end, the deck moves on.
+  const freeScrolls = (t: Element | null, dir: number) => {
+    const f = t?.closest<HTMLElement>('[data-fp-free]');
+    if (!f) return false;
+    if (f.scrollHeight <= f.clientHeight + 2) return false;
+    return dir > 0 ? f.scrollTop + f.clientHeight < f.scrollHeight - 2 : f.scrollTop > 2;
+  };
+
   // The wheel: one gesture, one move. Trackpads keep sending small deltas after a flick, so the
   // deck waits for the wheel to go quiet before it listens again.
   let acc = 0, quiet = 0, locked = false;
   addEventListener('wheel', (e) => {
-    if ((e.target as Element).closest('[data-fp-free]')) return;
     const dir = Math.sign(e.deltaY);
+    if (freeScrolls(e.target as Element, dir)) return;
     if (!dir || canScroll(dir)) return;
     e.preventDefault();
     clearTimeout(quiet);
@@ -168,12 +177,12 @@ export function initFullpage() {
     tEdge = true;
   }, { passive: true });
   addEventListener('touchend', (e) => {
-    if (!tEdge || (e.target as Element).closest('[data-fp-free], [data-fp-drag]')) return;
+    if (!tEdge || (e.target as Element).closest('[data-fp-drag]')) return;
     const dy = ty - e.changedTouches[0].clientY;
     const dx = tx - e.changedTouches[0].clientX;
     if (Math.abs(dy) < 60 || Math.abs(dx) > Math.abs(dy)) return;
     const dir = Math.sign(dy);
-    if (canScroll(dir)) return;
+    if (canScroll(dir) || freeScrolls(e.target as Element, dir)) return;
     if (dir > 0) next(); else prev();
   }, { passive: true });
 

@@ -46,6 +46,11 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
           </span>
         ))}
       </h1>
+      <!-- What he is, rolling like a slot reel: engineer first, then the rest. -->
+      <p class="tagline">
+        <span class="roll" aria-hidden="true"><span class="roll-in">{[...h.words, h.words[0]].map((w) => <span>{w}</span>)}</span></span>
+        <span class="sr-only">{h.words.join(', ')}</span>
+      </p>
     </div>
 
     <div class="lens" aria-hidden="true"><div class="lens-in"></div><span class="lens-shine"></span></div>
@@ -245,7 +250,7 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(24px, 4svh, 48px) var(--margin) clamp(220px, 40svh, 420px);
+    padding: clamp(24px, 4svh, 48px) var(--margin) clamp(110px, 18svh, 200px);
     transition: opacity 0.3s;
   }
 
@@ -658,11 +663,11 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
 
     .name-wrap { width: 100%; }
 
-    /* Phones: the name in the top third, the card hanging under it. */
-    .stage {
-      align-items: flex-start;
-      padding-top: 15svh;
-    }
+    /* Phones and tall screens: the name stacked on three lines, big, in the middle. */
+    .hero { --u: min(27vw, 11svh, 150px); }
+    .stage { align-items: center; padding-top: 6svh; padding-bottom: 16svh; }
+    .name .line:first-child { flex-wrap: wrap; row-gap: calc(var(--u) * 0.16); }
+    .name .line:first-child .sp { flex-basis: 100%; height: 0; }
 
     .lens { display: none; }
   }
@@ -684,6 +689,50 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
     .intro-word span { animation: none; }
   }
 
+  /* ---------- What he makes: a rolling word ---------- */
+  .tagline {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.35em;
+    margin-top: calc(var(--u) * 0.18);
+    font-size: clamp(1.05rem, 0.7rem + 1.3vw, 1.75rem);
+    font-weight: 800;
+    font-stretch: 112%;
+    letter-spacing: -0.01em;
+    color: color-mix(in oklab, var(--fg) 82%, transparent);
+  }
+
+  .roll {
+    position: relative;
+    display: inline-block;
+    height: 1.25em;
+    overflow: hidden;
+    vertical-align: bottom;
+    transition: width 0.5s cubic-bezier(0.6, 0, 0.3, 1);
+  }
+
+  .roll-in { display: grid; transition: translate 0.6s cubic-bezier(0.7, -0.3, 0.3, 1.3); }
+  .roll-in.is-jump { transition: none; }
+
+  .roll-in > span {
+    height: 1.25em;
+    line-height: 1.25em;
+    white-space: nowrap;
+    color: #ffd23f;
+    text-align: center;
+  }
+
+  :global(html.intro) .tagline,
+  .hero.is-paper .tagline { opacity: 0; }
+
+  .tagline { transition: opacity 0.6s 0.3s; }
+
+  @media (max-width: 700px) {
+    .scroll-cue { bottom: clamp(36px, 7svh, 72px); }
+  }
+
+
 </style>
 
 <script>
@@ -693,6 +742,34 @@ const ls = (k: string) => `--w:${L[k].w};--h:${L[k].h};--y0:${L[k].y0}`;
   initLiquidBg(document.querySelector<HTMLCanvasElement>('.hero .liquid-bg'));
   initLiquid();
   initHero3d();
+  // The rolling word: one every 2.2 s, the reel sized to the word on show.
+  const roll = document.querySelector<HTMLElement>('.hero .roll');
+  const reel = roll?.querySelector<HTMLElement>('.roll-in');
+  if (roll && reel && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const words = [...reel.children] as HTMLElement[];
+    let k = 0;
+    const fit = () => (roll.style.width = `${words[k].scrollWidth}px`);
+    const step = () => {
+      if (document.documentElement.dataset.slide && document.documentElement.dataset.slide !== 'inicio') return;
+      k++;
+      reel.style.translate = `0 ${-k * 1.25}em`;
+      fit();
+      // The last word repeats the first: once there, jump back to it without a seam.
+      if (k === words.length - 1) {
+        setTimeout(() => {
+          reel.classList.add('is-jump');
+          k = 0;
+          reel.style.translate = '0 0';
+          void reel.offsetWidth;
+          reel.classList.remove('is-jump');
+        }, 650);
+      }
+    };
+    document.fonts?.ready.then(fit);
+    fit();
+    setInterval(step, 2200);
+  }
+
   // The scroll cue fades once the visitor starts scrolling.
   const flag = () => document.documentElement.classList.toggle('scrolled', scrollY > 40);
   addEventListener('scroll', flag, { passive: true });
