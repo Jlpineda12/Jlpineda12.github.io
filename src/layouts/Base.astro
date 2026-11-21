@@ -22,6 +22,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <link rel="alternate" hreflang="en" href={alt('en')} />
     <link rel="alternate" hreflang="x-default" href={alt('es')} />
     <link rel="icon" type="image/png" href={`${base}favicon.png`} />
+    <link rel="apple-touch-icon" href={`${base}favicon.png`} />
     <meta name="theme-color" content="#3d4ccf" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={lang === 'es' ? 'es_CO' : 'en_US'} />
@@ -32,16 +33,14 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600..700&family=TikTok+Sans:wdth,wght@100..150,400..900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Caveat:wght@600..700&family=TikTok+Sans:wdth,wght@100..150,400..900&display=swap" rel="stylesheet" />
     <script is:inline>
-      // Every time the home page loads, the intro plays (his name animates in) and ends at the gate:
-      // scan the Creative ID to get in. A link straight to a chapter (#…) skips both; reduced motion
-      // skips the intro but keeps the card.
+      // Every time the home page loads, the intro plays (his name animates in). A link straight to a
+      // chapter (#…) or reduced motion skips it.
       (function () {
         var d = document.documentElement;
         d.classList.add('js');
         if (location.hash) return;
-        d.classList.add('gate');
         try {
           if (!matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('intro');
         } catch (e) {}
@@ -58,7 +57,7 @@ const og = new URL(`${base}og.jpg`, Astro.site).href;
       sameAs: site.socials.map((s) => s.url),
     })} />
   </head>
-  <body data-travelling={ui.travelling} data-rewind-label={ui.rewinding}>
+  <body data-rewind-label={ui.rewinding}>
     <a class="skip" href="#contenido">{ui.skip}</a>
     <slot />
   </body>

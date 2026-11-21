@@ -16,6 +16,7 @@
 
   --font: 'TikTok Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --comic: 'Bangers', 'Impact', 'Arial Black', sans-serif;
   --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
   --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
   --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
@@ -45,25 +46,28 @@ html {
    is paired with its complement (or a close neighbour) as the accent. scripts/scenes.ts blends the
    page from one to the next as you scroll; without scripts each chapter just paints its own. */
 [data-scene] { color: var(--fg); }
-/* Cobalt (his headphones, deepened) + warm yellow: complementary. */
+/* After the cobalt hero the chapters walk the wheel in small steps, all at the same soft lightness
+   (analogous colours): periwinkle → lavender → orchid → blush → cream. Neighbours are close, so
+   no change feels abrupt; each keeps one stronger accent from his palette. */
 [data-scene='hero'] { --bg: #3d4ccf; --fg: #fbf0e0; --accent: #ffd23f; }
-/* Peach (his skin) + red (his shirt): analogous, warm and close. */
-[data-scene='about'] { --bg: #fde3d2; --fg: var(--ink); --accent: #b02e2e; }
-/* Mint + coral red: complementary, so the cartridges pop. */
-[data-scene='projects'] { --bg: #cfeedd; --fg: var(--ink); --accent: #e5483b; }
-/* Lilac + amber: complementary. */
-[data-scene='process'] { --bg: #ddd5fb; --fg: var(--ink); --accent: #f2b630; }
-/* Butter + violet: complementary. */
-[data-scene='inventory'] { --bg: #fff1b3; --fg: var(--ink); --accent: #6b4fd8; }
-/* Periwinkle + coral; the yellow notebook is its complement. */
-[data-scene='contact'] { --bg: #b4c6ff; --fg: var(--ink); --accent: #ff6b4a; }
+[data-scene='about'] { --bg: #e8ebff; --fg: var(--ink); --accent: #3d4ccf; }
+[data-scene='projects'] { --bg: #ece6ff; --fg: var(--ink); --accent: #6b4fd8; }
+[data-scene='process'] { --bg: #f5e8fb; --fg: var(--ink); --accent: #a8459c; }
+[data-scene='inventory'] { --bg: #fde8ee; --fg: var(--ink); --accent: #d6455a; }
+[data-scene='contact'] { --bg: #fff0e3; --fg: var(--ink); --accent: #e8702a; }
 [data-scene='footer'] { --bg: #2a2a2e; --fg: #ffffff; --accent: #ffd23f; }
 
-html:not(.js) [data-scene] { background-color: var(--bg); }
+/* Each chapter paints its own colour (the hero draws its own); the seams between them are drawn
+   by components/Edge.astro. A faint dot grid on the light chapters. */
+[data-scene]:not([data-scene='hero']) { position: relative; background-color: var(--bg); }
+[data-scene]:not([data-scene='hero']):not([data-scene='footer']):not([data-scene='process']) {
+  background-image: radial-gradient(circle at 1px 1px, #2a2a2e1f 1px, transparent 1.4px);
+  background-size: var(--grid) var(--grid);
+}
 
 body {
   margin: 0;
-  background-color: var(--scene-bg, #3d4ccf);
+  background-color: #181f78;
   /* An engineer's notebook: a faint dot grid under everything. */
   background-image: radial-gradient(circle at 1px 1px, #2a2a2e24 1px, transparent 1.4px);
   background-size: var(--grid) var(--grid);
@@ -349,68 +353,6 @@ button {
     opacity: 1;
     transform: none;
   }
-}
-
-/* The cloud curtain used when travelling between chapters. */
-.cloud-wipe {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.cw-band {
-  position: absolute;
-  inset: 0 -10vw;
-  background: var(--paper);
-}
-
-.cw-edge {
-  position: absolute;
-  top: 50%;
-  width: 60vh;
-  height: auto;
-  translate: 0 -50%;
-}
-
-.cw-l {
-  left: 0;
-  translate: -78% -50%;
-  rotate: 90deg;
-}
-
-.cw-r {
-  right: 0;
-  translate: 78% -50%;
-  rotate: -90deg;
-}
-
-.cw-label {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: clamp(22px, 2.6vw, 40px);
-  font-weight: 800;
-  white-space: nowrap;
-  color: var(--ink);
-}
-
-.cw-label img {
-  width: 1.8em;
-  height: 1.8em;
-  animation: float 1s ease-in-out infinite;
-}
-
-.cw-label strong {
-  color: var(--red);
-  font-stretch: 125%;
-  text-transform: uppercase;
 }
 
 /* ---------- Sketchbook details shared by every section ---------- */
@@ -717,4 +659,238 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .droplet,
   .drop-ripple { display: none; }
+}
+
+/* ---------- The lanyard (scripts/lanyard.ts): José's Creative ID hangs from it in the hero and in
+   "About me". Each place sets --strap, --badge-w and --badge-h. ---------- */
+.lanyard {
+  position: absolute;
+  z-index: 2;
+  left: var(--anchor, 50%);
+  top: 0;
+  width: 0;
+  height: 0;
+  transition: left 1s var(--ease-out);
+}
+
+.swing {
+  --len: var(--strap);
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.strap {
+  position: absolute;
+  left: -15px;
+  top: -20px;
+  width: 30px;
+  height: calc(var(--strap-len, var(--strap)) + 24px);
+  transform-origin: 15px 20px;
+  rotate: var(--sa, 0deg);
+  background:
+    linear-gradient(90deg, #00000026 0 3px, #0000 3px calc(100% - 3px), #00000026 0),
+    repeating-linear-gradient(0deg, #ffffff12 0 2px, #0000 2px 5px),
+    var(--red);
+}
+
+/* The badge reel at the end of the strap; past it, a thin cord pulls out. */
+.reel {
+  position: absolute;
+  left: -2px;
+  top: calc(100% - 18px);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #2a2a2e 0 4px, #0000 4.5px),
+    radial-gradient(circle at 35% 30%, #fff 0, #e6e8ee 30%, #a9aeb9 75%, #8b919d);
+  box-shadow: 0 0 0 3px var(--red), 0 4px 6px #0000004d;
+}
+
+/* Drawn from the reel to the clip, wherever the card has been pulled. */
+.cord {
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 2px;
+  height: 0;
+  border-radius: 2px;
+  background: #2a2a2e;
+  transform-origin: 1px 0;
+}
+
+.clip {
+  position: absolute;
+  left: -21px;
+  top: calc(var(--len) - 6px);
+  width: 42px;
+  max-width: none;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 3px 2px #0000002e);
+}
+
+.badge {
+  position: absolute;
+  left: calc(var(--badge-w) / -2);
+  top: calc(var(--len) + 50px);
+  width: var(--badge-w);
+  height: var(--badge-h);
+  transform-origin: 50% -30px;
+  perspective: 900px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.badge.is-grabbed {
+  cursor: grabbing;
+}
+
+
+
+.lanyard.is-waiting .swing { visibility: hidden; }
+
+
+/* ---------- The deck (scripts/fullpage.ts): one chapter per screen ---------- */
+html.fp,
+html.fp body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
+html.fp [data-deck] > [data-slide] {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  visibility: hidden;
+  z-index: 1;
+  transform-origin: 50% 50%;
+}
+
+html.fp [data-deck] > [data-slide].is-current { visibility: visible; z-index: 2; }
+
+/* Each chapter fills its screen; if it is taller (a small phone), it scrolls inside. */
+html.fp [data-deck] > [data-slide] > * {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+html.fp [data-deck] > [data-slide] > *::-webkit-scrollbar { display: none; }
+
+html.fp [data-deck] > [data-slide] > section:not(.hero) {
+  display: grid;
+  align-content: safe center;
+  padding-block: clamp(32px, 7svh, 110px) clamp(72px, 10svh, 120px);
+}
+
+@media (max-width: 700px) {
+  html.fp [data-deck] > [data-slide] > section:not(.hero) { padding-block: 36px 66px; }
+}
+
+/* While a transition runs, the next chapter can sit under the current one. */
+html.fp [data-deck] > [data-slide].is-next { z-index: 1; }
+html.fp [data-deck] > [data-slide].is-under { visibility: visible; z-index: 1; }
+
+/* ---------- Transitions (scripts/transitions.ts) ---------- */
+.tx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* dive */
+.tx-circle { position: absolute; border-radius: 50%; }
+
+/* boot: a cartridge */
+.tx-cart {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(38vmin, 300px);
+  aspect-ratio: 0.86;
+  translate: -50% 0;
+  border-radius: 22px 22px 14px 14px;
+  background: linear-gradient(100deg, #ffffff30, #fff0 30%, #fff0 70%, #00000022), #6b4fd8;
+  clip-path: polygon(0 0, 82% 0, 100% 11%, 100% 100%, 0 100%);
+  box-shadow: inset 0 -12px 0 #00000030;
+}
+
+.tx-ridges {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 6%;
+  height: 8%;
+  background: repeating-linear-gradient(90deg, #00000026 0 4px, #0000 4px 9px);
+  border-radius: 4px;
+}
+
+.tx-label {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 20%;
+  bottom: 12%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 6%;
+  padding: 7%;
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px #0000000f;
+}
+
+/* The projects on the label: one picture at a time, flicking like a boot screen. */
+.tx-shot {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #2a2a2e;
+}
+
+.tx-shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.tx-cap { display: grid; gap: 2px; }
+
+.tx-cap b {
+  font-size: clamp(1.1rem, 0.8rem + 1.2vw, 1.7rem);
+  font-weight: 900;
+  font-stretch: 125%;
+  line-height: 1;
+  color: #2a2a2e;
+}
+
+.tx-cap small { font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: #2a2a2e99; }
+
+/* boot: the copy of the first cartridge, and the ring as it clicks into place */
+.tx-cart2 {
+  position: absolute;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 30px 30px #2a1a6a66);
+}
+
+.tx-cart2 > * { pointer-events: none; }
+
+.tx-ring {
+  position: absolute;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 3px solid #ffffffcc;
+  box-shadow: 0 0 24px #ffffff80;
+}
+
+/* page: the shadow the turning page throws on the chapter under it */
+.tx-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #00000055, #0000 60%);
 }

@@ -6,9 +6,21 @@
 
 const D2R = Math.PI / 180;
 
-import type { Point, Lanyard } from './pass';
+export type Point = { x: number; y: number };
 
-export function initLanyard(root = document.querySelector<HTMLElement>('[data-lanyard]')): Lanyard | null {
+/** The card on its lanyard: where it is, carry it somewhere, and its gestures. */
+export type Lanyard = {
+  center(): Point;
+  dock(target: () => Point): void;
+  undock(): void;
+  onDrag(cb: (p: Point) => void): void;
+  onRelease(cb: (p: Point) => void): void;
+  onTap(cb: () => void): void;
+};
+
+/** `waitFor`: drop in when this window event fires (its screen is shown); otherwise the card drops
+ *  in the first time its area comes into view. */
+export function initLanyard(root = document.querySelector<HTMLElement>('[data-lanyard]'), opts: { waitFor?: string } = {}): Lanyard | null {
   const swing = root?.querySelector<HTMLElement>('.swing');
   const badge = root?.querySelector<HTMLElement>('.badge');
   const card = root?.querySelector<HTMLElement>('.badge-card');
@@ -283,10 +295,10 @@ export function initLanyard(root = document.querySelector<HTMLElement>('[data-la
     wake();
   });
 
-  // It drops in from above the first time it comes into view.
+  // It drops in from above: when told to, or the first time it comes into view.
   let dropped = false;
-  new IntersectionObserver((entries) => {
-    if (dropped || !entries[0].isIntersecting) return;
+  const drop = () => {
+    if (dropped) return;
     dropped = true;
     root.classList.remove('is-waiting');
     if (reduced) return;
@@ -295,7 +307,23 @@ export function initLanyard(root = document.querySelector<HTMLElement>('[data-la
     a = 14;
     b = -8;
     wake();
-  }, { threshold: 0.35 }).observe(scope);
+  };
+  if (opts.waitFor) {
+    addEventListener(opts.waitFor, drop, { once: true });
+  } else {
+    new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) drop();
+    }, { threshold: 0.35 }).observe(scope);
+  }
+  // A new lap: the card drops in again.
+  addEventListener('jlp-loop', () => {
+    L0 = restLen();
+    dockAt = null;
+    len = -L0 * 1.6;
+    vl = 0;
+    va = 30;
+    wake();
+  });
   root.classList.add('is-waiting');
   render();
   return api;
